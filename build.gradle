@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
     //스프링 부트 시큐리티 관련 기본 설정과 의존성 기능 제공
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+//    implementation 'org.springframework.boot:spring-boot-starter-security'
     //데이터의 유효성 검사용 어노테이션 제공
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     //스프링 부트 웹 관련련 기본 설정과 의존성 기능 제공, Restful 관련 어노테이션 제공
