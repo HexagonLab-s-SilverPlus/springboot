@@ -43,18 +43,14 @@ public class WorkspaceController {
     @GetMapping("/{memUuid}")
     public ResponseEntity<ApiResponse<Workspace>> getWorkspace(@PathVariable String memUuid) {
         Optional<Workspace> workspaceOpt = workspaceService.getWorkspaceByMemUuid(memUuid);
-        if (workspaceOpt.isPresent()) {
-            return ResponseEntity.ok(ApiResponse.<Workspace>builder()
-                    .success(true)
-                    .message("워크스페이스 조회 성공")
-                    .data(workspaceOpt.get())
-                    .build());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
-                    .success(false)
-                    .message("워크스페이스가 존재하지 않습니다.")
-                    .build());
-        }
+        return workspaceOpt.map(workspace -> ResponseEntity.ok(ApiResponse.<Workspace>builder()
+                .success(true)
+                .message("워크스페이스 조회 성공")
+                .data(workspace)
+                .build())).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
+                .success(false)
+                .message("워크스페이스가 존재하지 않습니다.")
+                .build()));
     }
 
 }
