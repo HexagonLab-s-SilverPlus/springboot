@@ -64,6 +64,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     // 무슨용도야?
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    // Spring Security 관련 기능 제공
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
 }
 
 ////sourceSets

@@ -1,5 +1,8 @@
 package com.hexalab.silverplus.member.controller;
 
+import com.hexalab.silverplus.member.model.dto.Member;
+import com.hexalab.silverplus.member.model.dto.MemberFiles;
+import com.hexalab.silverplus.member.model.service.MemberFilesService;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
