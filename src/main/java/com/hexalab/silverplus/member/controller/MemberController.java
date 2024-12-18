@@ -1,5 +1,8 @@
 package com.hexalab.silverplus.member.controller;
 
+import com.hexalab.silverplus.member.model.dto.Member;
+import com.hexalab.silverplus.member.model.dto.MemberFiles;
+import com.hexalab.silverplus.member.model.service.MemberFilesService;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,6 @@ import java.io.File;
 @RestController     // REST API 어노테이션
 @RequestMapping("/member")
 @RequiredArgsConstructor    // 자동 객체 생성(의존성 주입)
-@CrossOrigin(origins = "http://localhost:3000")      // 서로 다른 포트 사용시 CrossOrigin 이슈 처리
 public class MemberController {
 
     private final MemberService memberService;
@@ -68,6 +70,17 @@ public class MemberController {
         return new ResponseEntity<String>("회원가입 성공", HttpStatus.OK);
     }
 
+    @PostMapping("/idchk")
+    // 아이디 중복 검사 처리 메소드
+    public ResponseEntity<String> memberCheckIdMethod(@RequestParam("memId") String memId) {
+        int memIdCount = memberService.selectCheckId(memId);
+        if(memIdCount > 0) {
+            return new ResponseEntity<String>("dup", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<String>("ok", HttpStatus.OK);
+        }
+    }
+
 /*
     // 로그인 처리 메소드
     @PostMapping("/login")
@@ -88,10 +101,6 @@ public class MemberController {
     // 회원 상태정보 수정 처리 메소드 (관리자)
     @PutMapping("/status")
     public ResponseEntity<?> memberStatusUpdateMethod() {}
-
-    @PostMapping("/idchk")
-    // 아이디 중복 검사 처리 메소드
-    public ResponseEntity<?> memberCheckIdMethod() {}
 
     @GetMapping
     // 회원 목록 출력 처리 메소드
