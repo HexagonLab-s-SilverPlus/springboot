@@ -62,7 +62,5 @@ public class QnAEntity {
         qnaId = UUID.randomUUID();
         qnaWCreateAt = new Timestamp(System.currentTimeMillis());
         qnaWUpdateAt = new Timestamp(System.currentTimeMillis());
-        qnaADUpdateBy= null;
-        qnaADCreateBy= null;
     }
 }
