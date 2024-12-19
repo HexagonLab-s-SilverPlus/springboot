@@ -23,11 +23,11 @@ public class QMemberEntity extends EntityPathBase<MemberEntity> {
 
     public final StringPath memCellphone = createString("memCellphone");
 
-    public final DatePath<java.sql.Date> memChangeStatus = createDate("memChangeStatus", java.sql.Date.class);
+    public final DateTimePath<java.sql.Timestamp> memChangeStatus = createDateTime("memChangeStatus", java.sql.Timestamp.class);
 
     public final StringPath memEmail = createString("memEmail");
 
-    public final DatePath<java.sql.Date> memEnrollDate = createDate("memEnrollDate", java.sql.Date.class);
+    public final DateTimePath<java.sql.Timestamp> memEnrollDate = createDateTime("memEnrollDate", java.sql.Timestamp.class);
 
     public final StringPath memFamilyApproval = createString("memFamilyApproval");
 
