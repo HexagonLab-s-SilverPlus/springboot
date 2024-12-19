@@ -35,7 +35,15 @@ public class RefreshService {
         refreshRepository.deleteByTokenValue(refreshValue);
     }
 
-    public List<RefreshToken> findByUserId(String userId){
-        return refreshRepository.findByUserId(userId);
+    public List<RefreshToken> findByMemUuid(String memUuid){
+        return refreshRepository.findByMemUuid(memUuid);
+    }
+
+    public int findByMemUuidCount(String memUuid){
+        return refreshRepository.findByMemUuidCount(memUuid);
+    }
+
+    public void deleteByRefreshTokenUuid(String tokenMemUuid){
+        refreshRepository.deleteByRefreshTokenUuid(tokenMemUuid);
     }
 }

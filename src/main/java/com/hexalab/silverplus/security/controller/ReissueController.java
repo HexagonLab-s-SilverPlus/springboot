@@ -26,6 +26,7 @@ public class ReissueController {
     private final RefreshService refreshService;        // 리프레시 토큰 처리용
 
 
+
     private final long access_expiration;
     private final long refresh_expiration;
 
@@ -43,8 +44,69 @@ public class ReissueController {
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-        // 리프레시 토큰을 request header 에 'Authorization' 에 넣어서 보냈다면
-        String refresh = request.getHeader("Authorization");
+        log.info("reissueController 실행 확인");
+        // request header에 보낸 accesstoken, refreshtoken 추출
+        String request_accessToken = request.getHeader("AccessToken");
+        String request_refreshToken = request.getHeader("Authorization");
+
+        // request header로 보낸 로그인 연장 요청 정보 추출
+        String extendLogin = request.getHeader("extendLogin");
+
+        log.info("전달온 accessToken 확인 : {}", request_accessToken);
+        log.info("전달온 refreshToken 확인 : {}", request_refreshToken);
+
+        try {
+            // 추출한 accesstoken 과 refreshtoken 에서 'Bearer ' 제거
+            String accessToken = request_accessToken != null && request_accessToken.startsWith("Bearer ") ? request_accessToken.substring("Bearer ".length()).trim() : null;
+            String refreshToken = request_refreshToken != null && request_refreshToken.startsWith("Bearer ") ? request_refreshToken.substring("Bearer ".length()).trim() : null;
+
+            // 토큰값이 null 일 경우 오류 반환
+            if(accessToken == null || refreshToken == null) {
+                log.warn("accessToken or refreshToken is null");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            // 토큰 만료 여부 확인
+            // accessToken
+            boolean isAccessTokenExpired = jwtUtil.isTokenExpired(accessToken);     // 만료시 true 를 리턴함
+            log.info("accessToken 만료여부 : {}", isAccessTokenExpired ? "만료" : "유효");
+            // refreshToken
+            boolean isRefreshTokenExpired = jwtUtil.isTokenExpired(refreshToken);       // 만료시 true 를 리턴함
+            log.info("refreshToken 만료여부 : {}", isRefreshTokenExpired ? "만료" : "유효");
+
+            // reissue 조건 1 :
+            // accessToken 이 만료되고 refreshToken 이 유효한 경우
+            if (isAccessTokenExpired && !isRefreshTokenExpired) {
+                log.info("refreshToken 을 이용하여 accessToken 발급 진행");
+
+                // refreshToken 정보에서 아이디 추출 (JWTUtil 클래스 안에 있는 메소드 사용)
+                String memId = jwtUtil.getUserIdFromToken(refreshToken);
+
+                // 추출한 아이디를 이용하여 accessToken 발급
+                String newAccessToken = jwtUtil.generateToken(memId, "access", access_expiration);
+
+                // 발급된 accessToken 을 header 에 저장
+                response.setHeader("Authorization", "Bearer " + newAccessToken);
+
+                return ResponseEntity.ok("accessToken generated");
+
+
+
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+
+
+
+
+/*
         if(refresh == null || !refresh.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -62,7 +124,6 @@ public class ReissueController {
             refreshService.deleteByRefreshToken(token);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-
         // 리프레시 토큰이 맞는지 카테고리로 확인
         String category = jwtUtil.getCategoryFromToken(token);
         if (category.equals("refresh")) {
@@ -98,6 +159,7 @@ public class ReissueController {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.OK);
+        */
     }
 
     // access token 확인하고 처리하는 메소드
