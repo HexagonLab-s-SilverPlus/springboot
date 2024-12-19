@@ -37,11 +37,14 @@ public class NoticeController {
         log.info("newfile"+file);
 
         // notice insert
-        noticeService.noticeInsert(notice);
-
-
-        // 공지사항 첨부파일 저장 폴더를 경로 지정
-        return null;
+        try {
+            noticeService.noticeInsert(notice);
+            log.info("notice inserted");
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 
