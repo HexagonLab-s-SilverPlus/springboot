@@ -17,7 +17,7 @@ import java.util.UUID;
 public class Member implements java.io.Serializable {
 
     @NotBlank
-    private UUID memUUID;    // MEM_UUID	VARCHAR2(100BYTE)
+    private String memUUID;    // MEM_UUID	VARCHAR2(100BYTE)
     private String memId;       // MEM_ID	VARCHAR2(50 BYTE)
     @NotBlank
     private String memPw;       // MEM_PW	VARCHAR2(50 BYTE)

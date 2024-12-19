@@ -35,6 +35,20 @@ public class MemberService {
         return entityOptional.get().toDto();
     }
 
+    // 아이디 중복확인 처리용 메소드
+    public int selectCheckId(String memId) {
+        if (memberRepository.selectCheckId(memId) > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    public Member findByMemId(String memId) {
+        Optional<MemberEntity> entityOptional = memberRepository.findById(memId);
+        return entityOptional.get().toDto();
+    }
+
 
     /*
     // 회원정보 수정 처리 메소드
@@ -54,4 +68,5 @@ public class MemberService {
 
     // 비밀번호 찾기 처리 메소드
     public int findMemberPw(String memId, String memName){}*/
+
 }

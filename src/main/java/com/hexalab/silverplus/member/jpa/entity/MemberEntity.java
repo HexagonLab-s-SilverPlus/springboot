@@ -20,7 +20,7 @@ public class MemberEntity {
 
     @Id
     @Column(name = "MEM_UUID", nullable = false)
-    private UUID memUUID;    // MEM_UUID	VARCHAR2(100BYTE)
+    private String memUUID;    // MEM_UUID	VARCHAR2(100BYTE)
     @Column(name = "MEM_ID")
     private String memId;       // MEM_ID	VARCHAR2(50 BYTE)
     @Column(name = "MEM_PW", nullable = false)
@@ -68,7 +68,7 @@ public class MemberEntity {
 
     @PrePersist
     public void prePersist() {
-        memUUID = UUID.randomUUID();
+        memUUID = UUID.randomUUID().toString();
         memEnrollDate = new java.sql.Date(System.currentTimeMillis());
     }
 
