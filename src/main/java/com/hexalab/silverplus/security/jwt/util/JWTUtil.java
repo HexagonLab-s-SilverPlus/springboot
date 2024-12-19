@@ -130,14 +130,16 @@ public class JWTUtil {
         }
 
         //사용자의 관리자 여부 확인
-        String adminYN = member.getMemType();
+        String memType = member.getMemType();
+        log.info("enrolldata : {}", member.getMemEnrollDate());
 
         //JWT 토큰 생성 : 사용자 아이디(subject)에 넣고, 관리자여부는 클레임으로 추가함 (임의대로 지정함)
         return Jwts.builder()
                 .setSubject(memId)  // 사용자 ID 설정 (로그인시 이메일 사용시에는 이메일 등록)
                 .claim("category", category)  // 카테고리 정보 추가 ("access", "refresh")
                 .claim("name", member.getMemName())  // 사용자 이름 또는 닉네임 추가
-                .claim("role", (adminYN))  // ROLE 정보 추가. 추후 수정예정
+                .claim("role", (memType))  // ROLE 정보 추가.
+                .claim("member", member)    // 조회해 온 member 통째로 저장
                 .setExpiration(new Date(System.currentTimeMillis() + expiredMs))  // 토큰 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256)  // 비밀키와 알고리즘으로 서명
                 .compact();  // JWT 생성 : JWT 를 압축 문자열로 만듦
