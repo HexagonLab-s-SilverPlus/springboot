@@ -152,7 +152,7 @@ public class JWTFilter extends OncePerRequestFilter {
             // 사용자 인증 객체 생성
             MemberEntity member = new MemberEntity();
             member.setMemId(username);
-            member.setMemType(role.equals("ADMIN") ? "Y" : "N");
+            member.setMemType(role);
             member.setMemPw("tempPassword");
 
             log.info("Authenticated member: {}", member);
