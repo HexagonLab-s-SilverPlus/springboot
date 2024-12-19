@@ -1,13 +1,16 @@
 package com.hexalab.silverplus.member.jpa.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hexalab.silverplus.member.model.dto.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.net.ntp.TimeStamp;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
@@ -44,9 +47,9 @@ public class MemberEntity {
     @Column(name = "MEM_STATUS", nullable = false, columnDefinition = "ACTIVE")
     private String memStatus;       // MEM_STATUS	VARCHAR2(50 BYTE)
     @Column(name = "MEM_ENROLL_DATE", nullable = false)
-    private Date memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
+    private Timestamp memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
     @Column(name = "MEM_CHANGE_STATUS")
-    private Date memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
+    private Timestamp memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
     @Column(name = "MEM_FAMILY_APPROVAL")
     private String memFamilyApproval;       // MEM_FAMILY_APPROVAL	CHAR(1 BYTE)
     @Column(name = "MEM_SOCIAL_KAKAO", columnDefinition = "N")
@@ -69,7 +72,7 @@ public class MemberEntity {
     @PrePersist
     public void prePersist() {
         memUUID = UUID.randomUUID().toString();
-        memEnrollDate = new java.sql.Date(System.currentTimeMillis());
+        memEnrollDate = new java.sql.Timestamp(System.currentTimeMillis());
     }
 
     public Member toDto() {

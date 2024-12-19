@@ -1,12 +1,15 @@
 package com.hexalab.silverplus.member.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.net.ntp.TimeStamp;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
@@ -35,8 +38,10 @@ public class Member implements java.io.Serializable {
     @NotBlank
     private String memStatus;       // MEM_STATUS	VARCHAR2(50 BYTE)
     @NotBlank
-    private Date memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
-    private Date memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
+//    private Date memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
+    private Timestamp memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
+//    private Date memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
+    private Timestamp memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
     private String memFamilyApproval;       // MEM_FAMILY_APPROVAL	CHAR(1 BYTE)
     private String memSocialKakao;      // MEM_SOCIAL_KAKAO	CHAR(1 BYTE)
     private String memKakaoEmail;       // MEM_KAKAO_EMAIL	VARCHAR2(50 BYTE)
