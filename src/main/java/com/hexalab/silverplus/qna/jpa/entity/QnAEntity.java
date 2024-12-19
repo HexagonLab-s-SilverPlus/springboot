@@ -19,27 +19,27 @@ import java.util.UUID;
 public class QnAEntity {
     @Id
     @Column(name="QNA_ID")
-    private String qnaId;
+    private String qnaId;   //QNA식별코드
     @Column(name="QNA_TITLE")
-    private String qnaTitle;
+    private String qnaTitle;    //제목
     @Column(name="QNA_W_CREATED_AT")
-    private Timestamp qnaWCreateAt;
+    private Timestamp qnaWCreateAt; //질문 등록 날짜
     @Column(name="QNA_W_UPDATED_AT")
-    private Timestamp qnaWUpdateAt;
+    private Timestamp qnaWUpdateAt; //질문 수정 날짜
     @Column(name="QNA_W_CONTENT")
-    private String qnaWContent;
+    private String qnaWContent; //질문내용
     @Column(name="QNA_W_CREATED_BY")
-    private String qnaWCreateBy;
+    private String qnaWCreateBy;    //질문자
     @Column(name="QNA_AD_CREATED_AT")
-    private Timestamp qnaADCreateAt;
+    private Timestamp qnaADCreateAt;    //답변 등록 날짜
     @Column(name="QNA_AD_UPDATED_AT")
-    private Timestamp qnaADUpdateAt;
+    private Timestamp qnaADUpdateAt;    //답변 수정 날짜
     @Column(name="QNA_AD_CONTENT")
-    private String qnaADContent;
+    private String qnaADContent;    //답변내용
     @Column(name="QNA_AD_CREATED_BY")
-    private String qnaADCreateBy;
+    private String qnaADCreateBy;    //답변자
     @Column(name="QNA_AD_UPDATED_BY")
-    private String qnaADUpdateBy;
+    private String qnaADUpdateBy;   //답변자(수정)
 
     public QnA toDto(){
         return QnA.builder()
