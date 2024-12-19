@@ -16,12 +16,23 @@ import org.springframework.web.bind.annotation.*;
 public class QnAController {
     private final QnAService qnaService;
 
+    @GetMapping("/mylist")
+    public ResponseEntity<QnA> selectMyListQnA(@RequestParam String uuid) {
+        log.info("selectMyListQnA  sada {}", uuid);
+        try {
+            QnA qna = qnaService.selectList(uuid);
+            return ResponseEntity.ok(qna);
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
     @PostMapping
-    public ResponseEntity qnaInsert(
+    public ResponseEntity insertQnA(
             @ModelAttribute QnA qna
             ){
         log.info("qna insert");
-        log.info("qna: {}", qna);
         if(qnaService.insertQnA(qna)){
             return ResponseEntity.ok().build();
         }else {

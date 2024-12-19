@@ -19,7 +19,7 @@ import java.util.UUID;
 public class QnAEntity {
     @Id
     @Column(name="QNA_ID")
-    private UUID qnaId;
+    private String qnaId;
     @Column(name="QNA_TITLE")
     private String qnaTitle;
     @Column(name="QNA_W_CREATED_AT")
@@ -59,10 +59,8 @@ public class QnAEntity {
 
     @PrePersist
     public void prePersist(){
-        qnaId = UUID.randomUUID();
+        qnaId = UUID.randomUUID().toString();
         qnaWCreateAt = new Timestamp(System.currentTimeMillis());
         qnaWUpdateAt = new Timestamp(System.currentTimeMillis());
-        qnaADUpdateBy= null;
-        qnaADCreateBy= null;
     }
 }

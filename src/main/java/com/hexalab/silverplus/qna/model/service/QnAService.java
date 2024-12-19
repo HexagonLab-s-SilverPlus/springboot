@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.qna.model.service;
 
+import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
 import com.hexalab.silverplus.qna.jpa.repository.QnARepository;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class QnAService {
     private final QnARepository qnARepository;
 
+    public QnA selectList(String uuid){
+        QnAEntity qnaEntity = qnARepository.findById(uuid).get();
+        log.info("qnaEntity: {}", qnaEntity);
+        return qnaEntity.toDto();
+    }
+
+//    public QnA selectListAll(){
+//
+//    }
+
     public boolean insertQnA(QnA qna){
         try {
-            log.info("qnaasdas: {}", qna);
             qnARepository.save(qna.toEntity());
             return true;
         }catch (Exception e){
