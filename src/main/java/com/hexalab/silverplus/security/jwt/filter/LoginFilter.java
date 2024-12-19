@@ -26,9 +26,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -128,6 +126,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("access_token : {}", access);
         log.info("refresh_token : {}", refresh);
         log.info("access_expiration : {}", access_expiration);
+
+        // 새로 로그인 할때  DB에 토큰정보가 있을 시 기존 리프레시 토큰정보 삭제
+        if (refreshService.findByMemUuidCount(memUUID) > 0) {
+            log.info("토큰정보 삭제 코드 작동 확인");
+            refreshService.deleteByRefreshTokenUuid(memUUID);
+        }
 
         // 리프레시토큰은 데이터베이스에 저장 처리
         RefreshToken refreshTokenEntity = RefreshToken.builder()
