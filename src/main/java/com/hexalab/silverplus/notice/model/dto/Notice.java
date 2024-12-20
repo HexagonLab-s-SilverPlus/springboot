@@ -23,7 +23,7 @@ public class Notice {
     private String notUpdateBy;         // NOT_UPDATED_BY	VARCHAR2(100 BYTE)
     private Timestamp notDeleteAt;      // NOT_DELETED_AT	TIMESTAMP(6)
     private String notDeleteBy;         // NOT_DELETED_BY	VARCHAR2(100 BYTE)
-    private String notReadCount;        // NOT_READ_COUNT	NUMBER
+    private int notReadCount;        // NOT_READ_COUNT	NUMBER
 
     public NoticeEntity toEntity(){
         return NoticeEntity.builder()
