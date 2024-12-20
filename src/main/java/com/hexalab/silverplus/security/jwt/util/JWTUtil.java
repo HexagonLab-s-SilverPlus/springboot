@@ -219,4 +219,5 @@ public class JWTUtil {
         return getClaimsFromToken(token).get("role", String.class);
     }
 
+
 }

@@ -20,6 +20,30 @@ public class WorkspaceController {
     @Autowired
     private WorkspaceService workspaceService;
 
+    @GetMapping("/{memUuid}")
+    public ResponseEntity<ApiResponse<Workspace>> getWorkspace(@PathVariable String memUuid) {
+        try{
+            Optional<Workspace> workspaceOpt = workspaceService.getWorkspaceByMemUuid(memUuid);
+            return workspaceOpt.map(workspace -> ResponseEntity.ok(ApiResponse.<Workspace>builder()
+                            .success(true)
+                            .message("워크스페이스 조회 성공")
+                            .data(workspace)
+                            .build()))
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
+                            .success(false)
+                            .message("워크스페이스가 존재하지 않습니다.")
+                            .build()));
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<Workspace>builder()
+                   .success(false)
+                   .message("워크스페이스이스 조회 실패")
+                   .build());
+
+        }
+    }
+
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Workspace>> createWorkspace(@RequestParam String memUuid) {
         try {
@@ -39,18 +63,5 @@ public class WorkspaceController {
         }
     }
 
-
-    @GetMapping("/{memUuid}")
-    public ResponseEntity<ApiResponse<Workspace>> getWorkspace(@PathVariable String memUuid) {
-        Optional<Workspace> workspaceOpt = workspaceService.getWorkspaceByMemUuid(memUuid);
-        return workspaceOpt.map(workspace -> ResponseEntity.ok(ApiResponse.<Workspace>builder()
-                .success(true)
-                .message("워크스페이스 조회 성공")
-                .data(workspace)
-                .build())).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
-                .success(false)
-                .message("워크스페이스가 존재하지 않습니다.")
-                .build()));
-    }
 
 }

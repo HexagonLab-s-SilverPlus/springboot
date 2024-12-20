@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.chat.model.dto;
 
 import com.hexalab.silverplus.chat.jpa.entity.ChatMessageEntity;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,9 +16,12 @@ import java.util.UUID;
 @Builder
 public class ChatMessage {
     private String msgId; // UUID -> String
+    @NotEmpty(message = "Sender Role is required")
     private String msgSenderRole;
+    @NotEmpty(message = "Content is required")
     private String msgContent;
     private Timestamp msgSentAt;
+    @NotEmpty(message = "Sender UUID is required")
     private String msgSenderUUID;
     private String msgType; // T(EXT) or V(OICE)
     private String parentMsgId; // 상위 메시지 ID
