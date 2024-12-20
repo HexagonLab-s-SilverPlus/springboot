@@ -118,7 +118,8 @@ public class SecurityConfig {
                             // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
                             // JWT 사용시 추가되는 설정임
-                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**",
+                                                "/api/workspace/**", "api/chat/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
