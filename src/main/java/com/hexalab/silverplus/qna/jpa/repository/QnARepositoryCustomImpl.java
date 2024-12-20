@@ -1,14 +1,20 @@
 package com.hexalab.silverplus.qna.jpa.repository;
 
+import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
+import com.hexalab.silverplus.member.jpa.entity.QMemberEntity;
 import com.hexalab.silverplus.qna.jpa.entity.QQnAEntity;
 import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
+import com.querydsl.core.Tuple;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,15 +28,64 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
 
     //QnA 테이블을 의미하는 QnAEntity 를 qna 로 표현한다는 선언임
     private QQnAEntity qna = QQnAEntity.qnAEntity;
+    private QMemberEntity member = QMemberEntity.memberEntity;
+
+//    @Override
+//    public List<QnAEntity> selectMyQnA(String uuid, Pageable pageable) {
+//        return queryFactory
+//                .selectFrom(qna)
+//                .where(qna.qnaWCreateBy.eq(uuid))
+//                .orderBy(qna.qnaWUpdateAt.desc())
+//                .offset(pageable.getOffset())
+//                .limit((pageable.getPageSize()))
+//                .fetch();
+//    }
+    @Override
+    public Map<String, Object> selectAllQnA(Pageable pageable) {
+        List<Tuple> qnaEntityList = queryFactory
+                .select(qna, member)
+                .from(qna)
+                .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
+                .orderBy(qna.qnaWUpdateAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Map<String, Object> resultList = new HashMap<>();
+        ArrayList<QnAEntity> qnaList = new ArrayList<>();
+        ArrayList<MemberEntity> memberList = new ArrayList<>();
+        for (Tuple tuple : qnaEntityList) {
+            qnaList.add(tuple.get(0, QnAEntity.class));
+            memberList.add(tuple.get(1, MemberEntity.class));
+        }
+        resultList.put("qna", qnaList);
+        resultList.put("member", memberList);
+
+        return resultList;
+    }
 
     @Override
-    public List<QnAEntity> selectMyQnA(String uuid, Pageable pageable) {
-        return queryFactory
-                .selectFrom(qna)
+    public Map<String, Object> selectMyQnA(String uuid, Pageable pageable) {
+        List<Tuple> qnaEntityList = queryFactory
+                .select(qna, member)
+                .from(qna)
+                .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
                 .where(qna.qnaWCreateBy.eq(uuid))
                 .orderBy(qna.qnaWUpdateAt.desc())
                 .offset(pageable.getOffset())
-                .limit((pageable.getPageSize()))
+                .limit(pageable.getPageSize())
                 .fetch();
+
+        Map<String, Object> resultList = new HashMap<>();
+        ArrayList<QnAEntity> qnaList = new ArrayList<>();
+        ArrayList<MemberEntity> memberList = new ArrayList<>();
+        for (Tuple tuple : qnaEntityList) {
+            qnaList.add(tuple.get(0, QnAEntity.class));
+            memberList.add(tuple.get(1, MemberEntity.class));
+        }
+        resultList.put("qna", qnaList);
+        resultList.put("member", memberList);
+
+        return resultList;
     }
 }
