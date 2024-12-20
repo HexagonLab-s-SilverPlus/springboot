@@ -37,7 +37,7 @@ public class NoticeEntity {
     @Column(name="NOT_DELETED_BY")
     private String notDeleteBy;         // NOT_DELETED_BY	VARCHAR2(100 BYTE)
     @Column(name="NOT_READ_COUNT")
-    private String notReadCount;        // NOT_READ_COUNT	NUMBER
+    private int notReadCount;        // NOT_READ_COUNT	NUMBER
 
     @PrePersist
     public void prePersist() {
