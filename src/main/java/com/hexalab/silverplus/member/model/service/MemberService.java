@@ -29,9 +29,9 @@ public class MemberService {
         }
     }
 
-    // 로그인, 회원상세정보, 마이페이지 처리 메소드
-    public Member selectMember(String memId) {
-        Optional<MemberEntity> entityOptional = memberRepository.findById(memId);
+    // 로그인, 회원상세정보, 마이페이지 처리 메소드(uuid로 셀렉)
+    public Member selectMember(String memUuId) {
+        Optional<MemberEntity> entityOptional = memberRepository.findById(memUuId);
         return entityOptional.get().toDto();
     }
 
@@ -45,8 +45,8 @@ public class MemberService {
     }
 
     public Member findByMemId(String memId) {
-        Optional<MemberEntity> entityOptional = memberRepository.findById(memId);
-        return entityOptional.get().toDto();
+        MemberEntity memberEntity = memberRepository.findByMemId(memId);
+        return memberEntity.toDto();
     }
 
 

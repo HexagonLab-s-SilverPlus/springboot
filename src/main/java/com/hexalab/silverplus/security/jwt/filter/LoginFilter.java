@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -126,6 +127,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("access_token : {}", access);
         log.info("refresh_token : {}", refresh);
         log.info("access_expiration : {}", access_expiration);
+        log.info("refresh_expiration : {}", refresh_expiration);
+        log.info("access 토큰 만료시간 : {}", jwtUtil.getExpirationDateFromToken(access).toInstant().atZone(ZoneId.of("Asia/Seoul")));
+        log.info("refresh 토큰 만료시간 : {}", jwtUtil.getExpirationDateFromToken(refresh).toInstant().atZone(ZoneId.of("Asia/Seoul")));
 
         // 새로 로그인 할때  DB에 토큰정보가 있을 시 기존 리프레시 토큰정보 삭제
         if (refreshService.findByMemUuidCount(memUUID) > 0) {

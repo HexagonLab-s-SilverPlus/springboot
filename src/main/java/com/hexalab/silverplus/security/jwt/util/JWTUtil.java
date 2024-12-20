@@ -5,6 +5,7 @@ import com.hexalab.silverplus.member.jpa.repository.MemberRepository;
 import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
@@ -14,7 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
-import java.sql.Date;
+import java.util.Date;
 import java.util.Base64;
 
 @Slf4j
@@ -121,7 +122,7 @@ public class JWTUtil {
         log.info("generate token : {}", secretKey);
 
         //MemberSerive 사용해서 db 에서 로그인한 사용자 정보를 조회해 옴
-        Member member = memberRepository.findByMemId(memId);
+        Member member = memberRepository.findByMemId(memId).toDto();
         log.info("member : {}", member);
 
         //사용자 정보가 없는 경우, UsernameNotFoundException (스프링 제공됨)을 발생시킴
@@ -140,7 +141,7 @@ public class JWTUtil {
                 .claim("name", member.getMemName())  // 사용자 이름 또는 닉네임 추가
                 .claim("role", (memType))  // ROLE 정보 추가.
                 .claim("member", member)    // 조회해 온 member 통째로 저장
-                .setExpiration(new Date(System.currentTimeMillis() + expiredMs))  // 토큰 만료 시간 설정
+                .setExpiration(new java.sql.Date(System.currentTimeMillis() + expiredMs))  // 토큰 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256)  // 비밀키와 알고리즘으로 서명
                 .compact();  // JWT 생성 : JWT 를 압축 문자열로 만듦
     }
@@ -154,12 +155,60 @@ public class JWTUtil {
                 .getBody();
     }
 
+    public Date getExpirationDateFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getExpiration();
+    }
+
     public String getUserIdFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
     public boolean isTokenExpired(String token) {
-        return getClaimsFromToken(token).getExpiration().before(new java.util.Date());
+//        log.info("만료여부 작동 확인");
+//        return getClaimsFromToken(token).getExpiration().before(new java.util.Date());
+        log.info("JWTUtil - 토큰 만료 여부 확인 시작: {}", token);
+
+        if (token == null || token.trim().isEmpty()) {
+            log.error("토큰이 비어있거나 유효하지 않습니다.");
+            return true; // 만료된 것으로 간주
+        }
+
+        try {
+            // JWT 파싱 및 Claims 추출
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token.trim())
+                    .getBody();
+
+            log.info("JWT 토큰 Claims: {}", claims);
+
+            // 만료 여부 확인
+            boolean isExpired = claims.getExpiration().before(new Date());
+            log.info("JWT 토큰 만료 여부: {}", isExpired ? "만료됨" : "유효함");
+            return isExpired;
+        } catch (ExpiredJwtException e) {
+            log.warn("토큰이 만료되었습니다: {}", e.getMessage());
+            log.info("만료된 토큰 Claims: {}", e.getClaims()); // 만료된 Claims 정보 로그 출력
+            return true; // 만료된 경우 true 반환
+        } catch (IllegalArgumentException e) {
+            log.error("JWT 파싱 중 오류: 토큰 형식이 잘못되었습니다. {}", e.getMessage());
+            return true; // 오류 발생 시 만료로 간주
+        } catch (Exception e) {
+            log.error("JWT 파싱 중 예상치 못한 오류: {}", e.getMessage());
+            return true; // 기타 오류도 만료로 간주
+        }
+
+    }
+
+    public String getMemUuidFromToken(String token) {
+        return getClaimsFromToken(token).get("member", Member.class).getMemUUID();
     }
 
     public String getCategoryFromToken(String token) {
