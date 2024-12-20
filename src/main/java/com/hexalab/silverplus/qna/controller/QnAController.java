@@ -27,26 +27,36 @@ public class QnAController {
     private final QnAService qnaService;
     private final MemberService memberService;
 
-//    @GetMapping("/mylist")
-//    public ResponseEntity<List<Map<String, Object>>> selectMyListQnA(@RequestParam String uuid) {
-//        log.info("selectMyListQnA : {}", uuid);
-//
-//        Map<String, Object> map = new HashMap();
-//
-//        Pageable pageable = PageRequest.of(0,
-//                10, Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
-////        map.put("paging", pageable);
-//
-//        try {
-//            List<Map<String, Object>> qnaList = qnaService.selectList(uuid, pageable);
-//            log.info("selectMyListQnA : {}", qnaList);
-////            map.put("list", qnaList);
-////            log.info("map : {}", map);
-//            return ResponseEntity.ok(qnaList);
-//        }catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-//        }
-//    }
+    @GetMapping("/mylist")
+    public ResponseEntity<Map<String, Object>> selectMyListQnA(
+            @RequestParam(required = false) String uuid,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        log.info("uuid : {}", uuid);
+        log.info("page : {}", page);
+        log.info("limit : {}", limit);
+
+        Map<String, Object> map = new HashMap();
+
+        Pageable pageable = PageRequest.of(page,
+                limit, Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
+        map.put("paging", pageable);
+
+        try {
+            Map<String, Object> qnaList = new HashMap<>();
+            if (uuid != null) {
+                qnaList = qnaService.selectMytList(uuid, pageable);
+            }else{
+                qnaList = qnaService.selectAllList(pageable);
+            }
+
+            log.info("Map<String, Object> : {}", qnaList);
+
+            return ResponseEntity.ok(qnaList);
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 
     @PostMapping

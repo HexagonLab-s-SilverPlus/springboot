@@ -1,10 +1,13 @@
 package com.hexalab.silverplus.qna.model.service;
 
+import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.model.service.MemberService;
+import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
 import com.hexalab.silverplus.qna.jpa.repository.QnARepository;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,21 +23,13 @@ public class QnAService {
     private final QnARepository qnARepository;
     private final MemberService memberService;
 
-    public List<Map<String, Object>> selectList(String uuid, Pageable pageable){
-
+    public Map<String, Object> selectMytList(String uuid, Pageable pageable){
         return qnARepository.selectMyQnA(uuid, pageable);
-//        ArrayList<QnA> list = new ArrayList<>();
-//
-//        for (Tuple qnaEntity : qnaEntityList) {
-//            list.add(qnaEntity.toDto());
-//        }
-//        log.info("ArrayList<QnA> : {}",list);
-//        return list;
     }
 
-//    public QnA selectListAll(){
-//
-//    }
+    public Map<String, Object> selectAllList(Pageable pageable){
+        return qnARepository.selectAllQnA(pageable);
+    }
 
     public boolean insertQnA(QnA qna){
         try {

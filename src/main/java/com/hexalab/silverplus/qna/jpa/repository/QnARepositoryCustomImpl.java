@@ -1,7 +1,9 @@
 package com.hexalab.silverplus.qna.jpa.repository;
 
+import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.entity.QMemberEntity;
 import com.hexalab.silverplus.qna.jpa.entity.QQnAEntity;
+import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
 import com.querydsl.core.Tuple;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +41,33 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
 //                .fetch();
 //    }
     @Override
-    public List<Map<String, Object>> selectMyQnA(String uuid, Pageable pageable) {
+    public Map<String, Object> selectAllQnA(Pageable pageable) {
         List<Tuple> qnaEntityList = queryFactory
-                .select(qna, member.memName)
+                .select(qna, member)
+                .from(qna)
+                .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
+                .orderBy(qna.qnaWUpdateAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Map<String, Object> resultList = new HashMap<>();
+        ArrayList<QnAEntity> qnaList = new ArrayList<>();
+        ArrayList<MemberEntity> memberList = new ArrayList<>();
+        for (Tuple tuple : qnaEntityList) {
+            qnaList.add(tuple.get(0, QnAEntity.class));
+            memberList.add(tuple.get(1, MemberEntity.class));
+        }
+        resultList.put("qna", qnaList);
+        resultList.put("member", memberList);
+
+        return resultList;
+    }
+
+    @Override
+    public Map<String, Object> selectMyQnA(String uuid, Pageable pageable) {
+        List<Tuple> qnaEntityList = queryFactory
+                .select(qna, member)
                 .from(qna)
                 .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
                 .where(qna.qnaWCreateBy.eq(uuid))
@@ -50,13 +76,15 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        List<Map<String, Object>> resultList = new ArrayList<>();
+        Map<String, Object> resultList = new HashMap<>();
+        ArrayList<QnAEntity> qnaList = new ArrayList<>();
+        ArrayList<MemberEntity> memberList = new ArrayList<>();
         for (Tuple tuple : qnaEntityList) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("qna", tuple.get(0, QQnAEntity.class));
-            result.put("memName", tuple.get(1, String.class));
-            resultList.add(result);
+            qnaList.add(tuple.get(0, QnAEntity.class));
+            memberList.add(tuple.get(1, MemberEntity.class));
         }
+        resultList.put("qna", qnaList);
+        resultList.put("member", memberList);
 
         return resultList;
     }
