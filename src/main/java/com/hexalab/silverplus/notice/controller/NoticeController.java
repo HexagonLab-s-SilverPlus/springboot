@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -21,9 +23,11 @@ public class NoticeController {
     private final NoticeService noticeService;
     private final NoticeFilesService noticeFilesService;
 
+    // 현재시간
+
 
     // upload file path(./uploads)
-    @Value("${uploadDir")
+    @Value("${uploadDir}")
     private String uploadDir;
 
     // insert
@@ -32,9 +36,17 @@ public class NoticeController {
             @ModelAttribute Notice notice,
             @RequestParam(name="newfile",required = false) MultipartFile file
     ){
+
+
         // front data check
         log.info("notice data"+notice);
         log.info("newfile"+file);
+
+        // 초기값 설정
+        notice.setNotCreateAt(new Timestamp(System.currentTimeMillis()));
+        notice.setNotUpdateAt(new Timestamp(System.currentTimeMillis()));
+        notice.setNotReadCount(0);
+
 
         // notice insert
         try {

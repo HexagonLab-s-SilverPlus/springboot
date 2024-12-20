@@ -47,7 +47,8 @@ public class WorkspaceController {
                 .success(true)
                 .message("워크스페이스 조회 성공")
                 .data(workspace)
-                .build())).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
+                .build()))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Workspace>builder()
                 .success(false)
                 .message("워크스페이스가 존재하지 않습니다.")
                 .build()));
