@@ -1,0 +1,82 @@
+# IDE 및 프로젝트 환경 파일
+/.idea/
+/.vscode/
+/*.iml
+*.class
+
+# Maven 빌드 파일
+/target/
+/out/
+
+# Gradle 빌드 파일
+/build/
+/.gradle/
+*.log
+
+# 환경 설정 파일
+/.env
+/.settings/
+/*.properties
+/*.yml
+/*.yaml
+
+# OS별 파일
+.DS_Store
+Thumbs.db
+
+# 로그 및 캐시
+*.log
+/logs/
+/*.log.*
+
+# IntelliJ와 Eclipse 설정 파일
+/.metadata/
+/*.classpath
+/*.project
+/.factorypath
+
+# Git 내부 파일
+/.git
+/.gitignore
+
+# Java IDE 캐시
+/.idea/
+/*.swp
+*~
+
+# Spring Boot 관련
+/bin/
+/target/
+/*.war
+/*.jar
+/*.ear
+
+# 테스트 출력 파일
+/test-output/
+/reports/
+
+# H2 및 데이터베이스 파일
+/*.h2.db
+/*.mv.db
+/*.ldb
+
+# 민감 정보 파일
+/secrets.json
+/keystore.jks
+/truststore.jks
+
+# 시스템 생성 파일
+*.tmp
+*.bak
+*.swp
+
+# 운영 배포 파일 (예: Docker)
+/docker-compose.override.yml
+.dockerignore
+*.dockerfile
+
+# Node.js 관련 파일 (프론트엔드 포함된 경우)
+/node_modules/
+/package-lock.json
+/pnpm-lock.yaml
+/yarn.lock

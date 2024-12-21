@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final UserService userService;
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -55,11 +56,12 @@ public class SecurityConfig {
     }
 
     // 직접 생성자를 작성해서 초기화 선언함 (@RequiredArgsConstructor 를 사용하지 않을 경우)
-    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository) {
+    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository, MemberService memberService) {
         this.refreshService = refreshService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
 //    @Bean
@@ -145,7 +147,7 @@ public class SecurityConfig {
                             .anyRequest().authenticated();
                 })
                 // JWTFilter 와 LoginFilter 를 시큐리티 필터 체인에 추가 등록함
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
+                .addFilterBefore(new JWTFilter(jwtUtil, memberService), LoginFilter.class)
                 // UsernamePasswordAuthenticationFilter.class : LoginFilter 를 UsernamePasswordAuthenticationFilter 로 형변환 함
                 .addFilterAt(new LoginFilter(userService, refreshService, memberRepository, authenticationManager(), jwtUtil, access_expiration, refresh_expiration), UsernamePasswordAuthenticationFilter.class)   // UsernamePasswordAuthenticationFilter : 스프링 부트에서 제공함
                 // service 가 두개여서 authenticationManager 가 service 혼동 으로 인한 스택 오버플로우 발생
