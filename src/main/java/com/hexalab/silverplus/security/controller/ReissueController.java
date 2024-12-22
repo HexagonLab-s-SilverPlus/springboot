@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
 
 @Slf4j
-@RestController("/token")
+@RestController
 public class ReissueController {
 
     private final JWTUtil jwtUtil;      // jwt 토큰 처리를 위한 유틸리티
@@ -106,6 +106,8 @@ public class ReissueController {
                     String memId = jwtUtil.getUserIdFromToken(accessToken);
                     // refreshToken 재발급 진행
                     String newRefreshToken = jwtUtil.generateToken(memId, "refresh", refresh_expiration);
+                    log.info("연장 요청으로 인한 재발급 : {}",newRefreshToken);
+                    response.setHeader("Access-Control-Expose-Headers", "refreshToken");
                     response.setHeader("refreshToken", "Bearer " + newRefreshToken);
                     return ResponseEntity.ok("refreshToken generated");
                 } else {

@@ -113,6 +113,9 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String request_accessToken = request.getHeader("Authorization");
         String request_refreshToken = request.getHeader("RefreshToken");
+        log.info("request_accessToken : {}", request_accessToken);
+        log.info("request_refreshToken : {}", request_refreshToken);
+
         String requestURI = request.getRequestURI();
 
         try {
@@ -142,6 +145,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 if (!isAccessTokenExpired && isRefreshTokenExpired) {
                     log.info("refreshToken-expired & accessToken-not expired");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
                     response.setHeader("Token-Expired", "RefreshToken");
                     response.getWriter().write("{\"error\": \"RefreshToken expired\"}");
                     return;
@@ -151,8 +155,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 if (isAccessTokenExpired && !isRefreshTokenExpired) {
                     log.warn("accessToken-expired");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
                     response.setHeader("Token-Expired", "AccessToken");
-                    log.info(response.getHeader("Token-Expired"));
+                    log.info("access 만료 & refresh 유효 응답 헤더값 : {}", response.getHeader("Token-Expired"));
                     response.getWriter().write("{\"error\": \"AccessToken expired\"}");
                     return;
                 }
@@ -161,6 +166,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 if (isAccessTokenExpired && isRefreshTokenExpired) {
                     log.warn("accessToken-expired & refreshToken-expired");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
                     response.setHeader("Token-Expired", "AllToken");
                     log.info(response.getHeader("Token-Expired"));
                     response.getWriter().write("{\"error\": \"AllToken expired\"}");
