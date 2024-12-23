@@ -23,12 +23,12 @@ public class QnAService {
     private final QnARepository qnARepository;
     private final MemberService memberService;
 
-    public Map<String, Object> selectMytList(String uuid, Pageable pageable){
-        return qnARepository.selectMyQnA(uuid, pageable);
+    public Map<String, Object> selectMytList(String uuid, Pageable pageable,int listCount){
+        return qnARepository.selectMyQnA(uuid, pageable, listCount);
     }
 
-    public Map<String, Object> selectAllList(Pageable pageable){
-        return qnARepository.selectAllQnA(pageable);
+    public Map<String, Object> selectAllList(Pageable pageable, int listCount){
+        return qnARepository.selectAllQnA(pageable, listCount);
     }
 
     public boolean insertQnA(QnA qna){
@@ -39,5 +39,13 @@ public class QnAService {
             log.error(e.getMessage());
             return false;
         }
+    }
+
+    public int selectAllListCount() {
+        return (int)qnARepository.count();
+    }
+
+    public int selectMytListCount(String uuid) {
+        return qnARepository.myCount(uuid);
     }
 }
