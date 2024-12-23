@@ -8,5 +8,5 @@ import java.util.Optional;
 public interface MemberRepositoryCustom {
 
     long selectCheckId(String memId);
-    Member findByMemId(String memId);
+    MemberEntity findByMemId(String memId);
 }

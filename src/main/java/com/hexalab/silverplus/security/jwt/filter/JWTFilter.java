@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.security.jwt.filter;
 
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
+import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.security.jwt.filter.output.CustomUserDetails;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -12,10 +13,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ import java.io.IOException;
 public class JWTFilter extends OncePerRequestFilter {
     // JWT 관련 유틸리티 메소드를 제공하는 JWTUtil 인스턴스를 멤버로 선언
     private final JWTUtil jwtUtil;
+    private final MemberService memberService;
 
     // 생성자를 통한 의존성 주입
 //    public JWTFilter(JWTUtil jwtUtil) {
@@ -102,36 +106,127 @@ public class JWTFilter extends OncePerRequestFilter {
     }*/
 
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         log.info("JWT filter running...");
-        try {
-            String authorization = request.getHeader("Authorization");
-            String requestURI = request.getRequestURI();
-            log.info("authorization : {}", authorization);
 
+        String request_accessToken = request.getHeader("Authorization");
+        String request_refreshToken = request.getHeader("RefreshToken");
+        log.info("request_accessToken : {}", request_accessToken);
+        log.info("request_refreshToken : {}", request_refreshToken);
+
+        String requestURI = request.getRequestURI();
+
+        try {
             // 로그인 및 토큰 재발급 요청은 필터 통과
             if (requestURI.equals("/login") || requestURI.equals("/reissue")) {
-                log.info("잘못 작동중인지 확인 1");
+                log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Authorization 헤더가 없거나 잘못된 형식이면 필터 통과
-            if (authorization == null || !authorization.startsWith("Bearer ")) {
-                log.info("잘못 작동중인지 확인 2");
-                filterChain.doFilter(request, response);
+            if (request_accessToken != null && request_refreshToken != null) {
+                String accessToken = request_accessToken.substring("Bearer ".length());
+                String refreshToken = request_refreshToken.substring("Bearer ".length());
+                log.info("accessToken : {}", accessToken);
+                log.info("refreshToken : {}", refreshToken);
+
+
+                log.info("Checking AccessToken expiration...");
+                boolean isAccessTokenExpired = jwtUtil.isTokenExpired(accessToken);
+                log.info("AccessToken 만료 여부: {}", isAccessTokenExpired ? "만료됨" : "유효함");
+
+                log.info("Checking RefreshToken expiration...");
+                boolean isRefreshTokenExpired = jwtUtil.isTokenExpired(refreshToken);
+                log.info("RefreshToken 만료 여부: {}", isRefreshTokenExpired ? "만료됨" : "유효함");
+
+                // refreshToken 만료, accessToken 유효
+                if (!isAccessTokenExpired && isRefreshTokenExpired) {
+                    log.info("refreshToken-expired & accessToken-not expired");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
+                    response.setHeader("Token-Expired", "RefreshToken");
+                    response.getWriter().write("{\"error\": \"RefreshToken expired\"}");
+                    return;
+                }
+
+                // accessToken 만료, refreshToken 유효
+                if (isAccessTokenExpired && !isRefreshTokenExpired) {
+                    log.warn("accessToken-expired");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
+                    response.setHeader("Token-Expired", "AccessToken");
+                    log.info("access 만료 & refresh 유효 응답 헤더값 : {}", response.getHeader("Token-Expired"));
+                    response.getWriter().write("{\"error\": \"AccessToken expired\"}");
+                    return;
+                }
+
+                // accessToken 만료, refreshToken 만료
+                if (isAccessTokenExpired && isRefreshTokenExpired) {
+                    log.warn("accessToken-expired & refreshToken-expired");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Access-Control-Expose-Headers", "Token-Expired");
+                    response.setHeader("Token-Expired", "AllToken");
+                    log.info(response.getHeader("Token-Expired"));
+                    response.getWriter().write("{\"error\": \"AllToken expired\"}");
+                    return;
+                }
+
+
+                // 사용자 정보 추출
+                String username = jwtUtil.getUserIdFromToken(accessToken);
+//                String role = jwtUtil.getRoleFromToken(accessToken);
+
+                log.info("username : {}", username);
+                log.info("인증객체 생성 코드 작동 확인");
+                // 사용자 인증 객체 생성
+                MemberEntity member = memberService.findByMemId(username).toEntity();
+
+
+                log.info("Authenticated member: {}", member);
+
+                // ROLE_ Prefix 추가: Spring Security에서 권한을 인식하려면 ROLE_ prefix가 필요합니다.
+                // SimpleGrantedAuthority: GrantedAuthority를 정확하게 설정합니다.
+                // CustomUserDetails 및 Authentication 객체 생성
+                CustomUserDetails customUserDetails = new CustomUserDetails(member);
+
+//                Authentication authToken = new UsernamePasswordAuthenticationToken(
+//                        customUserDetails,
+//                        null
+//                        , Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+//                );
+
+
+                Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+
+                log.info(authToken.toString());
+                // SecurityContext에 저장
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.info(" 확인 : " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+
+            } else {
+                log.info("전달온 Token 이 없음");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\": \"invalid token\"}");
                 return;
             }
 
-            String token = authorization.split(" ")[1];
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("JWT 처리 중 오류 발생: ", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\": \"Internal server error\"}");
+        }
+    }
+}
+
+/*
 
             // 토큰 만료 여부 확인
             if (jwtUtil.isTokenExpired(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Access token expired");
+                response.setHeader("token_expired");
                 log.info("만료여부확인");
                 return;
             }
@@ -161,11 +256,13 @@ public class JWTFilter extends OncePerRequestFilter {
             // SimpleGrantedAuthority: GrantedAuthority를 정확하게 설정합니다.
             // CustomUserDetails 및 Authentication 객체 생성
             CustomUserDetails customUserDetails = new CustomUserDetails(member);
-            /*Authentication authToken = new UsernamePasswordAuthenticationToken(
+
+            Authentication authToken = new UsernamePasswordAuthenticationToken(
                     customUserDetails,
                     null
-                    ,Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-            );*/
+                    , Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+            );
+
 
             Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
 
@@ -185,5 +282,6 @@ public class JWTFilter extends OncePerRequestFilter {
         }
     }
 
+*/
 
-}
+

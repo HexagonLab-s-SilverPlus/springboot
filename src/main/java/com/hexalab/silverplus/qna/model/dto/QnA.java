@@ -7,14 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 
 @Data    //@Getter, @Setter, @ToString, @EqualsAndHashCode, @RequiredArgsConstructor
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class QnA {
-    private UUID qnaId;                 //QNA식별코드
+    private String qnaId;                 //QNA식별코드
     private String qnaTitle;            //제목
     private Timestamp qnaWCreateAt;     //질문 등록 날짜
     private Timestamp qnaWUpdateAt;     //질문 수정 날짜
