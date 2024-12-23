@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface QnARepositoryCustom {
-    Map<String, Object> selectAllQnA(Pageable pageable);
-    Map<String, Object> selectMyQnA(String uuid, Pageable pageable);
+    Map<String, Object> selectAllQnA(Pageable pageable, int listCount);
+    Map<String, Object> selectMyQnA(String uuid, Pageable pageable, int listCount);
+
+    int myCount(String uuid);
 }
