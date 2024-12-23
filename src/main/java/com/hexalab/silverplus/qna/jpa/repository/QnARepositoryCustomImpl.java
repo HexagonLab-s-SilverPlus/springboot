@@ -30,18 +30,8 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
     private QQnAEntity qna = QQnAEntity.qnAEntity;
     private QMemberEntity member = QMemberEntity.memberEntity;
 
-//    @Override
-//    public List<QnAEntity> selectMyQnA(String uuid, Pageable pageable) {
-//        return queryFactory
-//                .selectFrom(qna)
-//                .where(qna.qnaWCreateBy.eq(uuid))
-//                .orderBy(qna.qnaWUpdateAt.desc())
-//                .offset(pageable.getOffset())
-//                .limit((pageable.getPageSize()))
-//                .fetch();
-//    }
     @Override
-    public Map<String, Object> selectAllQnA(Pageable pageable) {
+    public Map<String, Object> selectAllQnA(Pageable pageable, int listCount) {
         List<Tuple> qnaEntityList = queryFactory
                 .select(qna, member)
                 .from(qna)
@@ -60,12 +50,14 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
         }
         resultList.put("qna", qnaList);
         resultList.put("member", memberList);
+        resultList.put("paging", pageable);
+        resultList.put("listCount", listCount);
 
         return resultList;
     }
 
     @Override
-    public Map<String, Object> selectMyQnA(String uuid, Pageable pageable) {
+    public Map<String, Object> selectMyQnA(String uuid, Pageable pageable, int listCount) {
         List<Tuple> qnaEntityList = queryFactory
                 .select(qna, member)
                 .from(qna)
@@ -85,7 +77,17 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
         }
         resultList.put("qna", qnaList);
         resultList.put("member", memberList);
+        resultList.put("paging", pageable);
+        resultList.put("listCount", listCount);
 
         return resultList;
+    }
+
+    @Override
+    public int myCount(String uuid) {
+        return (int)queryFactory
+                .selectFrom(qna)
+                .where(qna.qnaWCreateBy.eq(uuid))
+                .fetchCount();
     }
 }

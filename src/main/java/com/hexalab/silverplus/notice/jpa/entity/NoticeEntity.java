@@ -39,11 +39,6 @@ public class NoticeEntity {
     @Column(name="NOT_READ_COUNT")
     private int notReadCount;        // NOT_READ_COUNT	NUMBER
 
-    @PrePersist
-    public void prePersist() {
-        notId = UUID.randomUUID();
-    }
-
     public Notice toDto(){
         return Notice.builder()
                 .notId(notId)

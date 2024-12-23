@@ -4,6 +4,7 @@ import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import com.hexalab.silverplus.qna.model.service.QnAService;
 import com.querydsl.core.Tuple;
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,7 @@ public class QnAController {
     @GetMapping("/mylist")
     public ResponseEntity<Map<String, Object>> selectMyListQnA(
             @RequestParam(required = false) String uuid,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit) {
         log.info("uuid : {}", uuid);
@@ -38,16 +40,20 @@ public class QnAController {
 
         Map<String, Object> map = new HashMap();
 
-        Pageable pageable = PageRequest.of(page,
+        Pageable pageable = PageRequest.of(page - 1,
                 limit, Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
-        map.put("paging", pageable);
+        int listCount = 0;
 
         try {
             Map<String, Object> qnaList = new HashMap<>();
-            if (uuid != null) {
-                qnaList = qnaService.selectMytList(uuid, pageable);
+            if (uuid != null ) {
+                log.info("MyList!!");
+                listCount = qnaService.selectMytListCount(uuid);
+                qnaList = qnaService.selectMytList(uuid, pageable, listCount);
             }else{
-                qnaList = qnaService.selectAllList(pageable);
+                log.info("AllList!!");
+                listCount = qnaService.selectAllListCount();
+                qnaList = qnaService.selectAllList(pageable, listCount);
             }
 
             log.info("Map<String, Object> : {}", qnaList);
