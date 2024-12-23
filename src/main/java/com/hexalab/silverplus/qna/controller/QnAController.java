@@ -1,22 +1,24 @@
 package com.hexalab.silverplus.qna.controller;
 
+import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import com.hexalab.silverplus.qna.model.service.QnAService;
-import com.querydsl.core.Tuple;
-import jakarta.validation.constraints.Null;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
@@ -26,7 +28,18 @@ import java.util.Map;
 @CrossOrigin
 public class QnAController {
     private final QnAService qnaService;
-    private final MemberService memberService;
+
+    // file upload path valiable
+    @Value("${ftp.server}")
+    private String ftpServer;
+    @Value("${ftp.port}")
+    private int ftpPort;
+    @Value("${ftp.username}")
+    private String ftpUsername;
+    @Value("${ftp.password}")
+    private String ftpPassword;
+    @Value("${ftp.remote-dir}")
+    private String ftpRemoteDir;
 
     @GetMapping("/mylist")
     public ResponseEntity<Map<String, Object>> selectMyListQnA(
@@ -67,10 +80,34 @@ public class QnAController {
 
     @PostMapping
     public ResponseEntity insertQnA(
-            @ModelAttribute QnA qna
-            ){
+            @ModelAttribute QnA qna,
+            @RequestParam(name="newFiles",required = false) MultipartFile[] files
+            ) {
         log.info("qna insert : {}", qna);
-        if(qnaService.insertQnA(qna)){
+        QnA inserQnA = qnaService.insertQnA(qna);
+        log.info("insert QnA : {}", inserQnA);
+        if(inserQnA != null) {
+            if(files != null && files.length > 0) {
+                for (int i = 0; i < files.length; i++) {
+                    String ext = files[i].getOriginalFilename().substring(files[i].getOriginalFilename().indexOf(".") + 1);
+                    String fileName = "qna_" + inserQnA.getQnaId() + "_" + i  + "." + ext;
+
+                    try {
+                        FTPUtility ftpUtility = new FTPUtility();
+                        ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+                        File tempFile = File.createTempFile("QnA-",null);
+                        files[i].transferTo(tempFile);
+                        // file upload
+                        String filePath = ftpRemoteDir + "qna/"+ fileName;
+                        ftpUtility.uploadFile(tempFile.getAbsolutePath(), filePath);
+                        tempFile.delete();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             return ResponseEntity.ok().build();
         }else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
