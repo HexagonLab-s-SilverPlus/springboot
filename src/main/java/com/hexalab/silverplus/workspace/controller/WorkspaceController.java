@@ -4,7 +4,7 @@ import com.hexalab.silverplus.workspace.model.dto.Workspace;
 import com.hexalab.silverplus.workspace.model.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.myweb.first.common.ApiResponse;
+import com.hexalab.silverplus.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
