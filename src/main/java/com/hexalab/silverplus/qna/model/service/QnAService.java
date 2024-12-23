@@ -31,13 +31,11 @@ public class QnAService {
         return qnARepository.selectAllQnA(pageable, listCount);
     }
 
-    public boolean insertQnA(QnA qna){
+    public QnA insertQnA(QnA qna){
         try {
-            qnARepository.save(qna.toEntity());
-            return true;
+            return qnARepository.save(qna.toEntity()).toDto();
         }catch (Exception e){
-            log.error(e.getMessage());
-            return false;
+            return null;
         }
     }
 

@@ -4,7 +4,7 @@ import com.hexalab.silverplus.chat.model.dto.ChatMessage;
 import com.hexalab.silverplus.chat.model.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.myweb.first.common.ApiResponse;
+import com.hexalab.silverplus.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

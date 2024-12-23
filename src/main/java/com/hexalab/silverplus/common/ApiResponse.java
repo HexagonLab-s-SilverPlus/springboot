@@ -1,4 +1,4 @@
-package org.myweb.first.common;
+package com.hexalab.silverplus.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

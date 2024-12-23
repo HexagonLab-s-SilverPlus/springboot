@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class JWTFilter extends OncePerRequestFilter {
     // JWT 관련 유틸리티 메소드를 제공하는 JWTUtil 인스턴스를 멤버로 선언
     private final JWTUtil jwtUtil;
     private final MemberService memberService;
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     // 생성자를 통한 의존성 주입
 //    public JWTFilter(JWTUtil jwtUtil) {
@@ -117,10 +119,16 @@ public class JWTFilter extends OncePerRequestFilter {
         log.info("request_refreshToken : {}", request_refreshToken);
 
         String requestURI = request.getRequestURI();
+        log.info("requestURI : {}", requestURI);
 
         try {
             // 로그인 및 토큰 재발급 요청은 필터 통과
-            if (requestURI.equals("/login") || requestURI.equals("/reissue")) {
+            if (requestURI.equals("/login") ||
+                    requestURI.equals("/reissue") ||
+                    requestURI.equals("/api/sms") ||
+                    requestURI.equals("/api/sms/verify") ||
+                    requestURI.equals("/member/idchk") ||
+                    requestURI.equals("/member")) {
                 log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;
