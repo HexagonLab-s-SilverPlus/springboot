@@ -2,6 +2,7 @@ package com.hexalab.silverplus.notice.controller;
 
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.notice.model.dto.Notice;
 import com.hexalab.silverplus.notice.model.dto.NoticeFiles;
 import com.hexalab.silverplus.notice.model.service.NoticeFilesService;
@@ -9,6 +10,9 @@ import com.hexalab.silverplus.notice.model.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -112,15 +118,43 @@ public class NoticeController {
 
     }
 
-//    //All NoticeList
-//    @GetMapping
-//    public ResponseEntity<Map> noticeList(
-//            @RequestParam(name="action", defaultValue = "Title") String action,
-//            @RequestParam(name="keyword", defaultValue = "") String keyword,
-//            @RequestParam(name="page", defaultValue = "1") int currentPage,
-//            @RequestParam(name="limit", defaultValue = "10") int limit
-//    ){
-//
-//    }
+    //All NoticeList
+    @GetMapping
+    public ResponseEntity<Map> noticeList(
+            @ModelAttribute Search search
+    ){
 
+        // 검색조건 없을시
+        if ((search.getKeyword() == null || search.getKeyword().isEmpty())
+            && (search.getStartDate() == null || search.getEndDate() == null)
+        ){
+            try{
+
+                // 리스트 갯수 확인
+                int listCount = noticeService.selectAllNoticeListCount();
+                log.info("list count : " + listCount);
+
+                // pageable 객체 생성
+                Pageable pageable = PageRequest.of(
+                        search.getPageNumber() -1,
+                        search.getPageSize(),
+                        Sort.by(Sort.Direction.DESC,"notCreateAt")
+                );
+
+                // 목록조회
+                ArrayList<Notice> noticeList = noticeService.selectAllNoticeList(pageable);
+                log.info("list count : " + noticeList.size());
+
+                // Map에 담아 전송
+                Map<String,Object> map = new HashMap<>();
+                map.put("list",noticeList);
+                map.put("search",search);
+                return ResponseEntity.ok(map);
+            } catch (Exception e){
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else
+        return null;
+    }
 }
