@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final UserService userService;
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -55,11 +56,12 @@ public class SecurityConfig {
     }
 
     // 직접 생성자를 작성해서 초기화 선언함 (@RequiredArgsConstructor 를 사용하지 않을 경우)
-    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository) {
+    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository, MemberService memberService) {
         this.refreshService = refreshService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
 //    @Bean
@@ -118,7 +120,8 @@ public class SecurityConfig {
                             // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
                             // JWT 사용시 추가되는 설정임
-                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**",
+                                                "/api/workspace/**", "api/chat/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
@@ -144,7 +147,7 @@ public class SecurityConfig {
                             .anyRequest().authenticated();
                 })
                 // JWTFilter 와 LoginFilter 를 시큐리티 필터 체인에 추가 등록함
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
+                .addFilterBefore(new JWTFilter(jwtUtil, memberService), LoginFilter.class)
                 // UsernamePasswordAuthenticationFilter.class : LoginFilter 를 UsernamePasswordAuthenticationFilter 로 형변환 함
                 .addFilterAt(new LoginFilter(userService, refreshService, memberRepository, authenticationManager(), jwtUtil, access_expiration, refresh_expiration), UsernamePasswordAuthenticationFilter.class)   // UsernamePasswordAuthenticationFilter : 스프링 부트에서 제공함
                 // service 가 두개여서 authenticationManager 가 service 혼동 으로 인한 스택 오버플로우 발생

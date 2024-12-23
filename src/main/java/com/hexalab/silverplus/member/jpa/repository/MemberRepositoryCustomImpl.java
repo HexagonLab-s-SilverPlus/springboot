@@ -29,11 +29,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     }
 
     @Override
-    public Member findByMemId(String memId) {
+    public MemberEntity findByMemId(String memId) {
         return queryFactory
                 .selectFrom(member)
                 .where(member.memId.eq(memId))
-                .fetchOne().toDto();
+                .fetchOne();
     }
 
 
