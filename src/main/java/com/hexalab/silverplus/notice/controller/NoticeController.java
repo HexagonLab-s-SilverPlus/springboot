@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -72,33 +73,34 @@ public class NoticeController {
             // nas ftp connect
             FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+            if (files != null && files.length > 0) {
+                // noticeFiles set
+                for (MultipartFile file : files) {
+                    // setter
+                    NoticeFiles insertFile = new NoticeFiles();
+                    String fileName = file.getOriginalFilename();
+                    String renameFile = CreateRenameFileName.create(notice.getNotId(),fileName);
+                    insertFile.setNfId(UUID.randomUUID());
+                    insertFile.setNfNotId(notice.getNotId());
+                    insertFile.setNfOreginalName(fileName);
+                    insertFile.setNfRename(renameFile);
 
-            // noticeFiles set
-            for (MultipartFile file : files) {
-                // setter
-                NoticeFiles insertFile = new NoticeFiles();
-                String fileName = file.getOriginalFilename();
-                String renameFile = CreateRenameFileName.create(notice.getNotId(),fileName);
-                insertFile.setNfId(UUID.randomUUID());
-                insertFile.setNfNotId(notice.getNotId());
-                insertFile.setNfOreginalName(fileName);
-                insertFile.setNfRename(renameFile);
+                    // create file
+                    File tempFile = File.createTempFile("notice-",null);
+                    file.transferTo(tempFile);
 
-                // create file
-                File tempFile = File.createTempFile("notice-",null);
-                file.transferTo(tempFile);
+                    // file upload
+                    String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
+                    ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
 
-                // file upload
-                String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
-                ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
+                    // db save
+                    noticeFilesService.noticeFileInsert(insertFile);
 
-                // db save
-                noticeFilesService.noticeFileInsert(insertFile);
+                    // delete tempFile
+                    tempFile.delete();
 
-                // delete tempFile
-                tempFile.delete();
-
-                log.info("insert file : " + fileName);
+                    log.info("insert file : " + fileName);
+                }
             }
             return ResponseEntity.ok().build();
 
@@ -110,5 +112,15 @@ public class NoticeController {
 
     }
 
+//    //All NoticeList
+//    @GetMapping
+//    public ResponseEntity<Map> noticeList(
+//            @RequestParam(name="action", defaultValue = "Title") String action,
+//            @RequestParam(name="keyword", defaultValue = "") String keyword,
+//            @RequestParam(name="page", defaultValue = "1") int currentPage,
+//            @RequestParam(name="limit", defaultValue = "10") int limit
+//    ){
+//
+//    }
 
 }
