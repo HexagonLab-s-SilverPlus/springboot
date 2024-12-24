@@ -60,7 +60,7 @@ public class MemberController {
 
             member.setMemUUID(UUID.randomUUID().toString());
 
-
+            memberService.insertMember(member);
             FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
 
@@ -84,18 +84,16 @@ public class MemberController {
                     ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
 
                     memberFilesService.insertMemberFiles(memberFiles);
-
                     tempFile.delete();
-
                 }
             }
-            memberService.insertMember(member);
+            log.info("저장할 member 객체 확인 : {}", member);
+
             return new ResponseEntity<String>("회원가입 성공", HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
     }
 
     @PostMapping("/idchk")
@@ -109,15 +107,20 @@ public class MemberController {
         }
     }
 
+    // 회원 탈퇴 처리 메소드
+    @PutMapping("/remove/{memId}")
+    public ResponseEntity memberRemoveMethod() {
+
+        return ResponseEntity.ok().build();
+    }
+
 /*
 
     // 회원정보 수정 처리 메소드
     @PutMapping
     public ResponseEntity<?> memberUpdateMethod() {}
 
-    // 회원 탈퇴 처리 메소드
-    @PutMapping("/remove")
-    public ResponseEntity<?> memberRemoveMethod() {}
+
 
     // 회원 상태정보 수정 처리 메소드 (관리자)
     @PutMapping("/status")
