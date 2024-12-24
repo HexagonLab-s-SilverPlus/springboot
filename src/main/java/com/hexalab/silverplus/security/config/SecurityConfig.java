@@ -113,16 +113,16 @@ public class SecurityConfig {
                     Authentication authentication1 = SecurityContextHolder.getContext().getAuthentication();
                     if (authentication1 != null) {
                         System.out.println("==== SecurityContextHolder 정보 ====");
-                        System.out.println("인증된 사용자: " + authentication1.getName());
-                        System.out.println("권한: " + authentication1.getAuthorities());
-                    } else {
-                        System.out.println("SecurityContextHolder에 인증 정보가 없습니다.");
-                    } auth
-                            // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
+                    System.out.println("인증된 사용자: " + authentication1.getName());
+                    System.out.println("권한: " + authentication1.getAuthorities());
+                } else {
+            System.out.println("SecurityContextHolder에 인증 정보가 없습니다.");
+        } auth
+                // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
-                            // JWT 사용시 추가되는 설정임
-                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**",
-                                                "/api/workspace/**", "/api/chat/**", "/api/sms/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                // JWT 사용시 추가되는 설정임
+                .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**",
+                        "/api/workspace/**", "/api/chat/**", "/api/sms/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
