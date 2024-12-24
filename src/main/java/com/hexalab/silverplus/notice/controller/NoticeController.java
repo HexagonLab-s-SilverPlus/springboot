@@ -136,17 +136,19 @@ public class NoticeController {
     ){
         log.info("search data : " + search);
         // 검색조건 없을시
-        if ((search.getKeyword() == null || search.getKeyword().isEmpty())
-            && (search.getStartDate() == null || search.getEndDate() == null)
+        if (search.getKeyword() == null || search.getKeyword().isEmpty()
         ){
             try{
-                //search setting
-                search.setPageNumber(1);
-                search.setPageSize(10);
-
                 // list count
                 int listCount = noticeService.selectAllNoticeListCount();
                 log.info("list count : " + listCount);
+
+                //search setting
+                if(search.getPageNumber()==0){
+                    search.setPageNumber(1);
+                    search.setPageSize(10);
+                }
+                search.setListCount(listCount);
 
                 // pageable 객체 생성
                 Pageable pageable = PageRequest.of(
