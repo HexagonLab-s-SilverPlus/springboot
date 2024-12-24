@@ -76,7 +76,7 @@ public class ProgramController {
                 for (MultipartFile file : files) {
                     ProgramFile programFile = new ProgramFile();
                     String fileName = file.getOriginalFilename();
-                    String renameFile = CreateRenameFileName.create(UUID.fromString(program.getSnrProgramId()), fileName);
+                    String renameFile = CreateRenameFileName.create(program.getSnrProgramId(), fileName);
                     programFile.setSnrFileId(UUID.randomUUID().toString());
                     programFile.setSnrFileOGName(fileName);
                     programFile.setSnrFileName(renameFile);
