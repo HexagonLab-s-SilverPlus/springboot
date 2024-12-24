@@ -13,8 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class NoticeFiles {
-    private UUID nfId;                  // NF_ID	VARCHAR2(100 BYTE)
-    private UUID nfNotId;             // NF_NOT_ID	VARCHAR2(100 BYTE)
+    private String nfId;                  // NF_ID	VARCHAR2(100 BYTE)
+    private String nfNotId;             // NF_NOT_ID	VARCHAR2(100 BYTE)
     private String nfOreginalName;      // NF_ORIGINAL_NAME	VARCHAR2(1000 BYTE)
     private String nfRename;            // NF_RENAME	VARCHAR2(1000 BYTE)
 

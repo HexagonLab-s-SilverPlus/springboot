@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface NoticeRepository extends JpaRepository<NoticeEntity, UUID>,NoticeRepositoryCustom {
+public interface NoticeRepository extends JpaRepository<NoticeEntity, String>,NoticeRepositoryCustom {
 
 }

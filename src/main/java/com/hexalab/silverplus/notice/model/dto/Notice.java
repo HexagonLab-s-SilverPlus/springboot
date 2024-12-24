@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class Notice {
-    private UUID notId;                 // NOT_ID	VARCHAR2(100 BYTE)
+    private String notId;                 // NOT_ID	VARCHAR2(100 BYTE)
     private String notTitle;            // NOT_TITLE	VARCHAR2(250 BYTE)
     private String notContent;          // NOT_CONTENT	CLOB
     private Timestamp notCreateAt;      // NOT_CREATED_AT	TIMESTAMP(6)

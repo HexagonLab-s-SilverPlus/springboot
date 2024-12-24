@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface NoticeFilesRepository extends JpaRepository<NoticeFilesEntity, UUID>,NoticeFilesRepositoryCustom {
+public interface NoticeFilesRepository extends JpaRepository<NoticeFilesEntity, String>,NoticeFilesRepositoryCustom {
 }

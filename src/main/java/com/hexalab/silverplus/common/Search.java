@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @Builder
 public class Search {
-    private String action;  // 제목, 내용, 기관, 주소
+    private String action;  // 제목, 내용, 기관, 주소, 기간
     private String keyword;  // 키워드
     private Timestamp startDate;  // 검색 시작일
     private Timestamp endDate;   // 검색 종료일

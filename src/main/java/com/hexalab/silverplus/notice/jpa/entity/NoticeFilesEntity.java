@@ -19,9 +19,9 @@ public class NoticeFilesEntity {
 
     @Id
     @Column(name="NF_ID")
-    private UUID nfId;                  // NF_ID	VARCHAR2(100 BYTE)
+    private String nfId;                  // NF_ID	VARCHAR2(100 BYTE)
     @Column(name="NF_NOT_ID")
-    private UUID nfNotId;             // NF_NOT_ID	VARCHAR2(100 BYTE)
+    private String nfNotId;             // NF_NOT_ID	VARCHAR2(100 BYTE)
     @Column(name="NF_ORIGINAL_NAME")
     private String nfOriginalName;      // NF_ORIGINAL_NAME	VARCHAR2(1000 BYTE)
     @Column(name="NF_RENAME")
