@@ -120,26 +120,42 @@ public class SecurityConfig {
         } auth
                 // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
-                // JWT 사용시 추가되는 설정임
-                .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**",
-                        "/api/workspace/**", "/api/chat/**", "/api/sms/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            // JWT 사용시 추가되는 설정임
+                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login", "/member/**", "/reissue",
+                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            // Notice
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
-                            //게시글 서비스
-                            .requestMatchers(HttpMethod.POST, "/board").hasRole("USER") // POST 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.PUT, "/board/{boardNum}").hasRole("USER") // PUT 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/board/{boardNum}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.POST, "/reply").hasRole("USER") // POST 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/reply/{replyNum}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            //회원 서비스
-                            .requestMatchers(HttpMethod.GET, "/member/myinfo").hasRole("USER") // GET 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.PUT, "/member").hasRole("USER") // PUT 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/member/{userId}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            //회원관리 서비스
-                            .requestMatchers(HttpMethod.PUT, "/member/loginok/{userId}/{loginOk}").hasRole("ADMIN") // PUT 요청은 ADMIN 롤 필요
-                            .requestMatchers(HttpMethod.GET, "/member/search").hasRole("ADMIN") // PUT 요청은 ADMIN 롤 필요
-                            .requestMatchers("/public/**", "/auth/**",  "/notice", "/board", "/members/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+
+                            // QnA
+
+                            // Program
+                            .requestMatchers(HttpMethod.GET, "/program").hasAnyRole("ADMIN", "MANAGER",  "FAMILY", "SENIOR")
+                            .requestMatchers(HttpMethod.POST, "/program").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.PUT, "/program/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.DELETE, "/program/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.GET, "/program/detail/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER", "FAMILY", "SENIOR")
+                            .requestMatchers(HttpMethod.GET, "/program/pfdown").hasAnyRole("ADMIN", "MANAGER", "FAMILY", "SENIOR")
+
+                            // Dashboard
+                            .requestMatchers(HttpMethod.POST, "/dashboard").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.GET, "/dashboard").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.DELETE, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.PUT, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
+
+                            // Book
+
+                            // Workspace
+                            .requestMatchers(HttpMethod.POST, "/api/workspace/create").hasAnyRole("ADMIN", "SENIOR")    // ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}").hasAnyRole("ADMIN", "SENIOR")  // ADMIN 추후 삭제
+
+                            // Chat
+                            .requestMatchers(HttpMethod.POST, "/api/chat/save").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/chat/history/{workspaceId}").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+
+                            // Member
+
                             // .permitAll() :  URL 의 접근을 허용한다는 의미(통과는 아님). 제일 처음 작동됨
                             // .permitAll() 에 등록되지 않은 url 은 서버에 접속 못하게 됨
                             // 로그 아웃 요청은 로그인한 사용자만 가능

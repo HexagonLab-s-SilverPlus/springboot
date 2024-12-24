@@ -19,7 +19,7 @@ import java.util.UUID;
 public class NoticeEntity {
     @Id
     @Column(name="NOT_ID")
-    private UUID notId;                 // NOT_ID	VARCHAR2(100 BYTE)
+    private String notId;                 // NOT_ID	VARCHAR2(100 BYTE)
     @Column(name="NOT_TITLE")
     private String notTitle;            // NOT_TITLE	VARCHAR2(250 BYTE)
     @Column(name="NOT_CONTENT")

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 @Slf4j
@@ -46,5 +47,16 @@ public class NoticeService {
             noticeList.add(entity.toDto());
         }
         return noticeList;
+    }
+
+    public int noticeDelete(String notId) {
+        try {
+            noticeRepository.deleteById(notId);
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
     }
 }

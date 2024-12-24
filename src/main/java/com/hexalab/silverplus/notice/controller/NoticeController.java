@@ -64,7 +64,7 @@ public class NoticeController {
         }
 
         // set(notice)
-        notice.setNotId(UUID.randomUUID()); // UUID
+        notice.setNotId(UUID.randomUUID().toString()); // UUID
         notice.setNotCreateAt(new Timestamp(System.currentTimeMillis())); // createBy
         notice.setNotUpdateAt(new Timestamp(System.currentTimeMillis())); // insertBy
         notice.setNotReadCount(0); // readCount set
@@ -73,8 +73,12 @@ public class NoticeController {
         // insert
         try {
             // notice insert
-            noticeService.noticeInsert(notice);
-            log.info("notice inserted");
+            if (noticeService.noticeInsert(notice)==1){
+                log.info("공지사항 글등록 성공");
+            } else{
+                log.info("공지사항 글 등록 실패");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
 
             // nas ftp connect
             FTPUtility ftpUtility = new FTPUtility();
@@ -86,7 +90,7 @@ public class NoticeController {
                     NoticeFiles insertFile = new NoticeFiles();
                     String fileName = file.getOriginalFilename();
                     String renameFile = CreateRenameFileName.create(notice.getNotId(),fileName);
-                    insertFile.setNfId(UUID.randomUUID());
+                    insertFile.setNfId(UUID.randomUUID().toString());
                     insertFile.setNfNotId(notice.getNotId());
                     insertFile.setNfOreginalName(fileName);
                     insertFile.setNfRename(renameFile);
@@ -100,16 +104,23 @@ public class NoticeController {
                     ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
 
                     // db save
-                    noticeFilesService.noticeFileInsert(insertFile);
-
-                    // delete tempFile
-                    tempFile.delete();
-
-                    log.info("insert file : " + fileName);
+                    if (noticeFilesService.noticeFileInsert(insertFile) ==1 ){
+                        // delete tempFile
+                        tempFile.delete();
+                        log.info("insert file : " + fileName);
+                    } else {
+                        log.info("공지사항 첨부파일 등록 실패");
+                        if(noticeService.noticeDelete(notice.getNotId())==1){
+                            log.info("등록실패 공지사항 삭제 성공");
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        } else{
+                            log.info("등록실패 공지사항 삭제 실패 확인이 필요합니다.");
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        }
+                    }
                 }
             }
             return ResponseEntity.ok().build();
-
         } catch (Exception e){
             e.printStackTrace();
             log.error("공지사항 등록 중 오류발생 : ",e);
@@ -123,16 +134,21 @@ public class NoticeController {
     public ResponseEntity<Map> noticeList(
             @ModelAttribute Search search
     ){
-
+        log.info("search data : " + search);
         // 검색조건 없을시
-        if ((search.getKeyword() == null || search.getKeyword().isEmpty())
-            && (search.getStartDate() == null || search.getEndDate() == null)
+        if (search.getKeyword() == null || search.getKeyword().isEmpty()
         ){
             try{
-
-                // 리스트 갯수 확인
+                // list count
                 int listCount = noticeService.selectAllNoticeListCount();
                 log.info("list count : " + listCount);
+
+                //search setting
+                if(search.getPageNumber()==0){
+                    search.setPageNumber(1);
+                    search.setPageSize(10);
+                }
+                search.setListCount(listCount);
 
                 // pageable 객체 생성
                 Pageable pageable = PageRequest.of(
@@ -140,7 +156,6 @@ public class NoticeController {
                         search.getPageSize(),
                         Sort.by(Sort.Direction.DESC,"notCreateAt")
                 );
-
                 // 목록조회
                 ArrayList<Notice> noticeList = noticeService.selectAllNoticeList(pageable);
                 log.info("list count : " + noticeList.size());
@@ -149,6 +164,7 @@ public class NoticeController {
                 Map<String,Object> map = new HashMap<>();
                 map.put("list",noticeList);
                 map.put("search",search);
+                log.info("map : " + map);
                 return ResponseEntity.ok(map);
             } catch (Exception e){
                 e.printStackTrace();

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Date;
 import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Component  // 스프링 부트 컨테이너에 의해 관리되는 컴포넌트로 선언
@@ -122,8 +123,10 @@ public class JWTUtil {
         log.info("generate token : {}", secretKey);
 
         //MemberSerive 사용해서 db 에서 로그인한 사용자 정보를 조회해 옴
-        Member member = memberRepository.findByMemId(memId).toDto();
+        Member member = memberService.findByMemId(memId);
+        Optional<MemberEntity> mem = memberRepository.findById(member.getMemUUID());
         log.info("member : {}", member);
+        log.info("mem : {}", mem);
 
         //사용자 정보가 없는 경우, UsernameNotFoundException (스프링 제공됨)을 발생시킴
         if (member == null) {
@@ -132,7 +135,7 @@ public class JWTUtil {
 
         //사용자의 관리자 여부 확인
         String memType = member.getMemType();
-        log.info("enrolldata : {}", member.getMemEnrollDate());
+        log.info("enrolldate : {}", member.getMemEnrollDate());
 
         //JWT 토큰 생성 : 사용자 아이디(subject)에 넣고, 관리자여부는 클레임으로 추가함 (임의대로 지정함)
         return Jwts.builder()
@@ -140,7 +143,7 @@ public class JWTUtil {
                 .claim("category", category)  // 카테고리 정보 추가 ("access", "refresh")
                 .claim("name", member.getMemName())  // 사용자 이름 또는 닉네임 추가
                 .claim("role", (memType))  // ROLE 정보 추가.
-                .claim("member", member)    // 조회해 온 member 통째로 저장
+                .claim("member", mem)    // 조회해 온 member 통째로 저장
                 .setExpiration(new java.sql.Date(System.currentTimeMillis() + expiredMs))  // 토큰 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256)  // 비밀키와 알고리즘으로 서명
                 .compact();  // JWT 생성 : JWT 를 압축 문자열로 만듦
