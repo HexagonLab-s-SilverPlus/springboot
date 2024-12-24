@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.qna.model.service;
 
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
@@ -23,12 +24,12 @@ public class QnAService {
     private final QnARepository qnARepository;
     private final MemberService memberService;
 
-    public Map<String, Object> selectMytList(String uuid, Pageable pageable,int listCount){
-        return qnARepository.selectMyQnA(uuid, pageable, listCount);
+    public Map<String, Object> selectMytList(String uuid, Pageable pageable, Search search){
+        return qnARepository.selectMyQnA(uuid, pageable, search);
     }
 
-    public Map<String, Object> selectAllList(Pageable pageable, int listCount){
-        return qnARepository.selectAllQnA(pageable, listCount);
+    public Map<String, Object> selectADList(Pageable pageable, Search search){
+        return qnARepository.selectADList(pageable, search);
     }
 
     public QnA insertQnA(QnA qna){
@@ -45,5 +46,9 @@ public class QnAService {
 
     public int selectMytListCount(String uuid) {
         return qnARepository.myCount(uuid);
+    }
+
+    public int selectTitleListCount(String keyword) {
+        return qnARepository.adTitleCount(keyword);
     }
 }

@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.qna.controller;
 
 import com.hexalab.silverplus.common.FTPUtility;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import com.hexalab.silverplus.qna.model.service.QnAService;
@@ -41,32 +42,36 @@ public class QnAController {
     @Value("${ftp.remote-dir}")
     private String ftpRemoteDir;
 
+    //qna list view
     @GetMapping("/mylist")
     public ResponseEntity<Map<String, Object>> selectMyListQnA(
             @RequestParam(required = false) String uuid,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit) {
+            @ModelAttribute Search search) {
         log.info("uuid : {}", uuid);
-        log.info("page : {}", page);
-        log.info("limit : {}", limit);
+        log.info("search : {}", search);
 
         Map<String, Object> map = new HashMap();
 
-        Pageable pageable = PageRequest.of(page - 1,
-                limit, Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
+                search.getPageSize(), Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
         int listCount = 0;
-
         try {
             Map<String, Object> qnaList = new HashMap<>();
             if (uuid != null ) {
-                log.info("MyList!!");
-                listCount = qnaService.selectMytListCount(uuid);
-                qnaList = qnaService.selectMytList(uuid, pageable, listCount);
+                //not Admin
+                if(search.getAction().equals("all")){
+                    search.setListCount(qnaService.selectMytListCount(uuid));
+                    qnaList = qnaService.selectMytList(uuid, pageable, search);
+                }
             }else{
-                log.info("AllList!!");
-                listCount = qnaService.selectAllListCount();
-                qnaList = qnaService.selectAllList(pageable, listCount);
+                //Admin
+                if(search.getAction().equals("all")) {
+                    search.setListCount(qnaService.selectAllListCount());
+                }else if(search.getAction().equals("title")) {
+                    search.setListCount(qnaService.selectTitleListCount(search.getKeyword()));
+                }
+
+                qnaList = qnaService.selectADList(pageable, search);
             }
 
             log.info("Map<String, Object> : {}", qnaList);

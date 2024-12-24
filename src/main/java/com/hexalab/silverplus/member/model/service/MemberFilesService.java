@@ -16,7 +16,13 @@ public class MemberFilesService {
     private final MemberFilesRepository memberFilesRepository;
 
     public int insertMemberFiles(MemberFiles memberFiles) {
-
-        return 1;
+        try {
+            memberFilesRepository.save(memberFiles.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
     }
 }
