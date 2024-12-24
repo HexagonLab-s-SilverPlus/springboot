@@ -62,13 +62,21 @@ public class QnAController {
                 if(search.getAction().equals("all")){
                     search.setListCount(qnaService.selectMytListCount(uuid));
                     qnaList = qnaService.selectMytList(uuid, pageable, search);
+                }else if(search.getAction().equals("title")) {
+                    search.setListCount(qnaService.selectTitleListCount(uuid, search.getKeyword()));
+                }else if(search.getAction().equals("date")) {
+                    search.setListCount(qnaService.selectDateListCount(uuid, search));
                 }
+
+                qnaList = qnaService.selectMytList(uuid, pageable, search);
             }else{
                 //Admin
                 if(search.getAction().equals("all")) {
                     search.setListCount(qnaService.selectAllListCount());
                 }else if(search.getAction().equals("title")) {
-                    search.setListCount(qnaService.selectTitleListCount(search.getKeyword()));
+                    search.setListCount(qnaService.selectTitleAllListCount(search.getKeyword()));
+                }else if(search.getAction().equals("date")) {
+                    search.setListCount(qnaService.selectDateAllListCount(search));
                 }
 
                 qnaList = qnaService.selectADList(pageable, search);
