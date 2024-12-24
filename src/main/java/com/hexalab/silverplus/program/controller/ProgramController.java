@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -55,6 +56,8 @@ public class ProgramController {
         }
 
         //set
+        program.setSnrStartedAt(program.getSnrStartedAt());
+        program.setSnrEndedAt(program.getSnrEndedAt());
         program.setSnrProgramId(UUID.randomUUID().toString());
         program.setSnrCreatedAt(new Timestamp(System.currentTimeMillis()));
 
@@ -76,8 +79,8 @@ public class ProgramController {
                 for (MultipartFile file : files) {
                     ProgramFile programFile = new ProgramFile();
                     String fileName = file.getOriginalFilename();
-                    String renameFile = CreateRenameFileName.create(program.getSnrProgramId(), fileName);
                     programFile.setSnrFileId(UUID.randomUUID().toString());
+                    String renameFile = CreateRenameFileName.create(programFile.getSnrFileId(), fileName);
                     programFile.setSnrFileOGName(fileName);
                     programFile.setSnrFileName(renameFile);
                     programFile.setSnrProgramId(program.getSnrProgramId());
