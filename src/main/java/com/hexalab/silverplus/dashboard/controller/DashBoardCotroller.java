@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.Timestamp;
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -24,9 +27,16 @@ public class DashBoardCotroller {
     public ResponseEntity dashboardInsert(
             @ModelAttribute DashBoard dashBoard) {
         log.info("Insert dashboard inserted" + dashBoard);
-
         try{
+        // taskStatus를 'Y' 또는 'N'으로 변환
+        String taskStatus = dashBoard.getTaskStatus();
+        dashBoard.setTaskStatus("true".equalsIgnoreCase(taskStatus) ? "Y" : "N");
+
+        dashBoard.setTaskId(UUID.randomUUID().toString());
+
             dashBoardService.insertDashboard(dashBoard);
+
+
             log.info("Insert dashboard inserted" + dashBoard);
             return ResponseEntity.ok().build();
         } catch (Exception e){
