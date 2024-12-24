@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface ProgramFileRepository extends JpaRepository<ProgramFileEntity, UUID>, ProgramFileRepositoryCustom {
+public interface ProgramFileRepository extends JpaRepository<ProgramFileEntity, String>, ProgramFileRepositoryCustom {
 }
