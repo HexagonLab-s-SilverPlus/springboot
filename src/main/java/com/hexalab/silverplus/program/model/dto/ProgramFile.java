@@ -13,10 +13,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ProgramFile {
-    private UUID snrFileId;   //SNR_FILE_ID	VARCHAR2(100 BYTE)
+    private String snrFileId;   //SNR_FILE_ID	VARCHAR2(100 BYTE)
     private String snrFileOGName;   //SNR_FILE_OG_NAME	VARCHAR2(1000 BYTE)
     private String snrFileName; //SNR_FILE_NAME	VARCHAR2(1000 BYTE)
-    private UUID snrProgramId;    //SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
+    private String snrProgramId;    //SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
 
     public ProgramFileEntity toEntity() {
         return ProgramFileEntity.builder()

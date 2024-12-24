@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +18,7 @@ import java.util.UUID;
 public class ProgramEntity {
     @Id
     @Column(name = "SNR_PROGRAM_ID")
-    private UUID snrProgramId;  //    SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
+    private String snrProgramId;  //    SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
     @Column(name = "SNR_TITLE")
     private String snrTitle;    //    SNR_TITLE	VARCHAR2(255 BYTE)
     @Column(name = "SNR_CONTENT")
