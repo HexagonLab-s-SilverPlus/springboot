@@ -11,6 +11,7 @@ import org.apache.commons.net.ntp.TimeStamp;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -71,8 +72,7 @@ public class MemberEntity {
 
     @PrePersist
     public void prePersist() {
-        memUUID = UUID.randomUUID().toString();
-        memEnrollDate = new java.sql.Timestamp(System.currentTimeMillis());
+        memEnrollDate = new Timestamp(System.currentTimeMillis());
     }
 
     public Member toDto() {

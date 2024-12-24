@@ -1,10 +1,7 @@
 package com.hexalab.silverplus.member.jpa.entity;
 
 import com.hexalab.silverplus.member.model.dto.MemberFiles;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +19,7 @@ public class MemberFilesEntity {
 
     @Id
     @Column(name = "MF_ID")
-    private UUID mfId;
+    private String mfId;
     @Column(name = "MF_MEM_UUID")
     private String mfMemUUID;
     @Column(name = "MF_ORIGINAL_NAME")
@@ -30,8 +27,9 @@ public class MemberFilesEntity {
     @Column(name = "MF_RENAME")
     private String mfRename;
 
+    @PrePersist
     public void prPersist() {
-        mfId = UUID.randomUUID();
+        mfId = UUID.randomUUID().toString();
     }
 
     public MemberFiles toDto() {

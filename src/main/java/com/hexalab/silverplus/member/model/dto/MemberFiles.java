@@ -16,7 +16,7 @@ import java.util.UUID;
 public class MemberFiles {
 
     @NotBlank
-    private UUID mfId;
+    private String mfId;
     private String mfMemUUID;
     private String mfOriginalName;
     private String mfRename;
