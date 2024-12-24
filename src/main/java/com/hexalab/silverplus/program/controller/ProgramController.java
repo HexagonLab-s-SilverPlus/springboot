@@ -55,9 +55,16 @@ public class ProgramController {
         }
 
         //set
-        program.setSnrProgramId(UUID.randomUUID());
+        program.setSnrProgramId(UUID.randomUUID().toString());
         program.setSnrCreatedAt(new Timestamp(System.currentTimeMillis()));
 
+        //program insert
+        if (programService.insertProgram(program) > 0) {
+            log.info("Program Insertion Successfully");
+        } else {
+            log.info("Program Insertion Failed");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         //set (ProgramFile)
         try {
@@ -69,8 +76,8 @@ public class ProgramController {
                 for (MultipartFile file : files) {
                     ProgramFile programFile = new ProgramFile();
                     String fileName = file.getOriginalFilename();
-                    String renameFile = CreateRenameFileName.create(program.getSnrProgramId(), fileName);
-                    programFile.setSnrFileId(UUID.randomUUID());
+                    String renameFile = CreateRenameFileName.create(UUID.fromString(program.getSnrProgramId()), fileName);
+                    programFile.setSnrFileId(UUID.randomUUID().toString());
                     programFile.setSnrFileOGName(fileName);
                     programFile.setSnrFileName(renameFile);
                     programFile.setSnrProgramId(program.getSnrProgramId());
@@ -95,21 +102,13 @@ public class ProgramController {
                     tempFile.delete();
                 }//for end
             }//if end
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             e.printStackTrace();
             log.error("어르신 프로그램 등록 중 오류발생 : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        //program insert
-        if (programService.insertProgram(program) > 0) {
-            log.info("Program Insertion Successfully");
-            return ResponseEntity.ok().build();
-        } else {
-            log.info("Program Insertion Failed");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-
     }//insertProgramMethod end
 
 }//ProgramController end

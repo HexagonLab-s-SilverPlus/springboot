@@ -1,5 +1,7 @@
 package com.hexalab.silverplus.member.controller;
 
+import com.hexalab.silverplus.common.CreateRenameFileName;
+import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.dto.MemberFiles;
 import com.hexalab.silverplus.member.model.service.MemberFilesService;
@@ -12,8 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 
 @Slf4j      // 로그
 @RestController     // REST API 어노테이션
@@ -30,44 +35,67 @@ public class MemberController {
     @Value("${uploadDir}")
     private String uploadDir;
 
+    // file upload path valiable
+    @Value("${ftp.server}")
+    private String ftpServer;
+    @Value("${ftp.port}")
+    private int ftpPort;
+    @Value("${ftp.username}")
+    private String ftpUsername;
+    @Value("${ftp.password}")
+    private String ftpPassword;
+    @Value("${ftp.remote-dir}")
+    private String ftpRemoteDir;
+
     // 회원가입 처리 메소드
     @PostMapping
     public ResponseEntity<String> memberEnrollMethod(
-            @ModelAttribute Member member, HttpServletRequest request){
-//            @RequestParam(name="mfiles", required = false) MultipartFile[] mfiles) {
-        log.info("전송온 member 데이터 확인 : " + member);    // 전송온 member 데이터 확인
-        // 패스워드 암호화 처리
-        member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
-        log.info("member" + member);    // 암호화처리 정상 작동 확인
+            @ModelAttribute Member member, HttpServletRequest request,
+            @RequestParam(name="memFiles", required = false) MultipartFile[] memFiles) {
+        try {
+            log.info("전송온 member 데이터 확인 : " + member);    // 전송온 member 데이터 확인
+            // 패스워드 암호화 처리
+            member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+            log.info("member" + member);    // 암호화처리 정상 작동 확인
 
-        // 파일첨부 처리
-        String savePath = uploadDir + File.separator + "member";
-        log.info("savePath" + savePath);    // 파일 저장 폴더경로 설정 정상 지정 확인
-        // MemberFiles 객체 생성
-        MemberFiles memberFiles = new MemberFiles();
-        File directory = new File(savePath);
-        if (!directory.exists()) {
-            directory.mkdirs();
+            member.setMemUUID(UUID.randomUUID().toString());
+
+
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+            if(memFiles != null && memFiles.length > 0) {
+                for (MultipartFile mfile : memFiles) {
+                    // MemberFiles 객체 생성
+                    MemberFiles memberFiles = new MemberFiles();
+
+                    String fileName = mfile.getOriginalFilename();
+                    String renamFileName = CreateRenameFileName.create(member.getMemUUID(), fileName);
+
+                    memberFiles.setMfId(member.getMemUUID());
+                    memberFiles.setMfOriginalName(mfile.getOriginalFilename());
+                    memberFiles.setMfRename(renamFileName);
+                    memberFiles.setMfMemUUID(member.getMemUUID());
+
+                    File tempFile = File.createTempFile("member-", null);
+                    mfile.transferTo(tempFile);
+
+                    String remoteFilePath = ftpRemoteDir + "member/" + renamFileName;
+                    ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
+
+                    memberFilesService.insertMemberFiles(memberFiles);
+
+                    tempFile.delete();
+
+                }
+            }
+            memberService.insertMember(member);
+            return new ResponseEntity<String>("회원가입 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-//        for (MultipartFile mfile : mfiles) {
-//            if(!mfile.isEmpty()) {
-//                try {
-//                    memberFiles.setMfOriginalName(mfile.getOriginalFilename());
-//                    String renameFilename = member.getMemId() + "_" + mfile.getOriginalFilename() + System.currentTimeMillis();
-//                    memberFiles.setMfRename(renameFilename);
-//                    memberFiles.setMfId(member.getMemUUID());
-//                    mfile.transferTo(new File(savePath, renameFilename));
-//                    memberFilesService.insertMemberFiles(memberFiles);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    return new ResponseEntity<String>("파일업로드 오류 발생", HttpStatus.BAD_REQUEST);
-//                }
-//            }
-//        }
-
-        memberService.insertMember(member);
-        return new ResponseEntity<String>("회원가입 성공", HttpStatus.OK);
     }
 
     @PostMapping("/idchk")
@@ -82,13 +110,6 @@ public class MemberController {
     }
 
 /*
-    // 로그인 처리 메소드
-    @PostMapping("/login")
-    public ResponseEntity<?> memberLoginMethod() {}
-
-    // 로그아웃 처리 메소드
-    @GetMapping("/logout")
-    public ResponseEntity<?> memberLogoutMethod() {}
 
     // 회원정보 수정 처리 메소드
     @PutMapping

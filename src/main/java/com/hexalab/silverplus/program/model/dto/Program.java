@@ -7,14 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Program {
-    private UUID snrProgramId;  //    SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
+    private String snrProgramId;  //    SNR_PROGRAM_ID	VARCHAR2(100 BYTE)
     private String snrTitle;    //    SNR_TITLE	VARCHAR2(255 BYTE)
     private String snrContent;  //    SNR_CONTENT	CLOB
     private Timestamp snrStartedAt; //    SNR_STARTED_AT	TIMESTAMP(6)
