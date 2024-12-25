@@ -143,7 +143,7 @@ public class JWTUtil {
                 .claim("category", category)  // 카테고리 정보 추가 ("access", "refresh")
                 .claim("name", member.getMemName())  // 사용자 이름 또는 닉네임 추가
                 .claim("role", (memType))  // ROLE 정보 추가.
-                .claim("member", mem)    // 조회해 온 member 통째로 저장
+                .claim("member", member)    // 조회해 온 member 통째로 저장
                 .setExpiration(new java.sql.Date(System.currentTimeMillis() + expiredMs))  // 토큰 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256)  // 비밀키와 알고리즘으로 서명
                 .compact();  // JWT 생성 : JWT 를 압축 문자열로 만듦
