@@ -214,6 +214,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 log.info(" 확인 : " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
 
             } else {
+                if (request_refreshToken == null) {
+                    log.error("RefreshToken 헤더가 전달되지 않았습니다.");
+                }
                 log.info("전달온 Token 이 없음");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"error\": \"invalid token\"}");

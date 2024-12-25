@@ -58,6 +58,7 @@ public class WorkspaceController {
                     .data(workspace)
                     .build());
         } catch (Exception e) {
+            e.printStackTrace();
             log.error("Workspace creation failed", e); // 디버깅용 로그 추가
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<Workspace>builder()
                     .success(false)

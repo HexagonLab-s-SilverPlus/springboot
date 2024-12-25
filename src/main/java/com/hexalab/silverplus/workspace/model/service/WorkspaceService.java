@@ -53,8 +53,8 @@ public class WorkspaceService {
     public List<Workspace> getWorkspaceByMemUuid(String memUuid) {
         return workspaceRepository.findByWorkspaceMemUuid(memUuid)
                 .stream()
-                .map(WorkspaceEntity::toDto) // Entity -> DTO 변환
-                .collect(Collectors.toList());
+                .map(WorkspaceEntity::toDto)
+                .toList();
     }
 
     /**
@@ -62,6 +62,6 @@ public class WorkspaceService {
      */
     public Optional<Workspace> getWorkspaceByWorkspaceId(String workspaceId) {
         return workspaceRepository.findWorkspaceByWorkspaceId(workspaceId)
-               .map(WorkspaceEntity::toDto);
+                .map(WorkspaceEntity::toDto);
     }
 }
