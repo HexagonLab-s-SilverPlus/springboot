@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,7 +102,7 @@ public class ChatController {
                 ApiResponse<List<ChatMessage>> response = ApiResponse.<List<ChatMessage>>builder()
                         .success(true)
                         .message("조회할 채팅 메시지 이력이 없습니다.")
-                        .data(history)
+                        .data(Collections.emptyList())
                         .build();
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
             }
