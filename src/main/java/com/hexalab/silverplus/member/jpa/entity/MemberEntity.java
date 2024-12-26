@@ -3,15 +3,13 @@ package com.hexalab.silverplus.member.jpa.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hexalab.silverplus.member.model.dto.Member;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.apache.commons.net.ntp.TimeStamp;
 
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -89,6 +87,7 @@ public class MemberEntity {
                 .memRnn(memRnn)
                 .memGovCode(memGovCode)
                 .memStatus(memStatus)
+                .memEnrollDate(memEnrollDate)
                 .memFamilyApproval(memFamilyApproval)
                 .memSocialKakao(memSocialKakao)
                 .memKakaoEmail(memKakaoEmail)

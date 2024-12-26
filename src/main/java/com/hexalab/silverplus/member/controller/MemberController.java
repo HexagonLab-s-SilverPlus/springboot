@@ -2,6 +2,7 @@ package com.hexalab.silverplus.member.controller;
 
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.dto.MemberFiles;
 import com.hexalab.silverplus.member.model.service.MemberFilesService;
@@ -10,6 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,6 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j      // 로그
@@ -48,7 +56,7 @@ public class MemberController {
     private String ftpRemoteDir;
 
     // 회원가입 처리 메소드
-    @PostMapping
+    @PostMapping("/enroll")
     public ResponseEntity<String> memberEnrollMethod(
             @ModelAttribute Member member, HttpServletRequest request,
             @RequestParam(name="memFiles", required = false) MultipartFile[] memFiles) {
@@ -109,16 +117,89 @@ public class MemberController {
 
     // 회원 탈퇴 처리 메소드
     @PutMapping("/remove/{memId}")
-    public ResponseEntity memberRemoveMethod() {
+    public ResponseEntity memberRemoveMethod(@PathVariable String memId) {
+        try {
+            if (memberService.removeByMemId(memId) == 1) {
+                return ResponseEntity.ok().build();
+            } else {
+                log.info("회원 탈퇴 실패");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
-        return ResponseEntity.ok().build();
+    }
+
+    // 회원정보 수정 처리 메소드
+    @PutMapping
+    public ResponseEntity memberUpdateMethod(@ModelAttribute Member member, HttpServletRequest request) {
+        log.info("수정 메소드 작동, 전달온 값 확인 : {}", member);
+        try {
+            // 요청 헤더에서 기존 비밀번호 정보 추출
+            String OriginalPassword = request.getHeader("OriginalPassword");
+            // 비밀번호 변경 요청 시
+            if (member.getMemPw() != null && member.getMemPw().length() > 0) {
+                // 수정하고자 하는 비밀번호 암호화처리
+                member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+            } else {
+                // 비밀번호 변경 요청 아닐 시 기존 비밀번호 저장처리
+                member.setMemPw(OriginalPassword);
+            }
+
+//            member.setMemChangeStatus(new LocalDateTime(System.currentTimeMillis()));
+
+
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("회원정보 수정 실패 : {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/adminList")
+    // 회원 목록 출력 처리 메소드
+    public List<Member> memberListMethod(@ModelAttribute Search search) {
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1, search.getPageSize(), Sort.by(Sort.Direction.ASC, "memEnrollDate"));
+
+        try {
+            List<Member> list = new ArrayList<Member>();
+            if(search.getAction().equals("all")){
+                search.setListCount(memberService.selectAllCount());
+                list = memberService.selectAllMember(pageable, search);
+                log.info("조회해 온 리스트 확인(전체) : {}", list);
+            } else if (search.getAction().equals("memId")) {
+                search.setListCount(memberService.selectMemIdCount(search.getKeyword()));
+                list = memberService.selectAllMember(pageable, search);
+                log.info("조회해 온 리스트 확인(아이디로 검색) : {}", list);
+            } else if (search.getAction().equals("memName")) {
+                search.setListCount(memberService.selectMemNameCount(search.getKeyword()));
+                list = memberService.selectAllMember(pageable, search);
+                log.info("조회해 온 리스트 확인(이름으로 검색) : {}", list);
+            } else if (search.getAction().equals("memStatus")) {
+                search.setListCount(memberService.selectMemStatusCount(search.getKeyword()));
+                list = memberService.selectAllMember(pageable, search);
+                log.info("조회해 온 리스트 확인(계정 상태로 검색) : {}", list);
+            } else if (search.getAction().equals("memType")) {
+                search.setListCount(memberService.selectMemTypeCount(search.getKeyword()));
+                list = memberService.selectAllMember(pageable, search);
+                log.info("조회해 온 리스트 확인(계정 타입으로 검색) : {}", list);
+            }
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("회원목록 출력 실패 : {}", e.getMessage());
+            return null;
+        }
+
     }
 
 /*
 
-    // 회원정보 수정 처리 메소드
-    @PutMapping
-    public ResponseEntity<?> memberUpdateMethod() {}
+
 
 
 
@@ -126,9 +207,7 @@ public class MemberController {
     @PutMapping("/status")
     public ResponseEntity<?> memberStatusUpdateMethod() {}
 
-    @GetMapping
-    // 회원 목록 출력 처리 메소드
-    public List memberListMethod() {}
+
 
     @GetMapping("/mdetail")
     // 회원 상세정보 출력 처리 메소드 (관리자)
