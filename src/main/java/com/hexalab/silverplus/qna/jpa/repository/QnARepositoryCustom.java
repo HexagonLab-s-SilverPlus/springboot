@@ -12,6 +12,8 @@ public interface QnARepositoryCustom {
     Map<String, Object> selectMyQnA(String uuid, Pageable pageable, Search search);
 
     int myCount(String uuid);
-
     int adTitleCount(String keyword);
+    int adDateCount(Search search);
+    int myTitleCount(String uuid, String keyword);
+    int myDateCount(String uuid, Search search);
 }
