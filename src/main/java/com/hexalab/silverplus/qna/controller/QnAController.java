@@ -2,6 +2,7 @@ package com.hexalab.silverplus.qna.controller;
 
 import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Search;
+import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.model.dto.QnA;
 import com.hexalab.silverplus.qna.model.service.QnAService;
@@ -29,6 +30,7 @@ import java.util.Map;
 @CrossOrigin
 public class QnAController {
     private final QnAService qnaService;
+    private final MemberService memberService;
 
     // file upload path valiable
     @Value("${ftp.server}")
@@ -90,15 +92,29 @@ public class QnAController {
         }
     }
 
+    @GetMapping("/detail/{qnaId}")
+    public ResponseEntity<Map<String, Object>> selectDetailQnA(@PathVariable String qnaId) {
+        try {
+            QnA qna = qnaService.selectOne(qnaId);
+            Member member = memberService.selectMember(qna.getQnaWCreateBy());
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("qna", qna);
+            map.put("member", member);
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     @PostMapping
     public ResponseEntity insertQnA(
             @ModelAttribute QnA qna,
             @RequestParam(name="newFiles",required = false) MultipartFile[] files
             ) {
-        log.info("qna insert : {}", qna);
+
         QnA inserQnA = qnaService.insertQnA(qna);
-        log.info("insert QnA : {}", inserQnA);
         if(inserQnA != null) {
             if(files != null && files.length > 0) {
                 for (int i = 0; i < files.length; i++) {
@@ -124,6 +140,15 @@ public class QnAController {
             return ResponseEntity.ok().build();
         }else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("{qnaId}")
+    public void deleteQnA(@PathVariable String qnaId) {
+        try {
+            qnaService.deleteOne(qnaId);
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 

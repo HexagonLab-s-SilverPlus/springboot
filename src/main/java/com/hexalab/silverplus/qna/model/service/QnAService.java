@@ -65,4 +65,12 @@ public class QnAService {
     public int selectDateListCount(String uuid, Search search) {
         return qnARepository.myDateCount(uuid, search);
     }
+
+    public QnA selectOne(String qnaId) {
+        return qnARepository.findById(qnaId).get().toDto();
+    }
+
+    public void deleteOne(String qnaId) {
+        qnARepository.deleteById(qnaId);
+    }
 }
