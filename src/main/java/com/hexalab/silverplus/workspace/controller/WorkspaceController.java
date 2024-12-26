@@ -68,4 +68,22 @@ public class WorkspaceController {
     }
 
 
+    @DeleteMapping("/{workspaceId}")
+    public ResponseEntity<ApiResponse<String>> deleteWorkspace(@PathVariable String workspaceId){
+        try {
+            workspaceService.deleteWorkspace(workspaceId);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                   .success(true)
+                   .message("워크스페이스 삭제 성공")
+                   .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("워크스페이스 삭제 실패: ", e); // 디버그용 로그 추가
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<String>builder()
+                   .success(false)
+                   .message("워크스페이스 삭제 실패")
+                   .build());
+        }
+    }
+
 }
