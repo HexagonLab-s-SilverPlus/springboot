@@ -126,7 +126,7 @@ public class JWTUtil {
         Member member = memberService.findByMemId(memId);
         Optional<MemberEntity> mem = memberRepository.findById(member.getMemUUID());
         log.info("member : {}", member);
-        log.info("mem : {}", mem);
+        log.info("mem : {}", member);
 
         //사용자 정보가 없는 경우, UsernameNotFoundException (스프링 제공됨)을 발생시킴
         if (member == null) {

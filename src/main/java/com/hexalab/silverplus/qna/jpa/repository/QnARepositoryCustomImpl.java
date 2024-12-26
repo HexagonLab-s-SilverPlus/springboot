@@ -13,10 +13,12 @@ import org.springframework.data.domain.Pageable;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Slf4j
 @Repository
@@ -56,12 +58,22 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
+        } else if(search.getAction().equals("date")) {
+            qnaEntityList = queryFactory
+                    .select(qna, member)
+                    .from(qna)
+                    .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
+                    .where(qna.qnaWCreateAt.between(search.getStartDate(), search.getEndDate()))
+                    .orderBy(qna.qnaWUpdateAt.desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
         }
-
 
         Map<String, Object> resultList = new HashMap<>();
         ArrayList<QnAEntity> qnaList = new ArrayList<>();
         ArrayList<MemberEntity> memberList = new ArrayList<>();
+
         for (Tuple tuple : qnaEntityList) {
             qnaList.add(tuple.get(0, QnAEntity.class));
             memberList.add(tuple.get(1, MemberEntity.class));
@@ -92,6 +104,16 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                     .from(qna)
                     .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
                     .where(qna.qnaWCreateBy.eq(uuid).and(qna.qnaTitle.like("%" + search.getKeyword() + "%")))
+                    .orderBy(qna.qnaWUpdateAt.desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+        } else if(search.getAction().equals("date")) {
+            qnaEntityList = queryFactory
+                    .select(qna, member)
+                    .from(qna)
+                    .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
+                    .where(qna.qnaWCreateBy.eq(uuid).and(qna.qnaWCreateAt.between(search.getStartDate(), search.getEndDate())))
                     .orderBy(qna.qnaWUpdateAt.desc())
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
@@ -127,6 +149,30 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
         return (int)queryFactory
                 .selectFrom(qna)
                 .where(qna.qnaTitle.like("%" + keyword + "%"))
+                .fetchCount();
+    }
+
+    @Override
+    public int adDateCount(Search search) {
+        return (int)queryFactory
+                .selectFrom(qna)
+                .where(qna.qnaWCreateAt.between(search.getStartDate(),search.getEndDate()))
+                .fetchCount();
+    }
+
+    @Override
+    public int myTitleCount(String uuid, String keyword) {
+        return (int)queryFactory
+                .selectFrom(qna)
+                .where(qna.qnaWCreateBy.eq(uuid).and(qna.qnaTitle.like("%" + keyword + "%")))
+                .fetchCount();
+    }
+
+    @Override
+    public int myDateCount(String uuid, Search search) {
+        return (int)queryFactory
+                .selectFrom(qna)
+                .where(qna.qnaWCreateBy.eq(uuid).and(qna.qnaWCreateAt.between(search.getStartDate(),search.getEndDate())))
                 .fetchCount();
     }
 }
