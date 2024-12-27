@@ -27,10 +27,10 @@ public class MemberFilesEntity {
     @Column(name = "MF_RENAME")
     private String mfRename;
 
-    @PrePersist
-    public void prPersist() {
-        mfId = UUID.randomUUID().toString();
-    }
+//    @PrePersist
+//    public void prPersist() {
+//        mfId = UUID.randomUUID().toString();
+//    }
 
     public MemberFiles toDto() {
         return MemberFiles.builder()
