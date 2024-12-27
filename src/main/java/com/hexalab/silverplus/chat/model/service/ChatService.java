@@ -30,19 +30,29 @@ public class ChatService {
     @Autowired
     private WorkspaceService workspaceService;
 
+    /**
+     * 채팅 메시지 저장
+     * @param chatMessage
+     * @return
+     */
     @Transactional
     public int saveChatMessage(ChatMessage chatMessage) {
         try {
-            Optional<Workspace> existingWorkspace = workspaceService.getWorkspaceByMemUuid(chatMessage.getMsgSenderUUID());
-            if (existingWorkspace.isEmpty() && !Objects.equals(chatMessage.getMsgSenderUUID(), "ai-uuid-1234-5678-90ab-cdef12345678")) {
-                workspaceService.createWorkspace(chatMessage.getMsgSenderUUID());
+            // 워크스페이스 존재 여부 확인
+            if(chatMessage.getMsgWorkspaceId() == null || chatMessage.getMsgWorkspaceId().trim().isEmpty()){
+                throw new IllegalArgumentException("워크스페이스 ID가 제공되지 않았습니다.");
             }
 
-            // 워크스페이스 확인 및 생성
+            // 전달받은 워크스페이스 ID로 실제 존재하는 워크스페이스인지 확인
+            Workspace workspace = workspaceService.getWorkspaceByWorkspaceId(chatMessage.getMsgWorkspaceId())
+                    .orElseThrow(() -> new IllegalArgumentException("워크스페이스 ID:  " + chatMessage.getMsgWorkspaceId()
+                            + "에 해당하는 워크스페이스가 존재하지 않습니다."));
+
+            // 메시지 저장
             ChatMessageEntity chatMessageEntity = chatMessage.toEntity();
 
             // userId 확인
-            log.info("Saving ChatMessageEntity with userId: {}", chatMessageEntity.getMsgId());
+            log.info("Saving ChatMessageEntity with msgId: {}", chatMessageEntity.getMsgId());
 
             if (chatMessageEntity.getMsgSenderUUID() == null || chatMessageEntity.getMsgSenderUUID().trim().isEmpty()) {
                 throw new IllegalArgumentException("sender UUID가 빈 항목입니다.");

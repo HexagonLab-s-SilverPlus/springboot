@@ -19,7 +19,7 @@ import java.util.UUID;
 public class NoticeEntity {
     @Id
     @Column(name="NOT_ID")
-    private UUID notId;                 // NOT_ID	VARCHAR2(100 BYTE)
+    private String notId;                 // NOT_ID	VARCHAR2(100 BYTE)
     @Column(name="NOT_TITLE")
     private String notTitle;            // NOT_TITLE	VARCHAR2(250 BYTE)
     @Column(name="NOT_CONTENT")
@@ -37,12 +37,7 @@ public class NoticeEntity {
     @Column(name="NOT_DELETED_BY")
     private String notDeleteBy;         // NOT_DELETED_BY	VARCHAR2(100 BYTE)
     @Column(name="NOT_READ_COUNT")
-    private String notReadCount;        // NOT_READ_COUNT	NUMBER
-
-    @PrePersist
-    public void prePersist() {
-        notId = UUID.randomUUID();
-    }
+    private int notReadCount;        // NOT_READ_COUNT	NUMBER
 
     public Notice toDto(){
         return Notice.builder()

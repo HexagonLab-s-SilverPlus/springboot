@@ -30,6 +30,7 @@ public interface RefreshRepository extends JpaRepository<RefreshToken, UUID> {
     @Query("SELECT count(*) FROM RefreshToken r WHERE r.tokenMemUuid = :memUuid")     // JPQL 방식 ( 테이블명 : 엔티티클래스명, 컬럼명 : 엔티티클래스 안의 멤버변수 명)
     int findByMemUuidCount(@Param("memUuid") String memUuid);
 
+    // memUUID 로 리프레시토큰 삭제 메소드
     @Modifying
     @Query("DELETE FROM RefreshToken r WHERE r.tokenMemUuid = :tokenMemUuid")
     void deleteByRefreshTokenUuid(String tokenMemUuid);

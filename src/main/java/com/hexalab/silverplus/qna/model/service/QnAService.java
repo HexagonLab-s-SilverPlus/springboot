@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.qna.model.service;
 
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
+
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -23,21 +26,51 @@ public class QnAService {
     private final QnARepository qnARepository;
     private final MemberService memberService;
 
-    public Map<String, Object> selectMytList(String uuid, Pageable pageable){
-        return qnARepository.selectMyQnA(uuid, pageable);
+    public Map<String, Object> selectMytList(String uuid, Pageable pageable, Search search){
+        return qnARepository.selectMyQnA(uuid, pageable, search);
     }
 
-    public Map<String, Object> selectAllList(Pageable pageable){
-        return qnARepository.selectAllQnA(pageable);
+    public Map<String, Object> selectADList(Pageable pageable, Search search){
+        return qnARepository.selectADList(pageable, search);
     }
 
-    public boolean insertQnA(QnA qna){
+    public QnA insertQnA(QnA qna){
         try {
-            qnARepository.save(qna.toEntity());
-            return true;
+            return qnARepository.save(qna.toEntity()).toDto();
         }catch (Exception e){
-            log.error(e.getMessage());
-            return false;
+            return null;
         }
+    }
+
+    public int selectAllListCount() {
+        return (int)qnARepository.count();
+    }
+
+    public int selectMytListCount(String uuid) {
+        return qnARepository.myCount(uuid);
+    }
+
+    public int selectTitleAllListCount(String keyword) {
+        return qnARepository.adTitleCount(keyword);
+    }
+
+    public int selectDateAllListCount(Search search) {
+        return qnARepository.adDateCount(search);
+    }
+
+    public int selectTitleListCount(String uuid, String keyword) {
+        return qnARepository.myTitleCount(uuid, keyword);
+    }
+
+    public int selectDateListCount(String uuid, Search search) {
+        return qnARepository.myDateCount(uuid, search);
+    }
+
+    public QnA selectOne(String qnaId) {
+        return qnARepository.findById(qnaId).get().toDto();
+    }
+
+    public void deleteOne(String qnaId) {
+        qnARepository.deleteById(qnaId);
     }
 }

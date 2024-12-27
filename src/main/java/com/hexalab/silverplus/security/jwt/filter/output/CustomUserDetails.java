@@ -26,12 +26,14 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
 
-//        // 사용자 정보에서 관리자여부에 따라 ROLE 권한을 부여함
+        // 사용자 정보에서 관리자여부에 따라 ROLE 권한을 부여함
 //        if (this.member.getAdminYN().equals("Y")) {
 //            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 //        } else {
 //            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 //        }
+        
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + this.member.getMemType()));
         return authorities;
     }
 
@@ -71,11 +73,12 @@ public class CustomUserDetails implements UserDetails {
     }
 
     // 사용자 계정이 활성화(사용 가능) 상태인지를 반환하는 메소드
-//    @Override
-//    public boolean isEnabled() {
-//        if (member.getLoginOk().equals("Y")) {
-//            return true;        // 활성화
-//        } else {
-//            return false;       // 비활성화(disable)
-//        }
+    @Override
+    public boolean isEnabled() {
+        if (member.getMemStatus().equals("ACTIVE")) {
+            return true;        // 활성화
+        } else {
+            return false;       // 비활성화(disable)
+        }
     }
+}

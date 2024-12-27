@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final UserService userService;
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -55,11 +56,12 @@ public class SecurityConfig {
     }
 
     // 직접 생성자를 작성해서 초기화 선언함 (@RequiredArgsConstructor 를 사용하지 않을 경우)
-    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository) {
+    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository, MemberService memberService) {
         this.refreshService = refreshService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
 //    @Bean
@@ -88,6 +90,7 @@ public class SecurityConfig {
         configuration.addAllowedHeader("*"); // 모든 헤더 허용
         configuration.setAllowCredentials(true); // 인증 정보 허용
         configuration.addExposedHeader("Authorization");    // 클라이언트 쪽 헤더 접근 허용. * 사용못함
+        configuration.addExposedHeader("Verify");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -110,32 +113,50 @@ public class SecurityConfig {
                     Authentication authentication1 = SecurityContextHolder.getContext().getAuthentication();
                     if (authentication1 != null) {
                         System.out.println("==== SecurityContextHolder 정보 ====");
-                        System.out.println("인증된 사용자: " + authentication1.getName());
-                        System.out.println("권한: " + authentication1.getAuthorities());
-                    } else {
-                        System.out.println("SecurityContextHolder에 인증 정보가 없습니다.");
-                    } auth
-                            // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
+                    System.out.println("인증된 사용자: " + authentication1.getName());
+                    System.out.println("권한: " + authentication1.getAuthorities());
+                } else {
+            System.out.println("SecurityContextHolder에 인증 정보가 없습니다.");
+        } auth
+                // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
                             // JWT 사용시 추가되는 설정임
-                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login",  "/notice/ntop3", "/board/btop3", "/member/**", "/reissue", "/reply", "/board/detail/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login", "/member/**", "/reissue",
+                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                            // Notice
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
                             .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
-                            //게시글 서비스
-                            .requestMatchers(HttpMethod.POST, "/board").hasRole("USER") // POST 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.PUT, "/board/{boardNum}").hasRole("USER") // PUT 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/board/{boardNum}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.POST, "/reply").hasRole("USER") // POST 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/reply/{replyNum}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            //회원 서비스
-                            .requestMatchers(HttpMethod.GET, "/member/myinfo").hasRole("USER") // GET 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.PUT, "/member").hasRole("USER") // PUT 요청은 USER 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/member/{userId}").hasRole("USER") // DELETE 요청은 USER 롤 필요
-                            //회원관리 서비스
-                            .requestMatchers(HttpMethod.PUT, "/member/loginok/{userId}/{loginOk}").hasRole("ADMIN") // PUT 요청은 ADMIN 롤 필요
-                            .requestMatchers(HttpMethod.GET, "/member/search").hasRole("ADMIN") // PUT 요청은 ADMIN 롤 필요
-                            .requestMatchers("/public/**", "/auth/**",  "/notice", "/board", "/members/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+
+                            // QnA
+
+                            // Program
+                            .requestMatchers(HttpMethod.GET, "/program").hasAnyRole("ADMIN", "MANAGER",  "FAMILY", "SENIOR")
+                            .requestMatchers(HttpMethod.POST, "/program").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.PUT, "/program/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.DELETE, "/program/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.GET, "/program/detail/{snrProgramId}").hasAnyRole("ADMIN", "MANAGER", "FAMILY", "SENIOR")
+                            .requestMatchers(HttpMethod.GET, "/program/pfdown").hasAnyRole("ADMIN", "MANAGER", "FAMILY", "SENIOR")
+
+                            // Dashboard
+                            .requestMatchers(HttpMethod.POST, "/dashboard").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.GET, "/dashboard").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.DELETE, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.PUT, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
+
+                            // Book
+
+                            // Workspace
+                            .requestMatchers(HttpMethod.POST, "/api/workspace/create").hasAnyRole("ADMIN", "SENIOR")    // ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}").hasAnyRole("ADMIN", "SENIOR")  // ADMIN 추후 삭제
+
+                            // Chat
+                            .requestMatchers(HttpMethod.POST, "/api/chat/save").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/chat/history/{workspaceId}").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+
+                            // Member
+                            .requestMatchers(HttpMethod.GET, "/member/adminList").hasRole("ADMIN")
+
                             // .permitAll() :  URL 의 접근을 허용한다는 의미(통과는 아님). 제일 처음 작동됨
                             // .permitAll() 에 등록되지 않은 url 은 서버에 접속 못하게 됨
                             // 로그 아웃 요청은 로그인한 사용자만 가능
@@ -144,7 +165,7 @@ public class SecurityConfig {
                             .anyRequest().authenticated();
                 })
                 // JWTFilter 와 LoginFilter 를 시큐리티 필터 체인에 추가 등록함
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
+                .addFilterBefore(new JWTFilter(jwtUtil, memberService), LoginFilter.class)
                 // UsernamePasswordAuthenticationFilter.class : LoginFilter 를 UsernamePasswordAuthenticationFilter 로 형변환 함
                 .addFilterAt(new LoginFilter(userService, refreshService, memberRepository, authenticationManager(), jwtUtil, access_expiration, refresh_expiration), UsernamePasswordAuthenticationFilter.class)   // UsernamePasswordAuthenticationFilter : 스프링 부트에서 제공함
                 // service 가 두개여서 authenticationManager 가 service 혼동 으로 인한 스택 오버플로우 발생

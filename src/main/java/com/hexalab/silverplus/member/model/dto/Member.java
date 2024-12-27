@@ -7,11 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.net.ntp.TimeStamp;
 
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.UUID;
 
 @Data       // getter, setter, ToString, Equals, HashCode 자동생성
 @AllArgsConstructor     // 매개변수 있는 생성자 자동생성
@@ -66,6 +63,7 @@ public class Member implements java.io.Serializable {
                 .memRnn(memRnn)
                 .memGovCode(memGovCode)
                 .memStatus(memStatus)
+                .memEnrollDate(memEnrollDate)
                 .memFamilyApproval(memFamilyApproval)
                 .memSocialKakao(memSocialKakao)
                 .memKakaoEmail(memKakaoEmail)

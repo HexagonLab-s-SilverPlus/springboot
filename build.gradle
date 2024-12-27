@@ -31,6 +31,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     //스프링 부트 웹 관련련 기본 설정과 의존성 기능 제공, Restful 관련 어노테이션 제공
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // REDIS 관련 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // SMS 발송을 위한 CoolSMS 의존성 추가
+    implementation 'net.nurigo:sdk:4.3.2'
+
 
     //oracle db 와 jpa 연결 설정
     //스프링과 연동되는 jpa 기술 관련 의존성 기능 제공
