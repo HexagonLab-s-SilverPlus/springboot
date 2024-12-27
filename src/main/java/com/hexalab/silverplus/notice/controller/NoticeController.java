@@ -3,6 +3,7 @@ package com.hexalab.silverplus.notice.controller;
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Search;
+import com.hexalab.silverplus.member.jpa.entity.MemberFilesEntity;
 import com.hexalab.silverplus.notice.model.dto.Notice;
 import com.hexalab.silverplus.notice.model.dto.NoticeFiles;
 import com.hexalab.silverplus.notice.model.service.NoticeFilesService;
@@ -10,20 +11,22 @@ import com.hexalab.silverplus.notice.model.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -89,8 +92,8 @@ public class NoticeController {
                     // setter
                     NoticeFiles insertFile = new NoticeFiles();
                     String fileName = file.getOriginalFilename();
-                    String renameFile = CreateRenameFileName.create(notice.getNotId(),fileName);
                     insertFile.setNfId(UUID.randomUUID().toString());
+                    String renameFile = CreateRenameFileName.create(insertFile.getNfId(),fileName);
                     insertFile.setNfNotId(notice.getNotId());
                     insertFile.setNfOreginalName(fileName);
                     insertFile.setNfRename(renameFile);
@@ -218,4 +221,154 @@ public class NoticeController {
         }
         return null;
     }
+
+    // 공지사항 상세보기
+    @GetMapping("/detail/{notId}")
+    public ResponseEntity<Map> noticeDetail(
+            @PathVariable("notId") String notId
+    ){
+        log.info("notId : " + notId);
+        // 담을객체
+        Map<String,Object> map = new HashMap<>();
+        List<Map<String, Object>> fileList = new ArrayList<>();
+
+        try {
+            // 조회수 증가
+            noticeService.upReadCount(notId);
+
+            // 공지사항 불러오기
+            Notice notice = noticeService.selectNotice(notId);
+            log.info("notice : " + notice);
+            map.put("notice", notice);
+
+            // 첨부파일 갯수 확인
+            ArrayList<NoticeFiles> noticeFiles = new ArrayList<NoticeFiles>();
+            int fileCount = noticeFilesService.checkNoticeFiles(notId);
+            log.info("첨부파일 갯수:{}", fileCount);
+
+            // 첨부파일 있을시 첨부파일 리스트 담기
+            if (fileCount != 0) {
+                noticeFiles = noticeFilesService.selectNoticeFiles(notId);
+                log.info("noticeFiles : " + noticeFiles);
+                map.put("noticeFiles", noticeFiles);
+            }
+
+            // FTP 서버 연결
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            for (NoticeFiles file : noticeFiles) {
+                Map<String, Object> fileData = new HashMap<>();
+
+                String mfRename = file.getNfRename();
+
+                // mfRename 값 확인
+                log.info("mfRename 값 확인: {}", mfRename);
+
+                // 파일 경로 구성
+                String remoteFilePath = ftpRemoteDir + "notice/" + mfRename;
+                log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
+
+                // 파일 다운로드
+                File tempFile = File.createTempFile("preview-", null);
+                ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                // 파일 읽기
+                byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                tempFile.delete();
+
+                // MIME 타입 결정
+                String mimeType = getMimeType(file.getNfOreginalName());
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+
+                // 파일 데이터 구성
+                fileData.put("fileName", file.getNfOreginalName());
+                fileData.put("mimeType", mimeType);
+                fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
+                fileList.add(fileData);
+            }
+            // 파일 담기
+            map.put("fileList", fileList);
+                // 리턴
+            return ResponseEntity.ok(map);
+        } catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/nfdown")
+    public ResponseEntity<Resource> fileDownload(
+            @RequestParam("ofile") String originalFileName,
+            @RequestParam("rfile") String renameFileName
+    ) {
+        log.info("ofile : " + originalFileName);
+        log.info("rfile : " + renameFileName);
+
+        try (FTPUtility ftpUtility = new FTPUtility()) {
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            // 임시 파일 생성 후 FTP에서 다운로드
+            File tempFile = File.createTempFile("download-", null);
+            String remoteFilePath = ftpRemoteDir + "notice/" + renameFileName;
+            ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+            Resource resource = new FileSystemResource(tempFile);
+
+            String encodedFileName = URLEncoder.encode(originalFileName, "UTF-8").replaceAll("\\+", "%20");
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            log.error("파일 다운로드 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    //MIME타입
+    private String getMimeType(String snrFileOGName) {
+        if (snrFileOGName == null || !snrFileOGName.contains(".")) {
+            return null;
+        }
+        String extension = snrFileOGName.substring(snrFileOGName.lastIndexOf(".") + 1).toLowerCase();
+
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+            case "bmp":
+            case "tif":
+            case "tiff":
+                return "image/" + extension;
+            case "xls":
+            case "xlsx":
+                return "application/vnd.ms-excel";
+            case "pdf":
+                return "application/pdf";
+            case "txt":
+                return "text/plain";
+            case "hwp":
+                return "application/x-hwp";
+            case "hwpx":
+                return "application/hwp+zip";
+            case "doc":
+            case "docx":
+                return "application/msword";
+            case "zip":
+            case "rar":
+            case "7z":
+            case "tar":
+            case "gz":
+                return "application/zip";
+            default:
+                return "application/octet-stream"; // 기본 MIME 타입
+        }
+    }//getMimeType end
+
 }
