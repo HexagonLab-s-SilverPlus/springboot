@@ -21,12 +21,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -123,6 +121,47 @@ public class ProgramController {
         }
     }//insertProgramMethod end
 
+    //MIME타입
+    private String getMimeType(String snrFileOGName) {
+        if (snrFileOGName == null || !snrFileOGName.contains(".")) {
+            return null;
+        }
+        String extension = snrFileOGName.substring(snrFileOGName.lastIndexOf(".") + 1).toLowerCase();
+
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+            case "bmp":
+            case "tif":
+            case "tiff":
+                return "image/" + extension;
+            case "xls":
+            case "xlsx":
+                return "application/vnd.ms-excel";
+            case "pdf":
+                return "application/pdf";
+            case "txt":
+                return "text/plain";
+            case "hwp":
+                return "application/x-hwp";
+            case "hwpx":
+                return "application/hwp+zip";
+            case "doc":
+            case "docx":
+                return "application/msword";
+            case "zip":
+            case "rar":
+            case "7z":
+            case "tar":
+            case "gz":
+                return "application/zip";
+            default:
+                return "application/octet-stream"; // 기본 MIME 타입
+        }
+    }//getMimeType end
+
     //Program List
     @GetMapping
     public Map<String, Object> programListMethod(
@@ -142,7 +181,8 @@ public class ProgramController {
         ArrayList<Program> list = programService.selectList(pageable);
 
         //각 프로그램의 모든 파일 정보 추가
-        ArrayList<Map<String, Object>> programWithImages = new ArrayList<>();
+        ArrayList<Map<String, Object>> programWithFiles = new ArrayList<>();
+
         try (FTPUtility ftpUtility = new FTPUtility()) {
             ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
 
@@ -150,37 +190,50 @@ public class ProgramController {
                 ArrayList<ProgramFile> files = programFileService.selectProgramFiles(program.getSnrProgramId());
 
                 //파일 URL 리스트 생성
-                ArrayList<String> fileUrls = new ArrayList<>();
+                ArrayList<Map<String, Object>> fileDataList = new ArrayList<>();
                 if (files != null && !files.isEmpty()) {
                     for (ProgramFile file : files) {
-                        //FTP 경로 생성
-                        //String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
-                        //String fileUrl = "ftp://" + ftpServer + ":" + ftpPort + remoteFilePath; //URL 생성
+                        Map<String, Object> fileData = new HashMap<>();
 
-                        //String remoteFilePath = (ftpRemoteDir.endsWith("/") ? ftpRemoteDir : ftpRemoteDir + "/") + "program/" + file.getSnrFileName();
-                        //String fileUrl = "ftp://" + ftpServer + ":" + ftpPort + remoteFilePath;
-
+                        //파일 경로 구성
                         String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
-                        String fileUrl = "https://" + ftpServer + ":" + ftpPort + "/files/" + remoteFilePath;
 
-                        fileUrls.add(fileUrl);  //리스트에 추가
+                        //파일 다운로드 및 처리
+                        File tempFile = File.createTempFile("program-", null);
+                        ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                        //파일 내용 읽기
+                        byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                        tempFile.delete();
+
+                        //MIME 타입 결정
+                        String mimeType = getMimeType(file.getSnrFileOGName());
+                        if (mimeType == null) {
+                            mimeType = "application/octet-stream";
+                        }
+
+                        //파일 데이터 구성
+                        fileData.put("fileName", file.getSnrFileOGName());
+                        fileData.put("mimeType", mimeType);
+                        fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+
+                        fileDataList.add(fileData);
                     }
                 }//if end
 
-                //프로그램 데이터와 파일 URL 리스트 병합
+                //프로그램 데이터와 파일 파일 데이터 병합
                 Map<String, Object> programData = new HashMap<>();
                 programData.put("program", program);
-                programData.put("fileUrls", fileUrls);  //모든 파일 URL 추가
+                programData.put("pgfiles", fileDataList);  //모든 파일 URL 추가
 
-                programWithImages.add(programData);
+                programWithFiles.add(programData);
             }//for end
-
         } catch (Exception e) {
             log.error("FTP 작업 중 오류 발생", e);
         }
 
         Map<String, Object> map = new HashMap<>();
-        map.put("list", programWithImages);
+        map.put("list", programWithFiles);
         map.put("paging", paging);
 
         return map;
