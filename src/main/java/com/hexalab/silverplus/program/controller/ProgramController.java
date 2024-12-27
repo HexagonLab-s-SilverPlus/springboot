@@ -239,4 +239,95 @@ public class ProgramController {
         return map;
     }//selectProgramList() end
 
+//    @GetMapping
+//    public Map<String, Object> programListMethod(
+//            @ModelAttribute Search search
+//    ) {
+//        log.info("search data : {}", search);
+//
+//        Map<String, Object> map = new HashMap<>();
+//
+//        //JPA가 제공하는 메소드에 필요한 Pageable 객체 생성
+//        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
+//                search.getPageSize(), Sort.by(Sort.Direction.DESC, "snrCreatedAt"));
+//
+//        int listCount = 0;
+//        try {
+//            //각 프로그램의 모든 파일 정보 추가
+//            Map<String, Object> programData = new HashMap<>();
+//
+//            if (search.getAction().equals("all")) {
+//                search.setListCount(programService.selectListCount());
+//
+//            } else if (search.getAction().equals("pgTitle")) {
+//                search.setListCount(programService.selectTitleListCount(search.getKeyword()));
+//            } else if (search.getAction().equals("pgContent")) {
+//                search.setListCount(programService.selectContentListCount(search.getKeyword()));
+//            } else if (search.getAction().equals("pgArea")) {
+//                search.setListCount(programService.selectAreaListCount(search.getKeyword()));
+//            } else if (search.getAction().equals("pgOrg")) {
+//                search.setListCount(programService.selectOrgNameListCount(search.getKeyword()));
+//            } else if (search.getAction().equals("pgDate")) {
+//                search.setListCount(programService.selectDateListCount(search));
+//            }
+//
+//            ArrayList<Program> list = programService.selectList(pageable, search);
+//
+//            //파일 미리보기 처리
+//            try (FTPUtility ftpUtility = new FTPUtility()) {
+//                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+//
+//                for (Program program : list) {
+//                    ArrayList<ProgramFile> files = programFileService.selectProgramFiles(program.getSnrProgramId());
+//
+//                    //파일 URL 리스트 생성
+//                    ArrayList<Map<String, Object>> fileDataList = new ArrayList<>();
+//                    if (files != null && !files.isEmpty()) {
+//                        for (ProgramFile file : files) {
+//                            Map<String, Object> fileData = new HashMap<>();
+//
+//                            //파일 경로 구성
+//                            String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+//
+//                            //파일 다운로드 및 처리
+//                            File tempFile = File.createTempFile("program-", null);
+//                            ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+//
+//                            //파일 내용 읽기
+//                            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+//                            tempFile.delete();
+//
+//                            //MIME 타입 결정
+//                            String mimeType = getMimeType(file.getSnrFileOGName());
+//                            if (mimeType == null) {
+//                                mimeType = "application/octet-stream";
+//                            }
+//
+//                            //파일 데이터 구성
+//                            fileData.put("fileName", file.getSnrFileOGName());
+//                            fileData.put("mimeType", mimeType);
+//                            fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+//
+//                            fileDataList.add(fileData);
+//                        }
+//                    }//if end
+//
+//                    //프로그램 데이터와 파일 파일 데이터 병합
+//                    programData.put("program", program);
+//                    programData.put("pgfiles", fileDataList);  //모든 파일 URL 추가
+//
+//                }//for end
+//
+//            } catch (Exception e) {
+//                log.error("FTP 작업 중 오류 발생", e);
+//            }
+//
+//            return programData;
+//        } catch (Exception e) {
+//            log.error("어르신 프로그램 목록 불러오기 중 오류 발생", e);
+//            return null;
+//        }
+//
+//    }//selectProgramList() end
+
 }//ProgramController end
