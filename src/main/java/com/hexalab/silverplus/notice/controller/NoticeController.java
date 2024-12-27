@@ -152,7 +152,7 @@ public class NoticeController {
 
                 // pageable 객체 생성
                 Pageable pageable = PageRequest.of(
-                        search.getPageNumber() -1,
+                        search.getPageNumber() - 1,
                         search.getPageSize(),
                         Sort.by(Sort.Direction.DESC,"notCreateAt")
                 );
@@ -170,7 +170,52 @@ public class NoticeController {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
-        } else
+
+        // 검색조건 있을시
+        } else if(search.getKeyword() != null){
+            try{
+                int listCount = 0;
+                // 목록 갯수 출력
+                if (search.getAction().equals("제목")){
+                    listCount = noticeService.selectSearchTitleNoticeListCount(search.getKeyword());
+                } else if (search.getAction().equals("내용")){
+                    listCount = noticeService.selectSearchContentNoticeListCount(search.getKeyword());
+                }
+                log.info("listCount : " + listCount);
+
+//                //search setting
+//                if(search.getPageNumber()==0){
+//                    search.setPageNumber(1);
+//                    search.setPageSize(10);
+//                }
+                search.setListCount(listCount);
+
+                // pageable 객체 생성
+                Pageable pageable = PageRequest.of(
+                        search.getPageNumber() - 1,
+                        search.getPageSize(),
+                        Sort.by(Sort.Direction.DESC,"notCreateAt")
+                );
+                // 목록조회
+                ArrayList<Notice> noticeList =new ArrayList<Notice>();
+                if (search.getAction().equals("제목")){
+                    noticeList = noticeService.selectSearchTitleNoticeList(search.getKeyword(),pageable);
+                } else if (search.getAction().equals("내용")){
+                    noticeList = noticeService.selectSearchContentNoticeList(search.getKeyword(),pageable);
+                }
+                log.info("list count : " + noticeList.size());
+
+                // Map에 담아 전송
+                Map<String,Object> map = new HashMap<>();
+                map.put("list",noticeList);
+                map.put("search",search);
+                log.info("map : " + map);
+                return ResponseEntity.ok(map);
+            } catch (Exception e){
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
         return null;
     }
 }

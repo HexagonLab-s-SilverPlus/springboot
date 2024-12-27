@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,5 +59,31 @@ public class NoticeService {
             log.error(e.getMessage());
             return 0;
         }
+    }
+
+    public int selectSearchTitleNoticeListCount(String keyword) {
+        return (int)noticeRepository.selectSearchTitleNoticeListCount(keyword);
+    }
+
+    public int selectSearchContentNoticeListCount(String keyword) {
+        return (int)noticeRepository.selectSearchContentNoticeListCount(keyword);
+    }
+
+    public ArrayList<Notice> selectSearchTitleNoticeList(String keyword, Pageable pageable) {
+        ArrayList<Notice> list=new ArrayList<Notice>();
+        List<NoticeEntity> noticeList = noticeRepository.selectSearchTitleNoticeList(keyword,pageable);
+        for(NoticeEntity entity : noticeList) {
+            list.add(entity.toDto());
+        }
+        return list;
+    }
+
+    public ArrayList<Notice> selectSearchContentNoticeList(String keyword, Pageable pageable) {
+        ArrayList<Notice> list=new ArrayList<Notice>();
+        List<NoticeEntity> noticeList = noticeRepository.selectSearchContentNoticeList(keyword,pageable);
+        for(NoticeEntity entity : noticeList) {
+            list.add(entity.toDto());
+        }
+        return list;
     }
 }
