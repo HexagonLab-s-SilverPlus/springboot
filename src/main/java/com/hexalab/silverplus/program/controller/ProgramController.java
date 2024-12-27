@@ -164,170 +164,103 @@ public class ProgramController {
 
     //Program List
     @GetMapping
-    public Map<String, Object> programListMethod(
-            @RequestParam(name = "page", defaultValue = "1") int currentPage,
-            @RequestParam(name = "limit", defaultValue = "8") int limit
+    public ResponseEntity<Map<String, Object>> programListMethod(
+        @ModelAttribute Search search
     ) {
-        int listCount = programService.selectListCount();
+        Map<String, Object> programWithFiles = new HashMap<>();
 
-        //페이지 관련 항목 계산 처리
-        Paging paging = new Paging(listCount, limit, currentPage);
-        paging.calculate();
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
+                search.getPageSize(), Sort.by(Sort.Direction.DESC, "snrCreatedAt"));
 
-        //JPA가 제공하는 메소드에 필요한 Pageable 객체 생성
-        Pageable pageable = PageRequest.of(paging.getCurrentPage() - 1, paging.getLimit(),
-                Sort.by(Sort.Direction.DESC, "snrCreatedAt"));
+        int listCount = 0;
 
-        ArrayList<Program> list = programService.selectList(pageable);
+        try {
+            Map<String, Object> programlist = new HashMap<>();
 
-        //각 프로그램의 모든 파일 정보 추가
-        ArrayList<Map<String, Object>> programWithFiles = new ArrayList<>();
+            if (search.getAction().equals("all")) {
+                search.setListCount(programService.selectAllListCount());
+            } else if (search.getAction().equals("pgTitle")) {
+                search.setListCount(programService.selectTitleListCount(search.getKeyword()));
+            } else if (search.getAction().equals("pgContent")) {
+                search.setListCount(programService.selectContentListCount(search.getKeyword()));
+            } else if (search.getAction().equals("pgArea")) {
+                search.setListCount(programService.selectAreaListCount(search.getKeyword()));
+            } else if (search.getAction().equals("pgOrg")) {
+                search.setListCount(programService.selectOrgNameListCount(search.getKeyword()));
+            } else if (search.getAction().equals("pgDate")) {
+                search.setListCount(programService.selectDateListCount(search));
+            }
 
-        try (FTPUtility ftpUtility = new FTPUtility()) {
-            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+            programlist = programService.selectSearchList(pageable, search);
+            log.info("programlist : {}", programlist);
 
-            for (Program program : list) {
-                ArrayList<ProgramFile> files = programFileService.selectProgramFiles(program.getSnrProgramId());
+            //각 프로그램의 모든 파일 정보 추가
+            List<Map<String, Object>> programWithFilesList = new ArrayList<>();
 
-                //파일 URL 리스트 생성
-                ArrayList<Map<String, Object>> fileDataList = new ArrayList<>();
-                if (files != null && !files.isEmpty()) {
-                    for (ProgramFile file : files) {
-                        Map<String, Object> fileData = new HashMap<>();
+            try (FTPUtility ftpUtility = new FTPUtility()) {
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
 
-                        //파일 경로 구성
-                        String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+                // 프로그램 목록 가져오기
+                List<Program> programs = (List<Program>) programlist.get("list");
 
-                        //파일 다운로드 및 처리
-                        File tempFile = File.createTempFile("program-", null);
-                        ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+                for (Program program : programs) {
+                    List<ProgramFile> files = programFileService.selectProgramFiles(program.getSnrProgramId());
 
-                        //파일 내용 읽기
-                        byte[] fileContent = Files.readAllBytes(tempFile.toPath());
-                        tempFile.delete();
+                    //파일 URL 리스트 생성
+                    List<Map<String, Object>> fileDataList = new ArrayList<>();
+                    if (files != null && !files.isEmpty()) {
+                        for (ProgramFile file : files) {
+                            Map<String, Object> fileData = new HashMap<>();
 
-                        //MIME 타입 결정
-                        String mimeType = getMimeType(file.getSnrFileOGName());
-                        if (mimeType == null) {
-                            mimeType = "application/octet-stream";
+                            //파일 경로 구성
+                            String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+
+                            //파일 다운로드 및 처리
+                            File tempFile = File.createTempFile("program-", null);
+                            ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                            //파일 내용 읽기
+                            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                            tempFile.delete();
+
+                            //MIME 타입 결정
+                            String mimeType = getMimeType(file.getSnrFileOGName());
+                            if (mimeType == null) {
+                                mimeType = "application/octet-stream";
+                            }
+
+                            //파일 데이터 구성
+                            fileData.put("fileName", file.getSnrFileOGName());
+                            fileData.put("mimeType", mimeType);
+                            fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+
+                            fileDataList.add(fileData);
                         }
+                    }//if end
 
-                        //파일 데이터 구성
-                        fileData.put("fileName", file.getSnrFileOGName());
-                        fileData.put("mimeType", mimeType);
-                        fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+                    //프로그램 데이터와 파일 파일 데이터 병합
+                    Map<String, Object> programData = new HashMap<>();
+                    programData.put("program", program);
+                    programData.put("pgfiles", fileDataList);  //모든 파일 URL 추가
 
-                        fileDataList.add(fileData);
-                    }
-                }//if end
+                    programWithFilesList.add(programData);
+                }//for end
 
-                //프로그램 데이터와 파일 파일 데이터 병합
-                Map<String, Object> programData = new HashMap<>();
-                programData.put("program", program);
-                programData.put("pgfiles", fileDataList);  //모든 파일 URL 추가
+                // 프로그램 리스트를 최종 반환 데이터에 추가
+                programWithFiles.put("list", programWithFilesList);
+                programWithFiles.put("search", search);
 
-                programWithFiles.add(programData);
-            }//for end
+            } catch (Exception e) {
+                log.error("FTP 작업 중 오류 발생", e);
+            }
+
+            return ResponseEntity.ok(programWithFiles);
         } catch (Exception e) {
-            log.error("FTP 작업 중 오류 발생", e);
-        }
+            e.printStackTrace();
+            log.error("어르신 프로그램 목록 불러오기 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }//try~catch end
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("list", programWithFiles);
-        map.put("paging", paging);
-
-        return map;
     }//selectProgramList() end
-
-//    @GetMapping
-//    public Map<String, Object> programListMethod(
-//            @ModelAttribute Search search
-//    ) {
-//        log.info("search data : {}", search);
-//
-//        Map<String, Object> map = new HashMap<>();
-//
-//        //JPA가 제공하는 메소드에 필요한 Pageable 객체 생성
-//        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
-//                search.getPageSize(), Sort.by(Sort.Direction.DESC, "snrCreatedAt"));
-//
-//        int listCount = 0;
-//        try {
-//            //각 프로그램의 모든 파일 정보 추가
-//            Map<String, Object> programData = new HashMap<>();
-//
-//            if (search.getAction().equals("all")) {
-//                search.setListCount(programService.selectListCount());
-//
-//            } else if (search.getAction().equals("pgTitle")) {
-//                search.setListCount(programService.selectTitleListCount(search.getKeyword()));
-//            } else if (search.getAction().equals("pgContent")) {
-//                search.setListCount(programService.selectContentListCount(search.getKeyword()));
-//            } else if (search.getAction().equals("pgArea")) {
-//                search.setListCount(programService.selectAreaListCount(search.getKeyword()));
-//            } else if (search.getAction().equals("pgOrg")) {
-//                search.setListCount(programService.selectOrgNameListCount(search.getKeyword()));
-//            } else if (search.getAction().equals("pgDate")) {
-//                search.setListCount(programService.selectDateListCount(search));
-//            }
-//
-//            ArrayList<Program> list = programService.selectList(pageable, search);
-//
-//            //파일 미리보기 처리
-//            try (FTPUtility ftpUtility = new FTPUtility()) {
-//                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
-//
-//                for (Program program : list) {
-//                    ArrayList<ProgramFile> files = programFileService.selectProgramFiles(program.getSnrProgramId());
-//
-//                    //파일 URL 리스트 생성
-//                    ArrayList<Map<String, Object>> fileDataList = new ArrayList<>();
-//                    if (files != null && !files.isEmpty()) {
-//                        for (ProgramFile file : files) {
-//                            Map<String, Object> fileData = new HashMap<>();
-//
-//                            //파일 경로 구성
-//                            String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
-//
-//                            //파일 다운로드 및 처리
-//                            File tempFile = File.createTempFile("program-", null);
-//                            ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
-//
-//                            //파일 내용 읽기
-//                            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
-//                            tempFile.delete();
-//
-//                            //MIME 타입 결정
-//                            String mimeType = getMimeType(file.getSnrFileOGName());
-//                            if (mimeType == null) {
-//                                mimeType = "application/octet-stream";
-//                            }
-//
-//                            //파일 데이터 구성
-//                            fileData.put("fileName", file.getSnrFileOGName());
-//                            fileData.put("mimeType", mimeType);
-//                            fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
-//
-//                            fileDataList.add(fileData);
-//                        }
-//                    }//if end
-//
-//                    //프로그램 데이터와 파일 파일 데이터 병합
-//                    programData.put("program", program);
-//                    programData.put("pgfiles", fileDataList);  //모든 파일 URL 추가
-//
-//                }//for end
-//
-//            } catch (Exception e) {
-//                log.error("FTP 작업 중 오류 발생", e);
-//            }
-//
-//            return programData;
-//        } catch (Exception e) {
-//            log.error("어르신 프로그램 목록 불러오기 중 오류 발생", e);
-//            return null;
-//        }
-//
-//    }//selectProgramList() end
 
 }//ProgramController end

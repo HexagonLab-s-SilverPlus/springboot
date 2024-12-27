@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -49,12 +50,31 @@ public class ProgramService {
         }
     }//insertProgram end
 
-    public int selectListCount() {
+    public int selectAllListCount() {
         return (int) programRepository.count();
     }//selectListCount end
 
-    public ArrayList<Program> selectList(Pageable pageable) {
-        return toList(programRepository.findAll(pageable));
-    }//selectList end
+    public int selectTitleListCount(String keyword) {
+        return programRepository.selectTitleListCount(keyword);
+    }
 
+    public int selectContentListCount(String keyword) {
+        return programRepository.selectContentListCount(keyword);
+    }
+
+    public int selectAreaListCount(String keyword) {
+        return programRepository.selectAreaListCount(keyword);
+    }
+
+    public int selectOrgNameListCount(String keyword) {
+        return programRepository.selectOrgNameListCount(keyword);
+    }
+
+    public int selectDateListCount(Search search) {
+        return programRepository.selectDateListCount(search);
+    }
+
+    public Map<String, Object> selectSearchList(Pageable pageable, Search search) {
+        return programRepository.selectSearchList(pageable, search);
+    }
 }//ProgramService end
