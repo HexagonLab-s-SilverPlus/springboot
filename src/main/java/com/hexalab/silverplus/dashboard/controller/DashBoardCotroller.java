@@ -2,6 +2,7 @@ package com.hexalab.silverplus.dashboard.controller;
 
 import com.hexalab.silverplus.dashboard.model.dto.DashBoard;
 import com.hexalab.silverplus.dashboard.model.service.DashBoardService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+
+import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,7 +28,7 @@ import java.util.UUID;
 public class DashBoardCotroller {
     private final DashBoardService dashBoardService;
 
-    //할일 등록 요청 처리용
+    //TODO 등록 요청 처리용
     @PostMapping
     public ResponseEntity dashboardInsert(
             @ModelAttribute DashBoard dashBoard) {
@@ -45,5 +51,29 @@ public class DashBoardCotroller {
 
     }
 
+//    TODO 전체목록 보기처리용
+    @GetMapping
+    public Map<String, Object> dashboardList(){
 
-}
+        //서비스 목록 조회 요청하고 결과 받기
+        ArrayList<DashBoard> list = dashBoardService.selectList();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", list);
+        return map;
+    }
+
+    //ToDo 삭제 요청
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteDashboard(@PathVariable String taskId) {
+        log.info("Delete request received for taskId: {}", taskId);
+        try {
+            dashBoardService.deleteDashboard(taskId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+}//DashBoard End.

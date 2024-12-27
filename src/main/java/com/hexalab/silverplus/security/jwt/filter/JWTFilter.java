@@ -128,7 +128,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     requestURI.equals("/api/sms") ||
                     requestURI.equals("/api/sms/verify") ||
                     requestURI.equals("/member/idchk") ||
-                    requestURI.equals("/member")) {
+                    requestURI.equals("/member/enroll")) {
                 log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;

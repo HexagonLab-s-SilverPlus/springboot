@@ -1,13 +1,17 @@
 package com.hexalab.silverplus.member.model.service;
 
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.repository.MemberRepository;
 import com.hexalab.silverplus.member.model.dto.Member;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -18,14 +22,21 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
 
+
+    private ArrayList<Member> toList(List<MemberEntity> list) {
+        ArrayList<Member> memberList = new ArrayList<>();
+        for (MemberEntity memberEntity : list) {
+            memberList.add(memberEntity.toDto());
+        }
+        return memberList;
+    }
+
     // 회원가입 처리 메소드
-    public int insertMember(Member member) {
+    public void insertMember(Member member) {
         try {
             memberRepository.save(member.toEntity());
-            return 1;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return 0;
         }
     }
 
@@ -49,13 +60,59 @@ public class MemberService {
         return memberEntity.toDto();
     }
 
+    public int removeByMemId(String memId) {
+        return (int) memberRepository.removeByMemId(memId);
+    }
 
-    /*
     // 회원정보 수정 처리 메소드
-    public int updateMember() {}
+    public int updateMember(Member member) {
+        try {
+            memberRepository.save(member.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
+    }
 
     // 회원 목록 출력 처리 메소드
-    public List<Member> selectAllMember() {}
+    public List<Member> selectAllMember(Pageable pageable, Search search) {
+        try {
+            log.info("조회하는 값 확인(서비스) : {}", memberRepository.selectAllMember(pageable, search));
+            return toList(memberRepository.selectAllMember(pageable, search));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
+    public int selectAllCount() {
+        return (int) memberRepository.selectAllCount();
+    }
+
+    public int selectMemIdCount(String keyword) {
+        return (int) memberRepository.selectMemIdCount(keyword);
+    }
+
+    public int selectMemNameCount(String keyword) {
+        return (int) memberRepository.selectMemNameCount(keyword);
+    }
+
+    public int selectMemStatusCount(String keyword) {
+        return (int) memberRepository.selectMemStatusCount(keyword);
+    }
+
+    public int selectMemTypeCount(String keyword) {
+        return (int) memberRepository.selectMemTypeCount(keyword);
+    }
+
+    /*
+
+
+
 
     // 회원 탈퇴 처리 메소드
     public int removeMember() {}
