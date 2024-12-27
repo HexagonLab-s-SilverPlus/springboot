@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,11 @@ public class WorkspaceController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size) {
         try {
+            log.info("memUuid: {}", memUuid);
+            log.info("workspaceStatus: {}", workspaceStatus);
+            log.info("page: {}", page);
+            log.info("size: {}", size);
+
             // 1-based page -> 0-based offset 계산
             int offset=(page-1) * size;
 
@@ -46,9 +52,11 @@ public class WorkspaceController {
 
             // 결과가 없는 경우
             if (workspaces.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<List<Workspace>>builder()
-                        .success(false)
-                        .message(workspaceStatus+"의 워크스페이스가 존재하지 않습니다.")
+                // 데이터가 없더라도 200 상태와 빈 배열 반환
+                return ResponseEntity.ok(ApiResponse.<List<Workspace>>builder()
+                        .success(true)
+                        .message(workspaceStatus + " 상태의 워크스페이스가 없습니다.")
+                        .data(Collections.emptyList())
                         .build());
             }
 
@@ -59,6 +67,7 @@ public class WorkspaceController {
                     .data(workspaces)
                     .build());
         } catch (Exception e) {
+            e.printStackTrace();
             log.error(workspaceStatus, "의 워크스페이스 조회 실패", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<List<Workspace>>builder()
                     .success(false)
