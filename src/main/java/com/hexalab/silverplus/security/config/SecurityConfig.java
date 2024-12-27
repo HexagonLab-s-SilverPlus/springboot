@@ -148,7 +148,7 @@ public class SecurityConfig {
 
                             // Workspace
                             .requestMatchers(HttpMethod.POST, "/api/workspace/create").hasAnyRole("ADMIN", "SENIOR")    // ADMIN 추후 삭제
-                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}").hasAnyRole("ADMIN", "SENIOR")  // ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}/status").hasAnyRole("ADMIN", "SENIOR")  // TODO: (From.은영) 제가 수정했습니다. 노션에도 업뎃은 해놨어요. ADMIN 추후 삭제
 
                             // Chat
                             .requestMatchers(HttpMethod.POST, "/api/chat/save").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
