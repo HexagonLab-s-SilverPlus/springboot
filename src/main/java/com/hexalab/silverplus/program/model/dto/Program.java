@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.program.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hexalab.silverplus.program.jpa.entity.ProgramEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
