@@ -371,4 +371,16 @@ public class NoticeController {
         }
     }//getMimeType end
 
+
+    // 공지사항 삭제
+    @DeleteMapping("/{noticeNo}")
+    public ResponseEntity noticeDelete(
+            @RequestParam("noticeNo") String notId,
+            @RequestParam("memName") String memName
+    ){
+        log.info("notId :" + notId);
+        log.info("memName : " + memName);
+        return null;
+    }
+
 }
