@@ -1,9 +1,9 @@
 package com.hexalab.silverplus.notice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Search;
-import com.hexalab.silverplus.member.jpa.entity.MemberFilesEntity;
 import com.hexalab.silverplus.notice.model.dto.Notice;
 import com.hexalab.silverplus.notice.model.dto.NoticeFiles;
 import com.hexalab.silverplus.notice.model.service.NoticeFilesService;
@@ -26,6 +26,9 @@ import java.io.File;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -63,6 +66,7 @@ public class NoticeController {
         if(files != null){
             for (MultipartFile file : files) {
                 log.info("파일이름 : " + file.getOriginalFilename());
+                log.info("파일 : " + file);
             }
         }
 
@@ -186,11 +190,6 @@ public class NoticeController {
                 }
                 log.info("listCount : " + listCount);
 
-//                //search setting
-//                if(search.getPageNumber()==0){
-//                    search.setPageNumber(1);
-//                    search.setPageSize(10);
-//                }
                 search.setListCount(listCount);
 
                 // pageable 객체 생성
@@ -275,6 +274,7 @@ public class NoticeController {
 
                 // 파일 읽기
                 byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+
                 tempFile.delete();
 
                 // MIME 타입 결정
@@ -373,14 +373,160 @@ public class NoticeController {
 
 
     // 공지사항 삭제
-    @DeleteMapping("/{noticeNo}")
+    @PostMapping("/delete/{notId}")
     public ResponseEntity noticeDelete(
-            @RequestParam("noticeNo") String notId,
-            @RequestParam("memName") String memName
+            @PathVariable("notId") String notId,
+            @RequestBody Map<String, Object> requestBody
     ){
         log.info("notId :" + notId);
-        log.info("memName : " + memName);
-        return null;
+        log.info("RequestBody : " + requestBody);
+
+        // params에서 데이터 추출
+        Map<String, Object> params = (Map<String, Object>) requestBody.get("params");
+        if (params == null) {
+            log.error("params 데이터가 없습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("params 데이터가 없습니다.");
+        }
+
+        try {
+            // 날짜 변환
+            String notCreateAtStr = params.get("notCreateAt").toString();
+            String notUpdateAtStr = params.get("notUpdateAt").toString();
+
+            // ISO 8601 -> LocalDateTime 변환
+            LocalDateTime notCreateAt = LocalDateTime.ofInstant(Instant.parse(notCreateAtStr), ZoneId.systemDefault());
+            LocalDateTime notUpdateAt = LocalDateTime.ofInstant(Instant.parse(notUpdateAtStr), ZoneId.systemDefault());
+
+            // LocalDateTime -> Timestamp 변환
+            Timestamp notCreateAtTimestamp = Timestamp.valueOf(notCreateAt);
+            Timestamp notUpdateAtTimestamp = Timestamp.valueOf(notUpdateAt);
+
+            // Notice 객체 생성
+            Notice notice = new Notice();
+            notice.setNotId(params.get("notId").toString());
+            notice.setNotTitle(params.get("notTitle").toString());
+            notice.setNotContent(params.get("notContent").toString());
+            notice.setNotCreateAt(notCreateAtTimestamp);
+            notice.setNotCreateBy(params.get("notCreateBy").toString());
+            notice.setNotUpdateAt(notUpdateAtTimestamp);
+            notice.setNotUpdateBy(params.get("notUpdateBy").toString());
+            notice.setNotDeleteAt(new Timestamp(System.currentTimeMillis()));
+            notice.setNotDeleteBy(params.get("memUUID").toString());
+            notice.setNotReadCount((int) params.get("notReadCount"));
+
+            log.info("notice: " + notice);
+
+            // 삭제 처리
+            if (noticeService.noticeUpdateDelete(notice) > 0) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (Exception e) {
+            log.error("공지사항 삭제 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<?> noticeUpdate(
+            @RequestParam("notice") String noticeJson,
+            @RequestParam(name = "deleteFiles", required = false) List<String> deleteFiles,
+            @RequestParam(name = "newFiles", required = false) List<MultipartFile> newFiles
+    ) {
+        log.info("noticeJson : " + noticeJson);
+        log.info("deleteFiles : " + deleteFiles);
+        log.info("newFiles : " + newFiles);
+
+        try {
+            // JSON 데이터 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> params = objectMapper.readValue(noticeJson, Map.class);
+
+            log.info("params : " + params);
+
+            // ISO 8601 날짜 문자열 변환
+            String notCreateAtStr = params.get("notCreateAt").toString();
+
+            // ISO 8601 -> LocalDateTime -> Timestamp 변환
+            LocalDateTime notCreateAt = LocalDateTime.ofInstant(Instant.parse(notCreateAtStr), ZoneId.systemDefault());
+            Timestamp notCreateAtTimestamp = Timestamp.valueOf(notCreateAt);
+
+            // Notice 객체 생성
+            Notice notice = new Notice();
+            notice.setNotId(params.get("notId").toString());
+            notice.setNotTitle(params.get("notTitle").toString());
+            notice.setNotContent(params.get("notContent").toString());
+            notice.setNotCreateAt(notCreateAtTimestamp);
+            notice.setNotCreateBy(params.get("notCreateBy").toString());
+            notice.setNotUpdateAt(new Timestamp(System.currentTimeMillis()));
+            notice.setNotUpdateBy(params.get("notUpdateBy").toString());
+            notice.setNotReadCount((int) params.get("notReadCount"));
+
+            log.info("notice: " + notice);
+
+            // 파일 처리 로직
+            if (newFiles != null) {
+                for (MultipartFile file : newFiles) {
+                    log.info("New file: " + file.getOriginalFilename());
+                }
+            }
+            if (deleteFiles != null) {
+                log.info("Delete files: " + deleteFiles.toArray());
+            }
+
+//            // nas ftp connect
+//            FTPUtility ftpUtility = new FTPUtility();
+//            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+//            if (newFiles != null && newFiles.size() > 0) {
+//                // noticeFiles set
+//                for (MultipartFile file : newFiles) {
+//                    // setter
+//                    NoticeFiles insertFile = new NoticeFiles();
+//                    String fileName = file.getOriginalFilename();
+//                    insertFile.setNfId(UUID.randomUUID().toString());
+//                    String renameFile = CreateRenameFileName.create(insertFile.getNfId(),fileName);
+//                    insertFile.setNfNotId(notice.getNotId());
+//                    insertFile.setNfOreginalName(fileName);
+//                    insertFile.setNfRename(renameFile);
+//
+//                    // create file
+//                    File tempFile = File.createTempFile("notice-",null);
+//                    file.transferTo(tempFile);
+//
+//                    // file upload
+//                    String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
+//                    ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
+//
+//                    // db save
+//                    if (noticeFilesService.noticeFileInsert(insertFile) ==1 ){
+//                        // delete tempFile
+//                        tempFile.delete();
+//                        log.info("insert file : " + fileName);
+//                    } else {
+//                        log.info("공지사항 첨부파일 등록 실패");
+//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//                    }
+//                }
+//            }
+//
+//            // 기존파일 삭제처리
+//            if(deleteFiles != null && deleteFiles.size() > 0) {
+//                for (NoticeFiles)
+//            }
+//
+//
+//            // 본글 수정 처리
+//            if (noticeService.noticeUpdate(notice) > 0) {
+//                log.info("업데이트성공");
+//                return ResponseEntity.ok().build();
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//            }
+        } catch (Exception e) {
+            log.error("공지사항 수정 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        return ResponseEntity.ok().build();
+    }
 }
