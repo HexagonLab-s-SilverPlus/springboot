@@ -222,7 +222,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"invalid token\"}");
                 return;
             }
-
+            log.info("JWTFilter 제대로 작동 진행되는지 확인");
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             log.error("JWT 처리 중 오류 발생: ", e);

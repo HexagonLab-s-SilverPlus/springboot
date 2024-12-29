@@ -88,6 +88,7 @@ public class MemberEntity {
                 .memGovCode(memGovCode)
                 .memStatus(memStatus)
                 .memEnrollDate(memEnrollDate)
+                .memChangeStatus(memChangeStatus)
                 .memFamilyApproval(memFamilyApproval)
                 .memSocialKakao(memSocialKakao)
                 .memKakaoEmail(memKakaoEmail)
