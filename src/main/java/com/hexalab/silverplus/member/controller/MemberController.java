@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.member.controller;
 
 import com.hexalab.silverplus.common.CreateRenameFileName;
+import com.hexalab.silverplus.common.CustomValidator;
 import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberFilesEntity;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +43,8 @@ public class MemberController {
     private final MemberFilesService memberFilesService;
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    private final CustomValidator validator;
 
     @Value("${uploadDir}")
     private String uploadDir;
@@ -93,6 +97,10 @@ public class MemberController {
             log.info("member" + member);    // 암호화처리 정상 작동 확인
 
             member.setMemUUID(UUID.randomUUID().toString());
+            member.setMemSocialKakao("N");
+            member.setMemSocialGoogle("N");
+            member.setMemSocialNaver("N");
+            member.setMemFamilyApproval("N");
 
             memberService.insertMember(member);
             FTPUtility ftpUtility = new FTPUtility();
@@ -160,24 +168,24 @@ public class MemberController {
     }
 
     // 회원정보 수정 처리 메소드
-    @PutMapping
-    public ResponseEntity memberUpdateMethod(@ModelAttribute Member member, HttpServletRequest request) {
+    @PutMapping("/update/{memUUID}")
+    public ResponseEntity memberUpdateMethod(@ModelAttribute Member member, BindingResult result) {
         log.info("수정 메소드 작동, 전달온 값 확인 : {}", member);
         try {
-            // 요청 헤더에서 기존 비밀번호 정보 추출
-            String OriginalPassword = request.getHeader("OriginalPassword");
             // 비밀번호 변경 요청 시
-            if (member.getMemPw() != null && member.getMemPw().length() > 0) {
+            if (!member.getMemPw().equals(memberService.findByMemId(member.getMemId()).getMemPw()))  {
                 // 수정하고자 하는 비밀번호 암호화처리
+                log.info("비밀번호 변경요청처리 확인");
                 member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
             } else {
-                // 비밀번호 변경 요청 아닐 시 기존 비밀번호 저장처리
-                member.setMemPw(OriginalPassword);
+                log.info("비밀번호 변경요청안함 처리 확인");
             }
 
-//            member.setMemChangeStatus(new LocalDateTime(System.currentTimeMillis()));
+            // 클라이언트로 넘어오는 "null" 값 처리
+            validator.validate(member, result);
+            log.info("전송보내는 memeber 객체 확인(memberUpdateMethod) : {}", member);
 
-
+            memberService.updateMember(member);
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -319,9 +327,7 @@ public class MemberController {
 
 
 
-    // 회원 상태정보 수정 처리 메소드 (관리자)
-    @PutMapping("/status")
-    public ResponseEntity<?> memberStatusUpdateMethod() {}
+
 
 
 
