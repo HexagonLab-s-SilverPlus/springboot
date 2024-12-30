@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.map;
 
@@ -51,7 +48,21 @@ public class DashBoardCotroller {
 
     }
 
-//    TODO 전체목록 보기처리용
+
+    @GetMapping("/date/{taskDate}")
+    public ResponseEntity<List<DashBoard>> getTodosByDate(@PathVariable Timestamp taskDate) {
+        log.info("Fetching todos for date: {}", taskDate);
+
+        List<DashBoard> tasks = dashBoardService.findByDate(taskDate);
+
+        if (!tasks.isEmpty()) {
+            return ResponseEntity.ok(tasks);
+        } else {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+    }
+
+    //    TODO 전체목록 보기처리용
     @GetMapping
     public Map<String, Object> dashboardList(){
 
@@ -75,5 +86,28 @@ public class DashBoardCotroller {
         }
     }
 
+    @PutMapping("/{Id}")
+    public ResponseEntity DashboardUpdate(@ModelAttribute DashBoard dashBoard) {
+        log.info("Update request received for Id: {}", dashBoard);
+
+        if (dashBoard.getTaskStatus() == null) {
+            if (dashBoard.getTaskStatus().equals("false")) {
+                dashBoard.setTaskStatus("N");
+
+            }
+            if (dashBoard.getTaskStatus().equals("true")) {
+                dashBoard.setTaskStatus("Y");
+            }
+        }
+
+
+
+            if (dashBoardService.updateDashBoard(dashBoard) > 0) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
+        }//update End
 
 }//DashBoard End.

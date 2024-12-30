@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +36,12 @@ public class DashBoardService {
 
 
     }
- //selctt
+ //select
+
+
+    public List<DashBoard> findByDate(Timestamp taskDate) {
+        return dashBoardRepository.findByTaskDate(taskDate); // Repository에서 쿼리 호출
+    }
 
     public ArrayList<DashBoard> selectList() {
          // 전체 데이터를 조회
@@ -54,6 +60,17 @@ public class DashBoardService {
     public int deleteDashboard(String taskId) {
         try {
             dashBoardRepository.deleteById(taskId);
+            return 1;
+        }catch (Exception e){
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
+     }
+
+     public int updateDashBoard(DashBoard dashBoard) {
+        try{
+            dashBoardRepository.save(dashBoard.toEntity());
             return 1;
         }catch (Exception e){
             e.printStackTrace();
