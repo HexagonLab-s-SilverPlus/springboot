@@ -39,13 +39,13 @@ public class NoticeService {
 
     // 공지사항 갯수
     public int selectAllNoticeListCount() {
-        return (int)noticeRepository.count();
+        return (int)noticeRepository.selectAllNoticeListCount();
     }
 
     // 공지사항 리스트 출력
     public ArrayList<Notice> selectAllNoticeList(Pageable pageable) {
-        Page<NoticeEntity> entityList = noticeRepository.findAll(pageable);
         ArrayList<Notice> noticeList = new ArrayList<Notice>();
+        List<NoticeEntity> entityList = noticeRepository.selectAllNoticeList(pageable);
         for(NoticeEntity entity : entityList) {
             noticeList.add(entity.toDto());
         }
@@ -108,5 +108,25 @@ public class NoticeService {
         log.info("upReadCount : " + notice);
         notice.setNotReadCount(notice.getNotReadCount() + 1);
         return noticeRepository.save(notice).toDto();
+    }
+
+    public int noticeUpdateDelete(Notice notice) {
+        try{
+            noticeRepository.save(notice.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public int noticeUpdate(Notice notice) {
+        try {
+            noticeRepository.save(notice.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 }
