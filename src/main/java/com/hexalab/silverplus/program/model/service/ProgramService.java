@@ -50,6 +50,7 @@ public class ProgramService {
         }
     }//insertProgram end
 
+    //Program List
     public int selectAllListCount() {
         return (int) programRepository.count();
     }//selectListCount end
@@ -74,7 +75,15 @@ public class ProgramService {
         return programRepository.selectDateListCount(search);
     }
 
+    //Program search
     public Map<String, Object> selectSearchList(Pageable pageable, Search search) {
         return programRepository.selectSearchList(pageable, search);
     }
+
+    //Program Detail
+    public Program selectProgram(String snrProgramId) {
+        return programRepository.findById(snrProgramId).get().toDto();
+    }
+
+
 }//ProgramService end

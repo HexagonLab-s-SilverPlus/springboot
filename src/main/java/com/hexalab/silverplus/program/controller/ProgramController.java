@@ -164,7 +164,7 @@ public class ProgramController {
 
     //Program List
     @GetMapping
-    public ResponseEntity<Map<String, Object>> programListMethod(
+    public ResponseEntity<Map<String, Object>> selectProgramListMethod(
         @ModelAttribute Search search
     ) {
         Map<String, Object> programWithFiles = new HashMap<>();
@@ -262,5 +262,67 @@ public class ProgramController {
         }//try~catch end
 
     }//selectProgramList() end
+
+    //Program Detail
+    @GetMapping("/detail/{snrProgramId}")
+    public ResponseEntity<Map<String, Object>> selectProgramDetailMethod(
+            @PathVariable String snrProgramId
+    ) {
+        try {
+            Map<String, Object> programWithFiles = new HashMap<>();
+            
+            Program program = programService.selectProgram(snrProgramId);
+            
+            try (FTPUtility ftpUtility = new FTPUtility()) {
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+                List<ProgramFile> files = programFileService.selectProgramFiles(snrProgramId);
+                List<Map<String, Object>> fileDataList = new ArrayList<>();
+
+                if (files != null && !files.isEmpty()) {
+                    for (ProgramFile file : files) {
+                        Map<String, Object> fileData = new HashMap<>();
+
+                        // FTP 파일 경로
+                        String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+
+                        // 다운로드
+                        File tempFile = File.createTempFile("program-", null);
+                        ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                        // 파일 읽기 및 MIME 타입 결정
+                        byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                        String mimeType = getMimeType(file.getSnrFileOGName());
+                        if (mimeType == null) {
+                            mimeType = "application/octet-stream";
+                        }
+
+                        // 데이터 구성
+                        fileData.put("fileName", file.getSnrFileOGName()); // 원본 파일명
+                        fileData.put("mimeType", mimeType);
+                        fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+
+                        fileDataList.add(fileData);
+
+                        // 임시 파일 삭제
+                        tempFile.delete();
+                    }
+                }
+
+                programWithFiles.put("program", program);
+                programWithFiles.put("files", fileDataList);
+
+            } catch (Exception e) {
+                log.error("FTP 작업 중 오류 발생", e);
+            }//ftp try~catch
+
+            return ResponseEntity.ok(programWithFiles);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("어르신 프로그램 디테일 불러오기 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }//selectProgramDetailMethod end
 
 }//ProgramController end
