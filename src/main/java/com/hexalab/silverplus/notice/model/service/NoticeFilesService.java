@@ -45,4 +45,15 @@ public class NoticeFilesService {
         }
         return noticeFiles;
     }
+
+    public int deleteNoticeFile(String nfId) {
+        try {
+            noticeFilesRepository.deleteById(nfId);
+            return 1;
+        } catch (Exception e){
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
+    }
 }
