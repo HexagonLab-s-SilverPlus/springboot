@@ -128,7 +128,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     requestURI.equals("/api/sms") ||
                     requestURI.equals("/api/sms/verify") ||
                     requestURI.equals("/member/idchk") ||
-                    requestURI.equals("/member")) {
+                    requestURI.equals("/member/enroll")) {
                 log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;
@@ -222,7 +222,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"invalid token\"}");
                 return;
             }
-
+            log.info("JWTFilter 제대로 작동 진행되는지 확인");
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             log.error("JWT 처리 중 오류 발생: ", e);

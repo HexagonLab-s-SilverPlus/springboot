@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -24,7 +25,7 @@ public class NoticeService {
 
     private final NoticeRepository noticeRepository;
 
-    // notice insert
+    // 공지사항 입력
     public int noticeInsert(Notice notice) {
         try {
             noticeRepository.save(notice.toEntity());
@@ -36,20 +37,22 @@ public class NoticeService {
         }
     }
 
+    // 공지사항 갯수
     public int selectAllNoticeListCount() {
-        return (int)noticeRepository.count();
+        return (int)noticeRepository.selectAllNoticeListCount();
     }
 
-
+    // 공지사항 리스트 출력
     public ArrayList<Notice> selectAllNoticeList(Pageable pageable) {
-        Page<NoticeEntity> entityList = noticeRepository.findAll(pageable);
         ArrayList<Notice> noticeList = new ArrayList<Notice>();
+        List<NoticeEntity> entityList = noticeRepository.selectAllNoticeList(pageable);
         for(NoticeEntity entity : entityList) {
             noticeList.add(entity.toDto());
         }
         return noticeList;
     }
 
+    // 파일업로드 실패시 입력한 공지사항 삭제용
     public int noticeDelete(String notId) {
         try {
             noticeRepository.deleteById(notId);
@@ -61,14 +64,17 @@ public class NoticeService {
         }
     }
 
+    // 공지사항 검색 리스트 갯수(제목)
     public int selectSearchTitleNoticeListCount(String keyword) {
         return (int)noticeRepository.selectSearchTitleNoticeListCount(keyword);
     }
 
+    // 공지사항 검색 리스트 갯수(내용)
     public int selectSearchContentNoticeListCount(String keyword) {
         return (int)noticeRepository.selectSearchContentNoticeListCount(keyword);
     }
 
+    // 공지사항 검색 리스트(제목)
     public ArrayList<Notice> selectSearchTitleNoticeList(String keyword, Pageable pageable) {
         ArrayList<Notice> list=new ArrayList<Notice>();
         List<NoticeEntity> noticeList = noticeRepository.selectSearchTitleNoticeList(keyword,pageable);
@@ -78,6 +84,7 @@ public class NoticeService {
         return list;
     }
 
+    // 공지사항 검색 리스트(내용)
     public ArrayList<Notice> selectSearchContentNoticeList(String keyword, Pageable pageable) {
         ArrayList<Notice> list=new ArrayList<Notice>();
         List<NoticeEntity> noticeList = noticeRepository.selectSearchContentNoticeList(keyword,pageable);
@@ -85,5 +92,41 @@ public class NoticeService {
             list.add(entity.toDto());
         }
         return list;
+    }
+
+    // 공지사항 상세보기
+    public Notice selectNotice(String notId) {
+        Optional<NoticeEntity> noticeEntity = noticeRepository.findById(notId);
+        return noticeEntity.get().toDto();
+    }
+    
+    // 공지사항 조회수 증가
+    @Transactional
+    public Notice upReadCount(String notId) {
+        Optional<NoticeEntity> noticeEntity = noticeRepository.findById(notId);
+        NoticeEntity notice = noticeEntity.get();
+        log.info("upReadCount : " + notice);
+        notice.setNotReadCount(notice.getNotReadCount() + 1);
+        return noticeRepository.save(notice).toDto();
+    }
+
+    public int noticeUpdateDelete(Notice notice) {
+        try{
+            noticeRepository.save(notice.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public int noticeUpdate(Notice notice) {
+        try {
+            noticeRepository.save(notice.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 }

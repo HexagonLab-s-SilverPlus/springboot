@@ -65,7 +65,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                     .limit(pageable.getPageSize())
                     .fetch();
             log.info("조회하는 값 확인(전체) : {}", list);
-        } else if (search.getAction().equals("memId")) {
+        } else if (search.getAction().equals("아이디")) {
             list = queryFactory
                     .selectFrom(member)
                     .where(member.memType.ne("ADMIN").and(member.memId.like("%" + search.getKeyword() + "%")))
@@ -73,7 +73,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
-        } else if (search.getAction().equals("memName")) {
+        } else if (search.getAction().equals("이름")) {
             list = queryFactory
                     .selectFrom(member)
                     .where(member.memType.ne("ADMIN").and(member.memName.like("%" + search.getKeyword() + "%")))
@@ -81,7 +81,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
-        } else if (search.getAction().equals("memStatus")) {
+        } else if (search.getAction().equals("계정상태")) {
             list = queryFactory
                     .selectFrom(member)
                     .where(member.memType.ne("ADMIN").and(member.memStatus.eq(search.getKeyword())))
@@ -89,7 +89,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
-        } else if (search.getAction().equals("memType"))
+        } else if (search.getAction().equals("계정타입"))
             list = queryFactory
                     .selectFrom(member)
                     .where(member.memType.ne("ADMIN").and(member.memType.eq(search.getKeyword())))
