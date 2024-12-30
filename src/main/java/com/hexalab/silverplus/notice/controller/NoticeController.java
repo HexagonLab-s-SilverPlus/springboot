@@ -431,18 +431,28 @@ public class NoticeController {
     @PostMapping("/update")
     public ResponseEntity<?> noticeUpdate(
             @RequestParam("notice") String noticeJson,
-            @RequestParam(name = "deleteFiles", required = false) List<String> deleteFiles,
+            @RequestParam(name = "deleteFiles", required = false) String deleteFilesJson,
             @RequestParam(name = "newFiles", required = false) List<MultipartFile> newFiles
     ) {
         log.info("noticeJson : " + noticeJson);
-        log.info("deleteFiles : " + deleteFiles);
+        log.info("deleteFiles : " + deleteFilesJson);
         log.info("newFiles : " + newFiles);
 
         try {
             // JSON 데이터 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> params = objectMapper.readValue(noticeJson, Map.class);
-
+            List<NoticeFiles> deleteFiles = new ArrayList<>();
+            // deleteFiles JSON 파싱
+            if (deleteFilesJson != null) {
+                deleteFiles = Arrays.asList(objectMapper.readValue(deleteFilesJson, NoticeFiles[].class));
+                for (NoticeFiles deleteFile : deleteFiles) {
+                    log.info("Delete file: " + deleteFile.getNfOreginalName());
+                }
+                for(Object deleteFile : deleteFiles) {
+                    log.info("Delete files: " + deleteFile.toString());
+                }
+            }
             log.info("params : " + params);
 
             // ISO 8601 날짜 문자열 변환
@@ -469,64 +479,76 @@ public class NoticeController {
             if (newFiles != null) {
                 for (MultipartFile file : newFiles) {
                     log.info("New file: " + file.getOriginalFilename());
+
                 }
             }
-            if (deleteFiles != null) {
-                log.info("Delete files: " + deleteFiles.toArray());
+
+            // nas ftp connect
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+            if (newFiles != null && newFiles.size() > 0) {
+                // noticeFiles set
+                for (MultipartFile file : newFiles) {
+                    // setter
+                    NoticeFiles insertFile = new NoticeFiles();
+                    String fileName = file.getOriginalFilename();
+                    insertFile.setNfId(UUID.randomUUID().toString());
+                    String renameFile = CreateRenameFileName.create(insertFile.getNfId(),fileName);
+                    insertFile.setNfNotId(notice.getNotId());
+                    insertFile.setNfOreginalName(fileName);
+                    insertFile.setNfRename(renameFile);
+
+                    // create file
+                    File tempFile = File.createTempFile("notice-",null);
+                    file.transferTo(tempFile);
+
+                    // file upload
+                    String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
+                    ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
+
+                    // db save
+                    if (noticeFilesService.noticeFileInsert(insertFile) ==1 ){
+                        // delete tempFile
+                        tempFile.delete();
+                        log.info("insert file : " + fileName);
+                    } else {
+                        log.info("공지사항 첨부파일 등록 실패");
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+                }
             }
 
-//            // nas ftp connect
-//            FTPUtility ftpUtility = new FTPUtility();
-//            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
-//            if (newFiles != null && newFiles.size() > 0) {
-//                // noticeFiles set
-//                for (MultipartFile file : newFiles) {
-//                    // setter
-//                    NoticeFiles insertFile = new NoticeFiles();
-//                    String fileName = file.getOriginalFilename();
-//                    insertFile.setNfId(UUID.randomUUID().toString());
-//                    String renameFile = CreateRenameFileName.create(insertFile.getNfId(),fileName);
-//                    insertFile.setNfNotId(notice.getNotId());
-//                    insertFile.setNfOreginalName(fileName);
-//                    insertFile.setNfRename(renameFile);
-//
-//                    // create file
-//                    File tempFile = File.createTempFile("notice-",null);
-//                    file.transferTo(tempFile);
-//
-//                    // file upload
-//                    String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
-//                    ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
-//
-//                    // db save
-//                    if (noticeFilesService.noticeFileInsert(insertFile) ==1 ){
-//                        // delete tempFile
-//                        tempFile.delete();
-//                        log.info("insert file : " + fileName);
-//                    } else {
-//                        log.info("공지사항 첨부파일 등록 실패");
-//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//                    }
-//                }
-//            }
-//
-//            // 기존파일 삭제처리
-//            if(deleteFiles != null && deleteFiles.size() > 0) {
-//                for (NoticeFiles)
-//            }
-//
-//
-//            // 본글 수정 처리
-//            if (noticeService.noticeUpdate(notice) > 0) {
-//                log.info("업데이트성공");
-//                return ResponseEntity.ok().build();
-//            } else {
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//            }
+            // 기존파일 삭제처리
+            if (deleteFiles != null && deleteFiles.size() > 0) {
+                for (NoticeFiles deleteFile : deleteFiles) {
+                    try {
+                        // 데이터베이스에서 삭제
+                        if (noticeFilesService.deleteNoticeFile(deleteFile.getNfId()) > 0) {
+                            log.info("파일 정보 삭제 성공: " + deleteFile.getNfOreginalName());
+
+                            // FTP 서버에서 파일 삭제
+                            String remoteFilePath = ftpRemoteDir + "notice/" + deleteFile.getNfRename();
+                            ftpUtility.deleteFile(remoteFilePath);
+                            log.info("FTP 파일 삭제 성공: " + remoteFilePath);
+                        } else {
+                            log.warn("파일 정보 삭제 실패: " + deleteFile.getNfOreginalName());
+                        }
+                    } catch (Exception e) {
+                        log.error("파일 삭제 중 오류 발생: " + deleteFile.getNfOreginalName(), e);
+                    }
+                }
+            }
+
+            // 본글 수정 처리
+            if (noticeService.noticeUpdate(notice) > 0) {
+                log.info("업데이트성공");
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
         } catch (Exception e) {
             log.error("공지사항 수정 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.ok().build();
     }
 }

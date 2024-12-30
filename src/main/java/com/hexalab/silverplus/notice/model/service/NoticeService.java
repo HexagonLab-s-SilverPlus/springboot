@@ -119,4 +119,14 @@ public class NoticeService {
             return 0;
         }
     }
+
+    public int noticeUpdate(Notice notice) {
+        try {
+            noticeRepository.save(notice.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 }
