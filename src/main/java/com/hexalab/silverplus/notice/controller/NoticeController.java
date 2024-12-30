@@ -108,6 +108,7 @@ public class NoticeController {
 
                     // file upload
                     String remoteFilePath = ftpRemoteDir + "notice/"+renameFile;
+
                     ftpUtility.uploadFile(tempFile.getAbsolutePath(),remoteFilePath);
 
                     // db save
