@@ -156,6 +156,7 @@ public class SecurityConfig {
 
                             // Member
                             .requestMatchers(HttpMethod.GET, "/member/adminList").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/member/update/{memUUID}").hasRole("ADMIN")
 
                             // .permitAll() :  URL 의 접근을 허용한다는 의미(통과는 아님). 제일 처음 작동됨
                             // .permitAll() 에 등록되지 않은 url 은 서버에 접속 못하게 됨

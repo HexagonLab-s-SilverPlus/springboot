@@ -3,6 +3,7 @@ package com.hexalab.silverplus.member.model.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,10 +35,10 @@ public class Member implements java.io.Serializable {
     private String memGovCode;      // MEM_GOV_CODE	VARCHAR2(50 BYTE)
     @NotBlank
     private String memStatus;       // MEM_STATUS	VARCHAR2(50 BYTE)
-    @NotBlank
-//    private Date memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp memEnrollDate;     // MEM_ENROLL_DATE	TIMESTAMP(6)
-//    private Date memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
+    @Null
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp memChangeStatus;       //MEM_CHANGE_STATUS	TIMESTAMP(6)
     private String memFamilyApproval;       // MEM_FAMILY_APPROVAL	CHAR(1 BYTE)
     private String memSocialKakao;      // MEM_SOCIAL_KAKAO	CHAR(1 BYTE)
@@ -64,6 +65,7 @@ public class Member implements java.io.Serializable {
                 .memGovCode(memGovCode)
                 .memStatus(memStatus)
                 .memEnrollDate(memEnrollDate)
+                .memChangeStatus(memChangeStatus)
                 .memFamilyApproval(memFamilyApproval)
                 .memSocialKakao(memSocialKakao)
                 .memKakaoEmail(memKakaoEmail)
