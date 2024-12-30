@@ -9,6 +9,7 @@ import com.hexalab.silverplus.qna.model.service.QnAService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,10 +99,22 @@ public class QnAController {
         try {
             QnA qna = qnaService.selectOne(qnaId);
             Member member = memberService.selectMember(qna.getQnaWCreateBy());
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+            String[] fileNames = ftpUtility.search(ftpRemoteDir + "qna/");
+            ArrayList<String> fileList = new ArrayList<>();
+
+            for (String fileName : fileNames) {
+                if(fileName.startsWith(ftpRemoteDir + "qna/qna_" + qnaId)){
+                    fileList.add(fileName);
+                }
+            }
 
             Map<String, Object> map = new HashMap<>();
             map.put("qna", qna);
             map.put("member", member);
+            map.put("files", fileList);
 
             return ResponseEntity.ok(map);
         } catch (Exception e){
@@ -109,7 +123,7 @@ public class QnAController {
     }
 
     @PostMapping
-    public ResponseEntity insertQnA(
+    public ResponseEntity<QnA> insertQnA(
             @ModelAttribute QnA qna,
             @RequestParam(name="newFiles",required = false) MultipartFile[] files
             ) {
@@ -140,6 +154,30 @@ public class QnAController {
             return ResponseEntity.ok().build();
         }else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @PutMapping("{role}")
+    public void updateQnA(@ModelAttribute QnA qna, @PathVariable String role) {
+        log.info("updateQnA");
+        try {
+            QnA qnaO = qnaService.selectOne(qna.getQnaId());
+            if(role.equals("ADMIN")) {
+                qnaO.setQnaADUpdateBy(qna.getQnaADUpdateBy());
+                qnaO.setQnaADUpdateAt(new Timestamp(System.currentTimeMillis()));
+                qnaO.setQnaADContent(qna.getQnaADContent());
+                if(qnaO.getQnaADCreateBy() == null){
+                    qnaO.setQnaADCreateBy(qna.getQnaADUpdateBy());
+                    qnaO.setQnaADCreateAt(qna.getQnaADUpdateAt());
+                }
+            }else{
+                qnaO.setQnaTitle(qna.getQnaTitle());
+                qnaO.setQnaWContent(qna.getQnaWContent());
+                qnaO.setQnaWUpdateAt(new Timestamp(System.currentTimeMillis()));
+            }
+
+            qnaService.updateOne(qnaO);
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 

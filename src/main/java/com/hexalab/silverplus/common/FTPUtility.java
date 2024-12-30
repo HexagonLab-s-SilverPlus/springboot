@@ -19,6 +19,16 @@ public class FTPUtility implements AutoCloseable {
         ftpClient.setFileType(FTP.BINARY_FILE_TYPE); // 바이너리 파일 타입 설정
     }
 
+    public String[] search(String remoteFilePath){
+        try {
+            String[] fileNames = ftpClient.listNames( remoteFilePath);
+            return fileNames;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void uploadFile(String localFilePath, String remoteFilePath) throws IOException {
         try (var inputStream = new FileInputStream(localFilePath)) {
             boolean success = ftpClient.storeFile(remoteFilePath, inputStream);

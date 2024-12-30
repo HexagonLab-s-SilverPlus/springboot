@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,6 +80,7 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
         resultList.put("qna", qnaList);
         resultList.put("member", memberList);
         resultList.put("search", search);
+        log.info("search : " + search);
 
         return resultList;
     }

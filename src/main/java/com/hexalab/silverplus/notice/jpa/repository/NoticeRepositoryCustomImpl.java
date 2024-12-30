@@ -20,10 +20,30 @@ public class NoticeRepositoryCustomImpl implements NoticeRepositoryCustom {
     private QNoticeEntity notice = QNoticeEntity.noticeEntity;
 
     @Override
+    public long selectAllNoticeListCount() {
+        return queryFactory
+                .selectFrom(notice)     //select * from notice
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
+                .fetchCount();
+    }
+
+    @Override
+    public List<NoticeEntity> selectAllNoticeList(Pageable pageable) {
+        return queryFactory
+                .selectFrom(notice)
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
+                .orderBy(notice.notCreateAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+    }
+
+    @Override
     public long selectSearchTitleNoticeListCount(String keyword) {
         return queryFactory
                 .selectFrom(notice)     //select * from notice
                 .where(notice.notTitle.like("%" + keyword + "%"))  //where noticetitle %keyword%
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
                 .fetchCount();
     }
 
@@ -32,6 +52,7 @@ public class NoticeRepositoryCustomImpl implements NoticeRepositoryCustom {
         return queryFactory
                 .selectFrom(notice)     //select * from notice
                 .where(notice.notContent.like("%" + keyword + "%"))  //where noticetitle %keyword%
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
                 .fetchCount();
     }
 
@@ -40,6 +61,7 @@ public class NoticeRepositoryCustomImpl implements NoticeRepositoryCustom {
         return queryFactory
                 .selectFrom(notice)
                 .where(notice.notTitle.like("%" + keyword + "%"))
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
                 .orderBy(notice.notCreateAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -51,6 +73,7 @@ public class NoticeRepositoryCustomImpl implements NoticeRepositoryCustom {
         return queryFactory
                 .selectFrom(notice)
                 .where(notice.notContent.like("%" + keyword + "%"))
+                .where(notice.notDeleteAt.isNull()) // 삭제되지 않은 자료
                 .orderBy(notice.notCreateAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
