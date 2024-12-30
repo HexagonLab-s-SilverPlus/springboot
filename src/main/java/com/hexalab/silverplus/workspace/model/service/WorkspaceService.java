@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,6 +132,43 @@ public class WorkspaceService {
     // limit: 10 (page size)
     // pageable: PageRequest.of(0, 10) (page 1), PageRequest.of(1, 10) (page 2), PageRequest.of(2, 10)...
 
+
+    /**
+     * 워크스페이스를 ARCHIVED 상태로 변경
+     * @param workspaceId 워크스페이스 ID
+     */
+    @Transactional
+    public void setWorkspaceAsFavorite(String workspaceId){
+        Optional<WorkspaceEntity> workspaceOptional = workspaceRepository.findWorkspaceByWorkspaceId(workspaceId);
+        if (workspaceOptional.isPresent()){
+            WorkspaceEntity workspaceEntity = workspaceOptional.get();
+            if ("DELETED".equals(workspaceEntity.getWorkspaceStatus())) {
+                throw new IllegalStateException("삭제된 워크스페이스는 ARCHIVED 상태로 변경할 수 없습니다.");
+            }
+            workspaceEntity.setWorkspaceStatus("ARCHIVED"); // 상태를 ARCHIVED로 설정
+            workspaceEntity.setWorkspaceUpdatedAt(Timestamp.from(Instant.now())); // 업데이트 시간 갱신
+            workspaceRepository.save(workspaceEntity);
+            log.info("워크스페이스 상태가 ARCHIVED로 변경되었습니다: {}", workspaceId);
+        } else {
+            log.error("ARCHIVED 상태로 변경할 워크스페이스를 찾을 수 없습니다: {}", workspaceId);
+            throw new RuntimeException("Workspace not found");
+        }
+    }
+
+
+
+    /**
+     * 워크스페이스를 ACTIVE 상태로 변경
+     * @param workspaceId 워크스페이스 ID
+     */
+    public void setWorkspaceAsActive(String workspaceId) {
+        WorkspaceEntity workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 워크스페이스가 존재하지 않습니다."));
+        workspace.setWorkspaceStatus("ACTIVE"); // 상태 변경
+        workspace.setWorkspaceUpdatedAt(Timestamp.from(Instant.now())); // 업데이트 시간 갱신
+        workspaceRepository.save(workspace); // 저장
+        log.info("워크스페이스 상태가 ACTIVE로 변경되었습니다: {}", workspaceId);
+    }
 
 
 }
