@@ -9,6 +9,7 @@ import com.hexalab.silverplus.qna.model.service.QnAService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,10 +99,22 @@ public class QnAController {
         try {
             QnA qna = qnaService.selectOne(qnaId);
             Member member = memberService.selectMember(qna.getQnaWCreateBy());
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+            String[] fileNames = ftpUtility.search(ftpRemoteDir + "qna/");
+            ArrayList<String> fileList = new ArrayList<>();
+
+            for (String fileName : fileNames) {
+                if(fileName.startsWith(ftpRemoteDir + "qna/qna_" + qnaId)){
+                    fileList.add(fileName);
+                }
+            }
 
             Map<String, Object> map = new HashMap<>();
             map.put("qna", qna);
             map.put("member", member);
+            map.put("files", fileList);
 
             return ResponseEntity.ok(map);
         } catch (Exception e){
