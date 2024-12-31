@@ -37,8 +37,17 @@ public class ProgramFileService {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    //File delete
     public int deleteProgramFile(String snrFileId) {
         try {
+            // ID로 파일 조회
+            Optional<ProgramFileEntity> optionalEntity = programFileRepository.findById(snrFileId);
+            if (optionalEntity.isEmpty()) {
+                log.warn("ProgramFile not found for ID: {}", snrFileId);
+                return 0; // 파일 없음
+            }
+
+            // 파일 삭제
             programFileRepository.deleteById(snrFileId);
             log.info("ProgramFile deleted successfully: {}", snrFileId);
             return 1; // 성공

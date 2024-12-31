@@ -230,6 +230,7 @@ public class ProgramController {
                             }
 
                             //파일 데이터 구성
+                            fileData.put("fileId", file.getSnrFileId()); // 추가된 fileId 필드
                             fileData.put("fileName", file.getSnrFileOGName());
                             fileData.put("mimeType", mimeType);
                             fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
