@@ -19,7 +19,9 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,6 +32,20 @@ public class JWTFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
     private final MemberService memberService;
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    private boolean isPassURL(String requestURI) {
+        List<String> passURLs = Arrays.asList(
+                "/login",       // 로그인 URL
+                "reissue",      // 토큰재발급 URL
+                "/api/sms",     // 휴대전화인증번호 요청 URL
+                "/api/sms/verify",      // 휴대전화인증 URL
+                "/member/idchk",        // 아이디 중복체크 URL
+                "/member/enroll",       // 회원가입 URL
+                "/api/email",       // 이메일인증번호 요청 URL
+               "/api/email/verify"      // 이메일인증 URL
+        );
+        return passURLs.contains(requestURI);
+    }
 
     // 생성자를 통한 의존성 주입
 //    public JWTFilter(JWTUtil jwtUtil) {
@@ -123,12 +139,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         try {
             // 로그인 및 토큰 재발급 요청은 필터 통과
-            if (requestURI.equals("/login") ||
-                    requestURI.equals("/reissue") ||
-                    requestURI.equals("/api/sms") ||
-                    requestURI.equals("/api/sms/verify") ||
-                    requestURI.equals("/member/idchk") ||
-                    requestURI.equals("/member/enroll")) {
+            if (isPassURL(requestURI)) {
                 log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;

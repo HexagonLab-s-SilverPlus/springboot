@@ -91,6 +91,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true); // 인증 정보 허용
         configuration.addExposedHeader("Authorization");    // 클라이언트 쪽 헤더 접근 허용. * 사용못함
         configuration.addExposedHeader("Verify");
+        configuration.addExposedHeader("Response");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

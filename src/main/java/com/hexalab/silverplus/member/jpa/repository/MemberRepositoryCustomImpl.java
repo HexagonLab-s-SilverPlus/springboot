@@ -140,4 +140,47 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchCount();
     }
 
+
+    // 이름과 이메일로 조회하는 쿼리문
+    @Override
+    public boolean findByEmailName(String memEmail, String memName) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memEmail.eq(memEmail).and(member.memName.eq(memName)))
+                .fetch().isEmpty();     // 조회 안될경우 true 리턴
+    }
+
+    @Override
+    public boolean findByPhoneName(String memCellPhone, String memName) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memCellphone.eq(memCellPhone).and(member.memName.eq(memName)))
+                .fetch().isEmpty();     // 조회 안될경우 true 리턴
+    }
+
+    @Override
+    public boolean findByEmailId(String memEmail, String memId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memEmail.eq(memEmail).and(member.memId.eq(memId)))
+                .fetch().isEmpty();     // 조회 안될경우 true 리턴
+    }
+
+    @Override
+    public boolean findByPhoneId(String memCellphone, String memId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memCellphone.eq(memCellphone).and(member.memId.eq(memId)))
+                .fetch().isEmpty();     // 조회 안될경우 true 리턴
+    }
+
+    // 회원 이름으로 조회하는 쿼리문
+    @Override
+    public MemberEntity findByMemName(String memName) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memName.eq(memName))
+                .fetchOne();
+    }
+
 }

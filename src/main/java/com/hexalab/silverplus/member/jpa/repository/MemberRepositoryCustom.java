@@ -19,4 +19,9 @@ public interface MemberRepositoryCustom {
     long selectMemNameCount(String keyword);
     long selectMemStatusCount(String keyword);
     long selectMemTypeCount(String keyword);
+    boolean findByEmailName(String memEmail, String memName);
+    boolean findByPhoneName(String memPhone, String memName);
+    boolean findByEmailId(String memEmail, String memId);
+    boolean findByPhoneId(String memCellphone, String memId);
+    MemberEntity findByMemName(String memName);
 }

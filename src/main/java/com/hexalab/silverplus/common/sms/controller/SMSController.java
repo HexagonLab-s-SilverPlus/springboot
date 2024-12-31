@@ -40,7 +40,7 @@ public class SMSController {
     }
 
     @PostMapping("/api/sms/verify")
-    public ResponseEntity verifyCode(@RequestBody SMS sms, HttpServletResponse response) {
+    public ResponseEntity verifyCode(@RequestBody SMS sms) {
         log.info("전달온 인증번호 확인 : {}", sms.getCode());
 
 //        if(smsService.verifyCode(sms.getMemCellphone(), sms.getCode())) {

@@ -321,6 +321,27 @@ public class MemberController {
         return ResponseEntity.ok(member);
     }
 
+    @PostMapping("/fid")
+    // 아이디 찾기 처리 메소드
+    public ResponseEntity<Member> memberFindIdMethod(@ModelAttribute Member member) {
+        // Member 객체 생성
+        if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {
+            if (memberService.findByEmailName(member.getMemEmail(), member.getMemName())) {
+                Member resultMember = memberService.findByMemName(member.getMemName());
+                return ResponseEntity.ok().body(resultMember);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {
+            if (memberService.findByPhoneName(member.getMemCellphone(), member.getMemName())) {
+                Member resultMember = memberService.findByMemName(member.getMemName());
+                return ResponseEntity.ok().body(resultMember);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
 /*
 
 
