@@ -11,15 +11,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -122,6 +126,29 @@ public class QnAController {
         }
     }
 
+    @GetMapping("/qfdown")
+    public ResponseEntity<Resource> fileDownload(
+            @RequestParam("fileName") String filename
+            ) {
+
+        try (FTPUtility ftpUtility = new FTPUtility()) {
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            // 임시 파일 생성 후 FTP에서 다운로드
+            File tempFile = File.createTempFile("downloa-", null);
+            ftpUtility.downloadFile(filename, tempFile.getAbsolutePath());
+
+            Resource resource = new FileSystemResource(tempFile);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+
     @PostMapping
     public ResponseEntity<QnA> insertQnA(
             @ModelAttribute QnA qna,
@@ -157,8 +184,14 @@ public class QnAController {
         }
     }
     @PutMapping("{role}")
-    public void updateQnA(@ModelAttribute QnA qna, @PathVariable String role) {
+    public void updateQnA(
+            @ModelAttribute QnA qna,
+            @PathVariable String role,
+            @RequestParam(name="newFiles",required = false) MultipartFile[] files) {
         log.info("updateQnA");
+        for (MultipartFile file : files) {
+            log.info("file : {}", file);
+        }
         try {
             QnA qnaO = qnaService.selectOne(qna.getQnaId());
             if(role.equals("ADMIN")) {
@@ -173,6 +206,25 @@ public class QnAController {
                 qnaO.setQnaTitle(qna.getQnaTitle());
                 qnaO.setQnaWContent(qna.getQnaWContent());
                 qnaO.setQnaWUpdateAt(new Timestamp(System.currentTimeMillis()));
+            }
+
+            for (int i = 0; i < files.length; i++) {
+                String ext = files[i].getOriginalFilename().substring(files[i].getOriginalFilename().indexOf(".") + 1);
+                String fileName = "qna_" + qnaO.getQnaId() + "_" + i  + "." + ext;
+
+                try {
+                    FTPUtility ftpUtility = new FTPUtility();
+                    ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+                    File tempFile = File.createTempFile("QnA-",null);
+                    files[i].transferTo(tempFile);
+                    // file upload
+                    String filePath = ftpRemoteDir + "qna/"+ fileName;
+                    ftpUtility.uploadFile(tempFile.getAbsolutePath(), filePath);
+                    tempFile.delete();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
 
             qnaService.updateOne(qnaO);
