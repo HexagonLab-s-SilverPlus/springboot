@@ -29,11 +29,28 @@ public class FTPUtility implements AutoCloseable {
         }
     }
 
+    public void reName(String oPath, String rePath){
+        try {
+            ftpClient.rename(oPath, rePath);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     public void uploadFile(String localFilePath, String remoteFilePath) throws IOException {
         try (var inputStream = new FileInputStream(localFilePath)) {
             boolean success = ftpClient.storeFile(remoteFilePath, inputStream);
             if (!success) {
                 throw new IOException("파일 업로드 실패: " + ftpClient.getReplyString());
+            }
+        }
+    }
+
+    public void uploadFile_mkDir(String remoteDirectory) throws IOException {
+        if (!ftpClient.changeWorkingDirectory(remoteDirectory)) {
+            // 디렉토리가 없으면 생성
+            if (!ftpClient.makeDirectory(remoteDirectory)) {
+                throw new IOException("디렉토리 생성 실패: " + ftpClient.getReplyString());
             }
         }
     }
