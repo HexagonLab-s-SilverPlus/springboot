@@ -72,6 +72,11 @@ dependencies {
 
     // 파일 업, 다운로드를 위한 FTP 라이브러리 추가
     implementation 'commons-net:commons-net:3.6'
+
+    // 이메일 인증을 위한 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.thymeleaf:thymeleaf-spring6:3.1.1.RELEASE'
+    implementation 'ognl:ognl:3.3.1' // 최신 버전 사용 가능
 }
 
 ////sourceSets

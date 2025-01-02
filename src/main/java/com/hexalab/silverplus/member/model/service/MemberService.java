@@ -109,6 +109,32 @@ public class MemberService {
         return (int) memberRepository.selectMemTypeCount(keyword);
     }
 
+    public boolean findByEmailName(String memEmail, String memName) {
+        return memberRepository.findByEmailName(memEmail, memName);
+    }
+
+    public boolean findByPhoneName(String memCellphone, String memName) {
+        return memberRepository.findByPhoneName(memCellphone, memName);
+    }
+
+    public boolean findByEmailId(String memEmail, String memId) {
+        return memberRepository.findByEmailId(memEmail, memId);
+    }
+
+    public  boolean findByPhoneId(String memCellphone, String memId) {
+        return memberRepository.findByPhoneId(memCellphone, memId);
+    }
+
+    public Member findByMemName(String memName) {
+        try {
+            return memberRepository.findByMemName(memName).toDto();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
     /*
 
 

@@ -85,5 +85,26 @@ public class ProgramService {
         return programRepository.findById(snrProgramId).get().toDto();
     }
 
+    //Program update
+    public int updateProgram(Program program) {
+        try {
+            programRepository.save(program.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("ProgramService : ", e.getMessage());
+            return 0;
+        }
+    }
 
+    //Program delete
+    public int deleteProgram(String snrProgramId) {
+        try {
+            programRepository.deleteById(snrProgramId);
+            return 1; // 성공
+        } catch (Exception e) {
+            log.error("프로그램 삭제 실패:", e);
+            return 0; // 실패
+        }
+    }
 }//ProgramService end
