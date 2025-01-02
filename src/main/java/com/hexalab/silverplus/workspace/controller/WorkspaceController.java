@@ -143,4 +143,54 @@ public class WorkspaceController {
         }
     }
 
+
+    /**
+     * 워크스페이스를 ARCHIVED 상태로 변경
+     * @param workspaceId 워크스페이스 ID
+     * @return
+     */
+    @PatchMapping("/{workspaceId}/archived")
+    public ResponseEntity<ApiResponse<String>> archiveWorkspace(@PathVariable String workspaceId) {
+        try{
+            workspaceService.setWorkspaceAsFavorite(workspaceId);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .success(true)
+                    .message("워크스페이스가 ARCHIVED 상태로 설정되었습니다.")
+                    .build());
+        }catch(Exception e){
+            e.printStackTrace();
+            log.error("워크스페이스 즐겨찾기 설정 실패:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<String>builder()
+                    .success(false)
+                    .message("워크스페이스 즐겨찾기 설정에 실패하였습니다.")
+                    .build());
+        }
+    }
+
+
+
+
+    /**
+     * 워크스페이스를 ACTIVE 상태로 변경 (즐겨찾기 해제)
+     * @param workspaceId 워크스페이스 ID
+     * @return ResponseEntity<ApiResponse<String>>
+     */
+    @PatchMapping("/{workspaceId}/active")
+    public ResponseEntity<ApiResponse<String>> setWorkspaceAsActive(@PathVariable String workspaceId) {
+        try {
+            workspaceService.setWorkspaceAsActive(workspaceId); // 서비스 메서드 호출
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .success(true)
+                    .message("워크스페이스가 ACTIVE 상태로 변경되었습니다.")
+                    .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("워크스페이스 ACTIVE 상태 변경 실패: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<String>builder()
+                    .success(false)
+                    .message("워크스페이스 ACTIVE 상태 변경 실패")
+                    .build());
+        }
+    }
+
 }

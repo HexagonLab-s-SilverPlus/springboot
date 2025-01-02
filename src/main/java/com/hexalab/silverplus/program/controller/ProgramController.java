@@ -164,7 +164,7 @@ public class ProgramController {
 
     //Program List
     @GetMapping
-    public ResponseEntity<Map<String, Object>> programListMethod(
+    public ResponseEntity<Map<String, Object>> selectProgramListMethod(
         @ModelAttribute Search search
     ) {
         Map<String, Object> programWithFiles = new HashMap<>();
@@ -230,6 +230,7 @@ public class ProgramController {
                             }
 
                             //파일 데이터 구성
+                            fileData.put("fileId", file.getSnrFileId()); // 추가된 fileId 필드
                             fileData.put("fileName", file.getSnrFileOGName());
                             fileData.put("mimeType", mimeType);
                             fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
@@ -263,4 +264,225 @@ public class ProgramController {
 
     }//selectProgramList() end
 
+    //Program Detail
+    @GetMapping("/detail/{snrProgramId}")
+    public ResponseEntity<Map<String, Object>> selectProgramDetailMethod(
+            @PathVariable String snrProgramId
+    ) {
+        try {
+            Map<String, Object> programWithFiles = new HashMap<>();
+            
+            Program program = programService.selectProgram(snrProgramId);
+            
+            try (FTPUtility ftpUtility = new FTPUtility()) {
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+                List<ProgramFile> files = programFileService.selectProgramFiles(snrProgramId);
+                List<Map<String, Object>> fileDataList = new ArrayList<>();
+
+                if (files != null && !files.isEmpty()) {
+                    for (ProgramFile file : files) {
+                        Map<String, Object> fileData = new HashMap<>();
+
+                        // FTP 파일 경로
+                        String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+
+                        // 다운로드
+                        File tempFile = File.createTempFile("program-", null);
+                        ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                        // 파일 읽기 및 MIME 타입 결정
+                        byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                        String mimeType = getMimeType(file.getSnrFileOGName());
+                        if (mimeType == null) {
+                            mimeType = "application/octet-stream";
+                        }
+
+                        // 데이터 구성
+                        fileData.put("fileId", file.getSnrFileId()); // 추가된 fileId 필드
+                        fileData.put("fileName", file.getSnrFileOGName()); // 원본 파일명
+                        fileData.put("mimeType", mimeType);
+                        fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent));
+
+                        fileDataList.add(fileData);
+
+                        // 임시 파일 삭제
+                        tempFile.delete();
+                    }
+                }
+
+                programWithFiles.put("program", program);
+                programWithFiles.put("files", fileDataList);
+
+            } catch (Exception e) {
+                log.error("FTP 작업 중 오류 발생", e);
+            }//ftp try~catch
+
+            return ResponseEntity.ok(programWithFiles);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("어르신 프로그램 디테일 불러오기 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }//selectProgramDetailMethod end
+
+    //Program Update
+    @PutMapping("/{snrProgramId}")
+    public ResponseEntity<Map<String, Object>> updateProgramMethod(
+            @PathVariable String snrProgramId,
+            @ModelAttribute Program program,
+            @RequestParam(name = "files", required = false) MultipartFile[] files,
+            @RequestParam(name = "deleteFileIds", required = false) List<String> deleteFileIds
+    ) {
+        try {
+            // 기존 데이터 로드 및 확인
+            Program existingProgram = programService.selectProgram(snrProgramId);
+            if (existingProgram == null) {
+                log.error("프로그램 ID가 존재하지 않습니다: {}", snrProgramId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            log.info("existingProgram : {}", existingProgram);
+
+            // 업데이트할 데이터 설정
+            program.setSnrProgramId(snrProgramId);
+            program.setSnrCreatedAt(existingProgram.getSnrCreatedAt());  //기존 값 유지
+            program.setSnrUpdatedAt(new Timestamp(System.currentTimeMillis()));
+
+            // 프로그램 데이터 업데이트
+            if (programService.updateProgram(program) > 0) {
+                log.info("Program 업데이트 성공");
+            } else {
+                log.error("Program 업데이트 실패");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
+            // 파일 처리 코드 작성해야 함
+            // NAS FTP 연결
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            // 1. 삭제할 파일 처리
+            if (deleteFileIds != null && !deleteFileIds.isEmpty()) {
+                log.info("deleteFileIds : {}", deleteFileIds);
+                for (String snrFileId : deleteFileIds) {
+                    ProgramFile fileToDelete = programFileService.selectProgramFile(snrFileId);
+                    if (fileToDelete != null) {
+                        String remoteFilePath = ftpRemoteDir + "program/" + fileToDelete.getSnrFileName();
+
+                        try {
+                            // FTP에서 파일 삭제
+                            ftpUtility.deleteFile(remoteFilePath);
+                            log.info("FTP 파일 삭제 성공: {}", remoteFilePath);
+
+                            // DB에서 파일 정보 삭제
+                            if (programFileService.deleteProgramFile(snrFileId) > 0) {
+                                log.info("DB 파일 삭제 성공: {}", snrFileId);
+                            } else {
+                                log.error("DB 파일 삭제 실패: {}", snrFileId);
+                            }
+                        } catch (Exception e) {
+                            log.error("FTP 파일 삭제 실패: {}", remoteFilePath, e);
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        }
+                    }
+                }
+            }
+
+            // 2. 새 파일 추가 처리
+            if (files != null && files.length > 0) {
+                for (MultipartFile file : files) {
+                    ProgramFile programFile = new ProgramFile();
+                    String fileName = file.getOriginalFilename();
+                    programFile.setSnrFileId(UUID.randomUUID().toString());
+                    String renameFile = CreateRenameFileName.create(programFile.getSnrFileId(), fileName);
+                    programFile.setSnrFileOGName(fileName);
+                    programFile.setSnrFileName(renameFile);
+                    programFile.setSnrProgramId(snrProgramId);
+
+                    // 임시 파일 생성
+                    File tempFile = File.createTempFile("program-", null);
+                    file.transferTo(tempFile);
+
+                    // 파일 업로드
+                    String remoteFilePath = ftpRemoteDir + "program/" + renameFile;
+                    ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
+
+                    // DB 저장
+                    if (programFileService.insertProgramFile(programFile) > 0) {
+                        log.info("ProgramFile 추가 성공");
+                    } else {
+                        log.error("ProgramFile 추가 실패");
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+
+                    // 임시 파일 삭제
+                    tempFile.delete();
+                }
+            }
+
+            return ResponseEntity.ok(Map.of("snrProgramId", snrProgramId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("어르신 프로그램 수정 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }//updateProgramMethod end
+
+    @DeleteMapping("/{snrProgramId}")
+    public ResponseEntity<Void> deleteProgramMethod(@PathVariable String snrProgramId) {
+        try {
+            log.info("프로그램 삭제 요청: {}", snrProgramId);
+
+            // 1. 프로그램에 연결된 파일 정보 조회
+            List<ProgramFile> files = programFileService.selectProgramFiles(snrProgramId);
+            if (files != null && !files.isEmpty()) {
+                log.info("연결된 파일 개수: {}", files.size());
+
+                // FTP 연결 설정
+                FTPUtility ftpUtility = new FTPUtility();
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+                for (ProgramFile file : files) {
+                    String remoteFilePath = ftpRemoteDir + "program/" + file.getSnrFileName();
+
+                    try {
+                        // FTP 서버에서 파일 삭제
+                        ftpUtility.deleteFile(remoteFilePath);
+                        log.info("FTP 파일 삭제 성공: {}", remoteFilePath);
+
+                        // DB에서 파일 정보 삭제
+                        if (programFileService.deleteProgramFile(file.getSnrFileId()) > 0) {
+                            log.info("DB 파일 삭제 성공: {}", file.getSnrFileId());
+                        } else {
+                            log.error("DB 파일 삭제 실패: {}", file.getSnrFileId());
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        }
+                    } catch (Exception e) {
+                        log.error("FTP 파일 삭제 실패: {}", remoteFilePath, e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+                }
+
+                // FTP 연결 해제
+                //ftpUtility.disconnect();
+            } else {
+                log.info("프로그램에 연결된 파일이 없습니다.");
+            }
+
+            // 2. 프로그램 데이터 삭제
+            if (programService.deleteProgram(snrProgramId) > 0) {
+                log.info("프로그램 삭제 성공: {}", snrProgramId);
+                return ResponseEntity.noContent().build();
+            } else {
+                log.error("프로그램 데이터 삭제 실패: {}", snrProgramId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            log.error("프로그램 삭제 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }//deleteProgramMethod
+    
 }//ProgramController end

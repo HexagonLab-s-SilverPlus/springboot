@@ -144,6 +144,8 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/dashboard").hasAnyRole("ADMIN", "MANAGER")
                             .requestMatchers(HttpMethod.DELETE, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
                             .requestMatchers(HttpMethod.PUT, "/dashboard/{taskId}").hasAnyRole("ADMIN", "MANAGER")
+                            .requestMatchers(HttpMethod.GET, "/dashboard/date/{taskDate}").hasAnyRole("ADMIN", "MANAGER")
+
 
                             // Book
 

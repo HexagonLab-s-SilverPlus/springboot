@@ -50,6 +50,7 @@ public class ProgramService {
         }
     }//insertProgram end
 
+    //Program List
     public int selectAllListCount() {
         return (int) programRepository.count();
     }//selectListCount end
@@ -74,7 +75,36 @@ public class ProgramService {
         return programRepository.selectDateListCount(search);
     }
 
+    //Program search
     public Map<String, Object> selectSearchList(Pageable pageable, Search search) {
         return programRepository.selectSearchList(pageable, search);
+    }
+
+    //Program Detail
+    public Program selectProgram(String snrProgramId) {
+        return programRepository.findById(snrProgramId).get().toDto();
+    }
+
+    //Program update
+    public int updateProgram(Program program) {
+        try {
+            programRepository.save(program.toEntity());
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("ProgramService : ", e.getMessage());
+            return 0;
+        }
+    }
+
+    //Program delete
+    public int deleteProgram(String snrProgramId) {
+        try {
+            programRepository.deleteById(snrProgramId);
+            return 1; // 성공
+        } catch (Exception e) {
+            log.error("프로그램 삭제 실패:", e);
+            return 0; // 실패
+        }
     }
 }//ProgramService end
