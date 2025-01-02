@@ -135,6 +135,10 @@ public class MemberService {
         }
     }
 
+    public int updateMemPw(String memPw, String memUUID) {
+        return (int) memberRepository.updateMemPw(memPw, memUUID);
+    }
+
     /*
 
 

@@ -347,32 +347,64 @@ public class MemberController {
                 return ResponseEntity.ok().header("Response", "failed").build();
             }
         }
+        // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
         return ResponseEntity.ok().header("Response", "verifyError").build();
     }
+
+    @PostMapping("/fpwd")
+    // 비밀번호 찾기 처리 메소드
+    public ResponseEntity memberFindPwdMethod(@RequestBody Member member) {
+        log.info("전달온 객체 확인(memberFindPwdMethod) : {}", member);
+
+        if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {        // 이메일 인증으로 비밀번호 찾기 시도 시
+            if (!memberService.findByEmailId(member.getMemEmail(), member.getMemId())) {        // 전달온 이메일 정보와 아이디 정보로 DB 조회
+                // 아이디 정보로 DB 조회하여 조회된 member 객체 저장
+                Member resultMember = memberService.findByMemId(member.getMemId());
+                // 조회된 member 객체에서 UUID 정보 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemUUID());
+            } else {
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {     // 휴대전화 인증으로 비밀번호 찾기 시도 시
+            if (!memberService.findByPhoneId(member.getMemCellphone(), member.getMemId())) {        // 전달온 휴대전화 정보와 아이디 정보로 DB 조회
+                // 아이디 정보로 DB 조회하여 조회된 member 객체 저장
+                Member resultMember = memberService.findByMemId(member.getMemId());
+                // 조회된 member 객체에서 UUID 정보 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemUUID());
+            } else {
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        }
+        // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+        return ResponseEntity.ok().header("Response", "verifyError").build();
+    }
+
+    // 비밀번호 수정 처리 메소드
+    @PutMapping("/pwdupdate/{memUUID}")
+    public ResponseEntity memberUpdatePwdMethod(@PathVariable String memUUID, @RequestBody Member member) {
+        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", member.getMemPw());
+        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", memUUID);
+
+
+        if (member.getMemPw() != null && member.getMemPw().length() > 0) {
+            String encodeMemPw = bCryptPasswordEncoder.encode(member.getMemPw());
+            log.info("암호화 처리된 비밀번호 확인(memberUpdatePwdMethod) : {}", encodeMemPw);
+            int result = memberService.updateMemPw(encodeMemPw, memUUID);
+            if (result > 0) {
+                log.info("비밀번호 수정 성공 여부(memberUpdatePwdMethod) : {}", result);
+                return ResponseEntity.ok().header("Response", "success").build();
+            } else {
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        }
+        return ResponseEntity.ok().header("Response", "verifyError").build();
+    }
+}
+
 /*
-
-
-
-
-
-
-
-
-
-
-
     @GetMapping("/minfo")
     // 마이페이지(내 정보) 출력 처리 메소드
     public ResponseEntity<?> memberInfoMethod() {}
-
-    @GetMapping("/fid")
-    // 아이디 찾기 처리 메소드
-    public ResponseEntity<?> memberFindIdMethod() {}
-
-    @PutMapping("/fpwd")
-    // 비밀번호 찾기 처리 메소드
-    public ResponseEntity<?> memberFindPwdMethod() {}
-*/
-
-
-}
+ */

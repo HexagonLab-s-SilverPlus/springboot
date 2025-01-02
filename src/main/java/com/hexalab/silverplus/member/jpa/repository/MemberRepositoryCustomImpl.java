@@ -183,4 +183,14 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public long updateMemPw(String memPw, String memUUID) {
+        return queryFactory
+                .update(member)
+                .set(member.memPw, memPw)
+                .where(member.memUUID.eq(memUUID))
+                .execute();
+    }
+
+
 }

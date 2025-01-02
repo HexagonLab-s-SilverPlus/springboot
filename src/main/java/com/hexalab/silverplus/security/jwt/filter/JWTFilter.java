@@ -44,10 +44,13 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/api/email",       // 이메일인증번호 요청 URL
                "/api/email/verify",      // 이메일인증 URL
                 "/member/fid",       // 아이디 찾기 URL
-                "/member/fpwd"     // 비밀번호 찾기 URL
+                "/member/fpwd",     // 비밀번호 찾기 URL
+                "/pwdupdate"        // 비밀번호 변경 URL
         );
-        return passURLs.contains(requestURI);
+//        return passURLs.contains(requestURI);
+        return passURLs.stream().anyMatch(requestURI::contains);
     }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
