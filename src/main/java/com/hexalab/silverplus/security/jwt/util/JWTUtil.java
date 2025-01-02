@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Base64;
 import java.util.Optional;

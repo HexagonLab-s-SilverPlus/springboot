@@ -323,24 +323,31 @@ public class MemberController {
 
     @PostMapping("/fid")
     // 아이디 찾기 처리 메소드
-    public ResponseEntity<Member> memberFindIdMethod(@ModelAttribute Member member) {
-        // Member 객체 생성
-        if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {
-            if (memberService.findByEmailName(member.getMemEmail(), member.getMemName())) {
+    public ResponseEntity<String> memberFindIdMethod(@RequestBody Member member) {
+        log.info("전달온 객체 확인(memberFindIdMethod) : {}", member);
+
+        if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {        // 이메일 인증으로 아이디 찾기 시도 시
+            if (!memberService.findByEmailName(member.getMemEmail(), member.getMemName())) {        // 전달온 이메일 정보와 이름 정보로 DB 조회
+                // DB 정보 조회 성공 시 전달온 이름 정보로 DB 에서 member 정보 조회하여 저장
                 Member resultMember = memberService.findByMemName(member.getMemName());
-                return ResponseEntity.ok().body(resultMember);
+                // 저장된 객체에서 아이디 정보만 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemId());
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
             }
-        } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {
-            if (memberService.findByPhoneName(member.getMemCellphone(), member.getMemName())) {
+        } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {     // 휴대전화 인증으로 아이디 찾기 시도 시
+            if (!memberService.findByPhoneName(member.getMemCellphone(), member.getMemName())) {        // 전달온 휴대전화 정보와 이름 정보로 DB 조회
+                // DB 정보 조회 성공 시 전달온 이름 정보로 DB 에서 member 정보 조회하여 저장
                 Member resultMember = memberService.findByMemName(member.getMemName());
-                return ResponseEntity.ok().body(resultMember);
+                // 저장된 객체에서 아이디 정보만 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemId());
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
             }
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok().header("Response", "verifyError").build();
     }
 /*
 
