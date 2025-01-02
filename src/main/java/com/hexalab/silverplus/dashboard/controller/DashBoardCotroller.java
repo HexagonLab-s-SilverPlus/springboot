@@ -25,46 +25,46 @@ import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.ma
 public class DashBoardCotroller {
     private final DashBoardService dashBoardService;
 
-    //TODO 등록 요청 처리용
+    //등록
     @PostMapping
     public ResponseEntity dashboardInsert(
             @ModelAttribute DashBoard dashBoard) {
         log.info("Insert dashboard inserted" + dashBoard);
-        try{
-        // taskStatus를 'Y' 또는 'N'으로 변환
-        String taskStatus = dashBoard.getTaskStatus();
-        dashBoard.setTaskStatus("true".equalsIgnoreCase(taskStatus) ? "Y" : "N");
+        try {
+            // taskStatus를 'Y' 또는 'N'으로 변환
+            String taskStatus = dashBoard.getTaskStatus();
+            dashBoard.setTaskStatus("true".equalsIgnoreCase(taskStatus) ? "Y" : "N");
 
-        dashBoard.setTaskId(UUID.randomUUID().toString());
+            dashBoard.setTaskId(UUID.randomUUID().toString());
 
             dashBoardService.insertDashboard(dashBoard);
 
 
             log.info("Insert dashboard inserted" + dashBoard);
             return ResponseEntity.ok().build();
-        } catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
     }
 
-
-    @GetMapping("/date/{taskDate}")
-    public ResponseEntity<List<DashBoard>> getTodosByDate(@PathVariable Timestamp taskDate) {
-        log.info("Fetching todos for date: {}", taskDate);
-
-        List<DashBoard> tasks = dashBoardService.findByDate(taskDate);
-
-        if (!tasks.isEmpty()) {
-            return ResponseEntity.ok(tasks);
-        } else {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-    }
+////    목록
+//    @GetMapping("/date/{taskDate}")
+//    public ResponseEntity<List<DashBoard>> getTodosByDate(@PathVariable Timestamp taskDate) {
+//        log.info("Fetching todos for date: {}", taskDate);
+//
+//        List<DashBoard> tasks = dashBoardService.findByDate(taskDate);
+//
+//        if (!tasks.isEmpty()) {
+//            return ResponseEntity.ok(tasks);
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+//        }
+//    }
 
     //    TODO 전체목록 보기처리용
     @GetMapping
-    public Map<String, Object> dashboardList(){
+    public Map<String, Object> dashboardList() {
 
         //서비스 목록 조회 요청하고 결과 받기
         ArrayList<DashBoard> list = dashBoardService.selectList();
@@ -95,11 +95,13 @@ public class DashBoardCotroller {
                 dashBoard.setTaskStatus("N");
 
             }
-            if (dashBoard.getTaskStatus().equals("true")) {
+            // 상태 처리
+            if ("false".equalsIgnoreCase(dashBoard.getTaskStatus())) {
+                dashBoard.setTaskStatus("N");
+            } else if ("true".equalsIgnoreCase(dashBoard.getTaskStatus())) {
                 dashBoard.setTaskStatus("Y");
             }
         }
-
 
 
             if (dashBoardService.updateDashBoard(dashBoard) > 0) {
@@ -110,4 +112,5 @@ public class DashBoardCotroller {
 
         }//update End
 
-}//DashBoard End.
+    }//DashBoard End.
+
