@@ -23,6 +23,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
 
+    // List 변환 처리용 메소드
     private ArrayList<Member> toList(List<MemberEntity> list) {
         ArrayList<Member> memberList = new ArrayList<>();
         for (MemberEntity memberEntity : list) {
@@ -55,11 +56,13 @@ public class MemberService {
         }
     }
 
+    // 아이디 정보로 회원조회 메소드
     public Member findByMemId(String memId) {
         MemberEntity memberEntity = memberRepository.findByMemId(memId);
         return memberEntity.toDto();
     }
 
+    // 회원탈퇴용 메소드
     public int removeByMemId(String memId) {
         return (int) memberRepository.removeByMemId(memId);
     }
@@ -89,6 +92,7 @@ public class MemberService {
         }
     }
 
+    // 리스트 페이징 및 검색 페이징 용 메소드
     public int selectAllCount() {
         return (int) memberRepository.selectAllCount();
     }
@@ -109,6 +113,7 @@ public class MemberService {
         return (int) memberRepository.selectMemTypeCount(keyword);
     }
 
+    // 아이디, 비밀번호 찾기 용 메소드
     public boolean findByEmailName(String memEmail, String memName) {
         return memberRepository.findByEmailName(memEmail, memName);
     }
@@ -139,21 +144,18 @@ public class MemberService {
         return (int) memberRepository.updateMemPw(memPw, memUUID);
     }
 
-    /*
+    // 소셜 로그인 관련 메소드
+    public Member findByKakaoEmail(String kakaoEmail) {
+        Optional<Member> member = memberRepository.findByKakaoEmail(kakaoEmail);
+        return member.get();
+    }
 
+    public Member findByGoogleProviderId(String GoogleProviderId) {
+        return memberRepository.findByGoogleProviderId(GoogleProviderId).toDto();
+    }
 
-
-
-    // 회원 탈퇴 처리 메소드
-    public int removeMember() {}
-
-    // 회원 상태정보 처리 메소드
-    public int updateStatusMember() {}
-
-    // 아이디 찾기 처리 메소드
-    public String findMemberId(String memName){}
-
-    // 비밀번호 찾기 처리 메소드
-    public int findMemberPw(String memId, String memName){}*/
-
+    public Member findByNaverEmail(String NaverEmail) {
+        Optional<Member> member = memberRepository.findByNaverEmail(NaverEmail);
+        return member.get();
+    }
 }

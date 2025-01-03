@@ -192,5 +192,30 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .execute();
     }
 
+    // 소셜 로그인 관련 쿼리문
+    @Override
+    public Optional<Member> findByKakaoEmail(String KakaoEmail) {
+        return Optional.ofNullable(
+                queryFactory
+                .selectFrom(member)
+                .where(member.memKakaoEmail.eq(KakaoEmail))
+                .fetchOne().toDto());
+    }
+
+    public MemberEntity findByGoogleProviderId(String GoogleProviderId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memGoogleEmail.eq(GoogleProviderId))
+                .fetchOne();
+    }
+
+    public Optional<Member> findByNaverEmail(String NaverEmail) {
+        return Optional.ofNullable(
+                queryFactory
+                .selectFrom(member)
+                .where(member.memNaverEmail.eq(NaverEmail))
+                .fetchOne().toDto());
+    }
+
 
 }

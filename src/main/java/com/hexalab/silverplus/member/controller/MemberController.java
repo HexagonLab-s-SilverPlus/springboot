@@ -46,8 +46,6 @@ public class MemberController {
 
     private final CustomValidator validator;
 
-    @Value("${uploadDir}")
-    private String uploadDir;
 
     // file upload path valiable
     @Value("${ftp.server}")
@@ -153,16 +151,17 @@ public class MemberController {
     // 회원 탈퇴 처리 메소드
     @PutMapping("/remove/{memId}")
     public ResponseEntity memberRemoveMethod(@PathVariable String memId) {
+        log.info("전달온 아이디 값 확인(memberRemoveMethod) : {}", memId);
         try {
-            if (memberService.removeByMemId(memId) == 1) {
-                return ResponseEntity.ok().build();
+            if (memberService.removeByMemId(memId) > 0) {
+                return ResponseEntity.ok().header("Response", "success").build();
             } else {
                 log.info("회원 탈퇴 실패");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                return ResponseEntity.ok().header("Response", "failed").build();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Response", "error").build();
         }
 
     }
@@ -401,10 +400,39 @@ public class MemberController {
         }
         return ResponseEntity.ok().header("Response", "verifyError").build();
     }
+
+
+    // 비밀번호 체크 메소드
+    @PostMapping("/pwdCheck")
+    public ResponseEntity memberCheckPwdMethod(@RequestBody Member member) {
+        log.info("전달 온 member 객체 데이터 확인(memberCheckPwdMethod) : {}", member);
+        // 전달 온 UUID 로 DB 조회
+        Member resultMember = memberService.selectMember(member.getMemUUID());
+        log.info("DB 에 저장된 비밀번호 확인(memberCheckPwdMethod) : {}", resultMember.getMemPw());
+        // 전달 온 비밀번호 암호화처리
+//        member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+//        log.info("암호화 처리한 비밀번호 확인(memberCheckPwdMethod) : {}", member.getMemPw());
+        if (bCryptPasswordEncoder.matches(member.getMemPw(), resultMember.getMemPw())) {
+            return ResponseEntity.ok().header("Response", "true").build();
+        } else {
+            return ResponseEntity.ok().header("Response", "false").build();
+        }
+    }
+
+
+    @GetMapping("/minfo/{memUUID}")
+    // 마이페이지(내 정보) 출력 처리 메소드
+    public ResponseEntity memberInfoMethod(@PathVariable String memUUID) {
+        log.info("전달 온 UUID 확인(memberInfoMethod) : {}", memUUID);
+        if (memUUID != null && memUUID.length() > 0) {
+            Member member = memberService.selectMember(memUUID);
+            return ResponseEntity.ok().header("Response", "success").body(member);
+        }
+        return ResponseEntity.ok().header("Response", "failed").build();
+    }
+
+
 }
 
-/*
-    @GetMapping("/minfo")
-    // 마이페이지(내 정보) 출력 처리 메소드
-    public ResponseEntity<?> memberInfoMethod() {}
- */
+
+

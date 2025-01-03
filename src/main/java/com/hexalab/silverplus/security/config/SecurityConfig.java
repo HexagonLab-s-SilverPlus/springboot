@@ -8,6 +8,8 @@ import com.hexalab.silverplus.security.jwt.filter.LoginFilter;
 import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
 import com.hexalab.silverplus.security.jwt.model.service.UserService;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
+import com.hexalab.silverplus.social.CustomOAuth2SuccessHandler;
+//import com.hexalab.silverplus.social.CustomOauth2UserService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
+//    private final CustomOauth2UserService oauth2UserService;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -62,6 +65,7 @@ public class SecurityConfig {
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
         this.memberService = memberService;
+//        this.oauth2UserService = oauth2UserService;
     }
 
 //    @Bean
@@ -102,7 +106,7 @@ public class SecurityConfig {
     // HTTP 관련 보안 설정을 정의함
     // SecurityFilterChain 을 Bean 으로 등록하고, http 서비스 요청에 대한 보안 설정을 구성함
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)      // import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -182,6 +186,9 @@ public class SecurityConfig {
                         }))
                 // 세션 정책을 STATELESS 로 설정하고, 세션을 사용하지 않는 것을 명시함
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http
+                .oauth2Login(oauth2 -> oauth2
+                .successHandler(customOAuth2SuccessHandler));
         return http.build();
     }   // securityFilterChain
 
