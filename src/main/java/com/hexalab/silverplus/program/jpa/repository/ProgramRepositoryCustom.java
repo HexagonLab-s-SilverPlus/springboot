@@ -9,6 +9,7 @@ import java.util.Map;
 
 public interface ProgramRepositoryCustom {
 
+    int selectNearbyListCount(String keyword);
     int selectTitleListCount(String keyword);
     int selectContentListCount(String keyword);
     int selectAreaListCount(String keyword);
@@ -16,4 +17,6 @@ public interface ProgramRepositoryCustom {
     int selectDateListCount(Search search);
 
     Map<String, Object> selectSearchList(Pageable pageable, Search search);
+
+    //Map<String, Object> selectNearbyPrograms(String memAddress, Pageable pageable, Search search);
 }//ProgramRepositoryCustom end

@@ -29,6 +29,14 @@ public class ProgramRepositoryCustomImpl implements ProgramRepositoryCustom {
     private QProgramEntity program = QProgramEntity.programEntity;
 
     @Override
+    public int selectNearbyListCount(String keyword) {
+        return (int) queryFactory
+                .selectFrom(program)
+                .where(program.snrOrgAddress.like("%" + keyword + "%"))
+                .fetchCount();
+    }//selectNearbyListCount end
+
+    @Override
     public int selectTitleListCount(String keyword) {
         return (int) queryFactory
                 .selectFrom(program)
@@ -121,6 +129,14 @@ public class ProgramRepositoryCustomImpl implements ProgramRepositoryCustom {
                             program.snrStartedAt.loe(search.getEndDate())
                                     .and(program.snrEndedAt.goe(search.getStartDate()))
                     )
+                    .orderBy(program.snrCreatedAt.desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+        } else if (search.getAction().equals("nearby")){
+            programList = queryFactory
+                    .selectFrom(program)
+                    .where(program.snrOrgAddress.like("%" + search.getKeyword() + "%"))
                     .orderBy(program.snrCreatedAt.desc())
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
