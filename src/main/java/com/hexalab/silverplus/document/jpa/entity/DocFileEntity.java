@@ -32,12 +32,12 @@ public class DocFileEntity {
 
 
     // Entity -> DTO 변환
-    public DocFile toDto(DocFileEntity entity) {
+    public DocFile toDto() {
         return DocFile.builder()
-                .dfId(entity.getDfId())
-                .dfOriginalName(entity.getDfOriginalName())
-                .dfRename(entity.getDfRename())
-                .docId(entity.getDocId())
+                .dfId(this.getDfId())
+                .dfOriginalName(this.getDfOriginalName())
+                .dfRename(this.getDfRename())
+                .docId(this.getDocId())
                 .build();
     }
 }

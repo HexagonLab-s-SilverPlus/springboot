@@ -24,16 +24,16 @@ public class Document {
 
 
     // Dto -> Entity 변환
-    public DocumentEntity toDto(Document document) {
+    public DocumentEntity toEntity() {
         return DocumentEntity.builder()
-                .docId(document.getDocId())
-                .docType(document.getDocType())
-                .docStatus(document.getDocStatus())
-                .docCreateAt(document.getDocCreateAt())
-                .isApproved(document.getIsApproved())
-                .docCompleted(document.getDocCompleted())
-                .writtenBy(document.getWrittenBy())
-                .approvedBy(document.getApprovedBy())
+                .docId(this.getDocId())
+                .docType(this.getDocType())
+                .docStatus(this.getDocStatus())
+                .docCreateAt(this.getDocCreateAt())
+                .isApproved(this.getIsApproved())
+                .docCompleted(this.getDocCompleted())
+                .writtenBy(this.getWrittenBy())
+                .approvedBy(this.getApprovedBy())
                 .build();
     }
 }

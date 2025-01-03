@@ -47,16 +47,16 @@ public class DocumentEntity {
 
 
     // Entity -> DTO 변환
-    public Document toDto(DocumentEntity entity) {
+    public Document toDto() {
         return Document.builder()
-                .docId(entity.getDocId())
-                .docType(entity.getDocType())
-                .docStatus(entity.getDocStatus())
-                .docCreateAt(entity.getDocCreateAt())
-                .isApproved(entity.getIsApproved())
-                .docCompleted(entity.getDocCompleted())
-                .writtenBy(entity.getWrittenBy())
-                .approvedBy(entity.getApprovedBy())
+                .docId(this.getDocId())
+                .docType(this.getDocType())
+                .docStatus(this.getDocStatus())
+                .docCreateAt(this.getDocCreateAt())
+                .isApproved(this.getIsApproved())
+                .docCompleted(this.getDocCompleted())
+                .writtenBy(this.getWrittenBy())
+                .approvedBy(this.getApprovedBy())
                 .build();
     }
 }
