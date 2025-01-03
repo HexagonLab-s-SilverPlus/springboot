@@ -4,6 +4,7 @@ import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.program.jpa.entity.ProgramEntity;
 import com.hexalab.silverplus.program.jpa.repository.ProgramRepository;
 import com.hexalab.silverplus.program.model.dto.Program;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,6 +52,10 @@ public class ProgramService {
     }//insertProgram end
 
     //Program List
+    public int selectNearbyListCount(String keyword) {
+        return programRepository.selectNearbyListCount(keyword);
+    }
+
     public int selectAllListCount() {
         return (int) programRepository.count();
     }//selectListCount end
@@ -107,4 +112,5 @@ public class ProgramService {
             return 0; // 실패
         }
     }
+
 }//ProgramService end
