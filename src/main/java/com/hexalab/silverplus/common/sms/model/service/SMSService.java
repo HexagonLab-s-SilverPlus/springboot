@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.common.sms.model.service;
 
 import com.hexalab.silverplus.common.sms.model.jpa.repository.SMSRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.NurigoApp;
@@ -15,6 +16,7 @@ import java.security.SecureRandom;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class SMSService {
 
     private final SMSRepository smsRepository;
