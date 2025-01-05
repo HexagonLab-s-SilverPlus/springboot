@@ -86,31 +86,38 @@ public class DashBoardCotroller {
         }
     }
 
-    @PutMapping("/{Id}")
-    public ResponseEntity DashboardUpdate(@ModelAttribute DashBoard dashBoard) {
-        log.info("Update request received for Id: {}", dashBoard);
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> DashboardUpdate(
+            @PathVariable("id") String id,
+            @RequestBody DashBoard dashBoard) { // @RequestBody 사용
+        log.info("Update request received for Id: {}", id);
 
+
+        // `taskDate`를 그대로 사용
+        if (dashBoard.getTaskDate() == null) {
+            return ResponseEntity.badRequest().build(); // taskDate가 없으면 잘못된 요청 처리
+        }
+        // PathVariable로 받은 ID를 DashBoard 객체에 설정
+        dashBoard.setTaskId(id);
+
+        // taskStatus 기본값 설정
         if (dashBoard.getTaskStatus() == null) {
-            if (dashBoard.getTaskStatus().equals("false")) {
-                dashBoard.setTaskStatus("N");
-
-            }
-            // 상태 처리
-            if ("false".equalsIgnoreCase(dashBoard.getTaskStatus())) {
-                dashBoard.setTaskStatus("N");
-            } else if ("true".equalsIgnoreCase(dashBoard.getTaskStatus())) {
-                dashBoard.setTaskStatus("Y");
-            }
+            dashBoard.setTaskStatus("N");
         }
 
-
-            if (dashBoardService.updateDashBoard(dashBoard) > 0) {
+        try {
+            int result = dashBoardService.updateDashBoard(dashBoard);
+            if (result > 0) {
                 return ResponseEntity.ok().build();
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
+        } catch (Exception e) {
+            log.error("Update failed: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
-        }//update End
 
-    }//DashBoard End.
+}//DashBoard End.
 
