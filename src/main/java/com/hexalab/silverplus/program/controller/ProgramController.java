@@ -4,6 +4,8 @@ import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.common.Search;
+import com.hexalab.silverplus.member.model.dto.Member;
+import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.notice.model.dto.Notice;
 import com.hexalab.silverplus.program.model.dto.Program;
 import com.hexalab.silverplus.program.model.dto.ProgramFile;
@@ -25,6 +27,8 @@ import java.nio.file.Files;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestController
@@ -35,6 +39,7 @@ public class ProgramController {
     //service DI
     private final ProgramService programService;
     private final ProgramFileService programFileService;
+    private final MemberService memberService;
 
     // file upload path valiable
     @Value("${ftp.server}")
@@ -165,8 +170,12 @@ public class ProgramController {
     //Program List
     @GetMapping
     public ResponseEntity<Map<String, Object>> selectProgramListMethod(
-        @ModelAttribute Search search
+        @ModelAttribute Search search,
+        @RequestParam(required = false) String memUUID
     ) {
+        log.info("search 추출 : {}", search);
+        log.info("memUUID 추출 : {}", memUUID);
+
         Map<String, Object> programWithFiles = new HashMap<>();
 
         Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
@@ -175,23 +184,52 @@ public class ProgramController {
         int listCount = 0;
 
         try {
+
             Map<String, Object> programlist = new HashMap<>();
 
-            if (search.getAction().equals("all")) {
-                search.setListCount(programService.selectAllListCount());
-            } else if (search.getAction().equals("pgTitle")) {
-                search.setListCount(programService.selectTitleListCount(search.getKeyword()));
-            } else if (search.getAction().equals("pgContent")) {
-                search.setListCount(programService.selectContentListCount(search.getKeyword()));
-            } else if (search.getAction().equals("pgArea")) {
-                search.setListCount(programService.selectAreaListCount(search.getKeyword()));
-            } else if (search.getAction().equals("pgOrg")) {
-                search.setListCount(programService.selectOrgNameListCount(search.getKeyword()));
-            } else if (search.getAction().equals("pgDate")) {
-                search.setListCount(programService.selectDateListCount(search));
-            }
+            if (memUUID != null) {
+                //멤버의 주소에서 지역 키워드 추출하기
+                Member snrMember = memberService.selectMember(memUUID);
+
+                // 정규 표현식: 시/도, 구/군, 읍/면 추출
+                String regex = "(?:도|시)\\s*(.*?)\\s*(?:구|군)";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(snrMember.getMemAddress());
+
+                String snrAddressKeyword = "";
+
+                if (matcher.find()) {
+                    // "구" 또는 "군" 앞의 단어를 추출
+                    snrAddressKeyword = matcher.group(1);
+                } else {
+                    System.out.println("주소에서 지역 정보를 추출할 수 없습니다.");
+                }
+
+                log.info("snrAddressKeyword : {}", snrAddressKeyword);
+                //멤버의 주소에서 지역 키워드 추출하기 end
+
+                search.setKeyword(snrAddressKeyword);
+                if (search.getAction().equals("nearby")) {
+                    search.setListCount(programService.selectNearbyListCount(search.getKeyword()));
+                }
+            } else {
+                if (search.getAction().equals("all")) {
+                    search.setListCount(programService.selectAllListCount());
+                } else if (search.getAction().equals("pgTitle")) {
+                    search.setListCount(programService.selectTitleListCount(search.getKeyword()));
+                } else if (search.getAction().equals("pgContent")) {
+                    search.setListCount(programService.selectContentListCount(search.getKeyword()));
+                } else if (search.getAction().equals("pgArea")) {
+                    search.setListCount(programService.selectAreaListCount(search.getKeyword()));
+                } else if (search.getAction().equals("pgOrg")) {
+                    search.setListCount(programService.selectOrgNameListCount(search.getKeyword()));
+                } else if (search.getAction().equals("pgDate")) {
+                    search.setListCount(programService.selectDateListCount(search));
+                }
+            }//if (memUUID != null && snrAddressKeyword != null) end
 
             programlist = programService.selectSearchList(pageable, search);
+
             log.info("programlist : {}", programlist);
 
             //각 프로그램의 모든 파일 정보 추가
