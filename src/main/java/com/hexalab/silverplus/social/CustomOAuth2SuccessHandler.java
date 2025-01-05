@@ -1,52 +1,113 @@
 package com.hexalab.silverplus.social;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
+import com.hexalab.silverplus.security.jwt.jpa.entity.RefreshToken;
+import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
+import com.hexalab.silverplus.security.jwt.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Component
-@AllArgsConstructor
 @Slf4j
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final MemberService memberService;
+    private final long access_expiration;
+    private final long refresh_expiration;
+    private final JWTUtil jwtUtil;
+    private final RefreshService refreshService;
 
-//    public CustomOAuth2SuccessHandler(MemberService memberService) {
-//        this.memberService = memberService;
-//    }
+    public CustomOAuth2SuccessHandler(MemberService memberService, @Value("${jwt.access-token.expiration}") long access_expiration, @Value("${jwt.refresh-token.expiration}") long refresh_expiration, JWTUtil jwtUtil, RefreshService refreshService) {
+        this.memberService = memberService;
+        this.access_expiration = access_expiration;
+        this.refresh_expiration = refresh_expiration;
+        this.jwtUtil = jwtUtil;
+        this.refreshService = refreshService;
+    }
 
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
-        String provider = authToken.getAuthorizedClientRegistrationId();
-
-        OAuth2User oAuth2User = authToken.getPrincipal();
-        String providerId = oAuth2User.getAttribute("sub");
-
+    // 소셜 로그인 처리 메소드
+    private void socailLogin(Member member, HttpServletResponse response, HttpServletRequest request, String provider, String providerId) {
         try {
-            if (provider.equals("google")) {
-                Member member = memberService.findByGoogleProviderId(providerId);
-                if (member != null) {
-                    String memId = member.getMemId();
-                    String memPw = member.getMemPw();
-                    getRedirectStrategy().sendRedirect(request, response, "/oauth2");
-                } else {
-                    String redirectURL = "/oauth2?"
-                }
+            if (member != null) {
+                String access = jwtUtil.generateToken(member.getMemId(), "access", access_expiration);
+                String refresh = jwtUtil.generateToken(member.getMemId(), "refresh", refresh_expiration);
+                String linked = "on";
+
+                RefreshToken refreshToken = RefreshToken.builder()
+                        .tokenUuid(UUID.randomUUID().toString())
+                        .tokenStatus("activated")
+                        .tokenValue(refresh)
+                        .tokenExpIn(refresh_expiration)
+                        .tokenMemUuid(member.getMemUUID())
+                        .build();
+                refreshService.save(refreshToken);
+
+                String redirectURL = String.format("http://localhost:3000/oauth2?linked=%s&accessToken=%s&refreshToken=%s", linked, access, refresh);
+
+                getRedirectStrategy().sendRedirect(request, response, redirectURL);
+            } else {    // 연동이 안되어있을 시
+                String linked = "off";
+                String redirectURL = String.format("http://localhost:3000/oauth2?provider=%s&socialId=%s&linked=%s", provider, providerId, linked);
+                getRedirectStrategy().sendRedirect(request, response, redirectURL);
             }
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
         }
+    }
 
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        log.info("소셜 로그인 핸들러 작동 확인");
 
+        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
+        String provider = authToken.getAuthorizedClientRegistrationId();
 
+        OAuth2User oAuth2User = authToken.getPrincipal();
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+
+        log.info("Attributes: {}", attributes);
+
+        String providerId = null;
+
+        switch (provider) {
+            case "google" -> { // 구글 소셜 로그인 시도 시
+                providerId = oAuth2User.getAttribute("sub");
+                // 연동 여부 확인을 위한 DB 조회
+                Member member = memberService.findByGoogleProviderId(providerId);
+                socailLogin(member, response, request, provider, providerId);
+            }
+            case "naver" -> {  // 네이버 소셜 로그인 시도 시
+                providerId = attributes.get("id").toString();
+
+                if (providerId == null) {
+                    throw new IllegalArgumentException("Provider ID가 null입니다.");
+                }
+                log.info("네이버 소셜 로그인 시도 확인(onAuthenticationSuccess) : {}", provider + "&" + providerId);
+                // 연동 여부 확인을 위한 DB 조회
+                Member member = memberService.findByNaverProviderId(providerId);
+                socailLogin(member, response, request, provider, providerId);
+            }
+            case "kakao" -> {  // 카카오 로그인 시도 시
+                providerId = attributes.get("id").toString();
+                // 연동 여부 확인을 위한 DB 조회
+                Member member = memberService.findByKakaoProviderId(providerId);
+                socailLogin(member, response, request, provider, providerId);
+            }
+        }
     }
 }

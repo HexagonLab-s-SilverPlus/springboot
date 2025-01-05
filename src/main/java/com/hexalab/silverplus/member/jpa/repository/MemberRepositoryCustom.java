@@ -25,7 +25,7 @@ public interface MemberRepositoryCustom {
     boolean findByPhoneId(String memCellphone, String memId);
     MemberEntity findByMemName(String memName);
     long updateMemPw(String memPw, String memUUID);
-    Optional<Member> findByKakaoEmail(String KakaoEmail);
+    MemberEntity findByKakaoProviderId(String kakaoProviderId);
     MemberEntity findByGoogleProviderId(String GoogleProviderId);
-    Optional<Member> findByNaverEmail(String NaverEmail);
+    MemberEntity findByNaverProviderId(String NaverProviderId);
 }

@@ -194,12 +194,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
     // 소셜 로그인 관련 쿼리문
     @Override
-    public Optional<Member> findByKakaoEmail(String KakaoEmail) {
-        return Optional.ofNullable(
-                queryFactory
+    public MemberEntity findByKakaoProviderId(String kakaoProviderId) {
+        return queryFactory
                 .selectFrom(member)
-                .where(member.memKakaoEmail.eq(KakaoEmail))
-                .fetchOne().toDto());
+                .where(member.memKakaoEmail.eq(kakaoProviderId))
+                .fetchOne();
     }
 
     public MemberEntity findByGoogleProviderId(String GoogleProviderId) {
@@ -209,12 +208,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchOne();
     }
 
-    public Optional<Member> findByNaverEmail(String NaverEmail) {
-        return Optional.ofNullable(
-                queryFactory
+    public MemberEntity findByNaverProviderId(String NaverProviderId) {
+        return queryFactory
                 .selectFrom(member)
-                .where(member.memNaverEmail.eq(NaverEmail))
-                .fetchOne().toDto());
+                .where(member.memNaverEmail.eq(NaverProviderId))
+                .fetchOne();
     }
 
 

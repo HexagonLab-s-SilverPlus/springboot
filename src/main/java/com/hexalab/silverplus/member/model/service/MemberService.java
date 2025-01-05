@@ -145,17 +145,30 @@ public class MemberService {
     }
 
     // 소셜 로그인 관련 메소드
-    public Member findByKakaoEmail(String kakaoEmail) {
-        Optional<Member> member = memberRepository.findByKakaoEmail(kakaoEmail);
-        return member.get();
+    public Member findByKakaoProviderId(String kakaoProviderId) {
+        MemberEntity memberEntity = memberRepository.findByKakaoProviderId(kakaoProviderId);
+        if(memberEntity != null) {
+            return memberEntity.toDto();
+        } else {
+            return null;
+        }
     }
 
     public Member findByGoogleProviderId(String GoogleProviderId) {
-        return memberRepository.findByGoogleProviderId(GoogleProviderId).toDto();
+        MemberEntity memberEntity = memberRepository.findByGoogleProviderId(GoogleProviderId);
+        if(memberEntity != null) {
+            return memberEntity.toDto();
+        } else {
+            return null;
+        }
     }
 
-    public Member findByNaverEmail(String NaverEmail) {
-        Optional<Member> member = memberRepository.findByNaverEmail(NaverEmail);
-        return member.get();
+    public Member findByNaverProviderId(String NaverProviderId) {
+       MemberEntity memberEntity = memberRepository.findByNaverProviderId(NaverProviderId);
+       if(memberEntity != null) {
+           return memberEntity.toDto();
+       } else {
+           return null;
+       }
     }
 }
