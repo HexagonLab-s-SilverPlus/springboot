@@ -4,10 +4,14 @@ import com.hexalab.silverplus.book.model.dto.Book;
 import com.hexalab.silverplus.book.model.service.BookService;
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.FTPUtility;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.notice.model.dto.NoticeFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -95,5 +102,73 @@ public class BookController {
         }
     }
 
+    // list
+    @GetMapping
+    public ResponseEntity<Map> bookList(
+            @ModelAttribute Search search
+    ){
+        log.info("search : " + search);
 
+        //검색조건 없을시
+        if (search.getKeyword() == null|| search.getKeyword().isEmpty()){
+            try{
+                // list count
+                int listCount = bookService.selectAllBookListCount();
+                log.info("listCount : " + listCount);
+                //search setting
+                if(search.getPageNumber()==0){
+                    search.setPageNumber(1);
+                    search.setPageSize(8);
+                }
+                search.setListCount(listCount);
+
+                //pageable 객체 생성
+                Pageable pageable = PageRequest.of(
+                        search.getPageNumber()-1,
+                        search.getPageSize(),
+                        Sort.by(Sort.Direction.DESC,"bookCreateAt")
+                );
+                // 목록조회
+                ArrayList<Book> bookList = bookService.selectAllBookList(pageable);
+                log.info("bookList count : " + bookList.size());
+
+                // map에 담아 전송
+                Map<String,Object> map = new HashMap<>();
+                map.put("list",bookList);
+                map.put("search",search);
+                return ResponseEntity.ok(map);
+            } catch (Exception e){
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            try{
+                int listCount = bookService.selectSearchBookListCount(search.getKeyword());
+                log.info("listCount : " + listCount);
+
+                search.setListCount(listCount);
+
+                // pageable 객체 생성
+                Pageable pageable = PageRequest.of(
+                        search.getPageNumber() -1,
+                        search.getPageSize(),
+                        Sort.by(Sort.Direction.DESC,"bookCreateAt")
+                );
+
+                // 목록조회
+                ArrayList<Book> bookList = new ArrayList<Book>();
+                bookList = bookService.selectSearchBookList(search.getKeyword(),pageable);
+                log.info("bookList count : " + bookList.size());
+
+                Map<String,Object> map = new HashMap<>();
+                map.put("list",bookList);
+                map.put("search",search);
+                log.info("map : " + map);
+                return ResponseEntity.ok(map);
+            } catch (Exception e){
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+    }
 }
