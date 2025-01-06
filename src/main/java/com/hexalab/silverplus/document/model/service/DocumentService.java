@@ -1,6 +1,7 @@
 package com.hexalab.silverplus.document.model.service;
 
 import com.hexalab.silverplus.common.ApiResponse;
+import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.document.jpa.entity.DocumentEntity;
 import com.hexalab.silverplus.document.jpa.repository.DocumentRepository;
 import com.hexalab.silverplus.document.model.dto.Document;
@@ -8,10 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 @Slf4j    //Logger 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
@@ -23,14 +27,41 @@ public class DocumentService {
     @Autowired
     private DocumentRepository documentRepository;
 
+    @Value("${ftp.server}")
+    private String ftpServer;
+
+    @Value("${ftp.port}")
+    private int ftpPort;
+
+    @Value("${ftp.username}")
+    private String ftpUsername;
+
+    @Value("${ftp.password}")
+    private String ftpPassword;
+
+    @Value("${ftp.remote-dir}")
+    private String ftpRemoteDir;
+
     /**
-     * 공문서 저장
+     * 공문서 저장 및 NAS 업로드
      */
     @Transactional
-    public Document saveDocument(Document document) {
+    public Document saveDocument(Document document, File file ) {
+        // 1. 문서 엔터티 저장
         DocumentEntity entity = document.toEntity();
         DocumentEntity savedEntity = documentRepository.save(entity);
-        log.info("Document saved: {}", savedEntity);
+
+        // 2. NAS FTP Upload
+        try(FTPUtility ftpUtility=new FTPUtility()){
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+            String remoteFilePath=ftpRemoteDir+file.getName();
+            ftpUtility.uploadFile(file.getAbsolutePath(), remoteFilePath);
+            log.info("나스에 파일이 성공적으로 업로드됨: {}", remoteFilePath);
+        }catch(IOException e){
+            log.error("나스에 파일 업로드하는게 실패:{}", e.getMessage());
+            throw new RuntimeException("FTP upload failed", e);
+        }
+
         return savedEntity.toDto();
     }
 
