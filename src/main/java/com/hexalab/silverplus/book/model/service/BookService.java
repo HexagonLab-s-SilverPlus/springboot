@@ -5,6 +5,7 @@ import com.hexalab.silverplus.book.jpa.repository.BookRepository;
 import com.hexalab.silverplus.book.model.dto.Book;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ public class BookService {
 
     // 책정보 전체 조회
     public ArrayList<Book> selectAllBookList(Pageable pageable) {
-        List<BookEntity> bookEntities = bookRepository.findAll();
+        Page<BookEntity> bookEntities = bookRepository.findAll(pageable);
         ArrayList<Book> books = new ArrayList<>();
         for (BookEntity bookEntity : bookEntities) {
             books.add(bookEntity.toDto());

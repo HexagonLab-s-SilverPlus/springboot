@@ -113,6 +113,7 @@ public class BookController {
                 // list count
                 int listCount = bookService.selectAllBookListCount();
                 log.info("listCount : " + listCount);
+                log.info("getPageNumber : " + search.getPageNumber());
                 //search setting
                 if(search.getPageNumber()==0){
                     search.setPageNumber(1);
