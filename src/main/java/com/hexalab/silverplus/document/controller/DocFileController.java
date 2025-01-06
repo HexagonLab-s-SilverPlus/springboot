@@ -7,35 +7,48 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-@Slf4j
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/doc-files")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class DocFileController {
 
     private final DocFileService docFileService;
 
     /**
-     * 파일 저장
+     * 공문서 파일 저장
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<DocFile>> saveDocFile(@RequestBody DocFile docFile) {
-        DocFile savedDocFile = docFileService.saveDocFile(docFile);
-        return ResponseEntity.ok(
-                ApiResponse.<DocFile>builder()
-                        .success(true)
-                        .message("DocFile saved successfully.")
-                        .data(savedDocFile)
-                        .build()
-        );
+    public ResponseEntity<ApiResponse<DocFile>> saveDocFile(
+            @RequestParam("docId") String docId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            DocFile savedDocFile = docFileService.saveDocFile(docId, file);
+            return ResponseEntity.ok(
+                    ApiResponse.<DocFile>builder()
+                            .success(true)
+                            .message("문서 파일이 성공적으로 저장되었습니다.")
+                            .data(savedDocFile)
+                            .build()
+            );
+        } catch (IOException e) {
+            log.error("파일 저장 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(
+                    ApiResponse.<DocFile>builder()
+                            .success(false)
+                            .message("문서 파일 저장 중 오류가 발생했습니다.")
+                            .build()
+            );
+        }
     }
 
-
-
     /**
-     * 파일 조회
+     * 공문서 파일 조회
      */
     @GetMapping("/{dfId}")
     public ResponseEntity<ApiResponse<DocFile>> getDocFileById(@PathVariable String dfId) {
@@ -43,14 +56,14 @@ public class DocFileController {
         return ResponseEntity.ok(
                 ApiResponse.<DocFile>builder()
                         .success(true)
-                        .message("DocFile retrieved successfully.")
+                        .message("문서 파일 정보를 성공적으로 조회했습니다.")
                         .data(docFile)
                         .build()
         );
     }
 
     /**
-     * 파일 삭제
+     * 공문서 파일 삭제
      */
     @DeleteMapping("/{dfId}")
     public ResponseEntity<ApiResponse<Void>> deleteDocFileById(@PathVariable String dfId) {
@@ -58,11 +71,8 @@ public class DocFileController {
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .success(true)
-                        .message("DocFile deleted successfully.")
+                        .message("문서 파일이 성공적으로 삭제되었습니다.")
                         .build()
         );
     }
-
-
-
 }
