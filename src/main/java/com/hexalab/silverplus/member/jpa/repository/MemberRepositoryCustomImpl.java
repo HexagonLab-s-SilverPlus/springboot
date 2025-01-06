@@ -183,4 +183,37 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public long updateMemPw(String memPw, String memUUID) {
+        return queryFactory
+                .update(member)
+                .set(member.memPw, memPw)
+                .where(member.memUUID.eq(memUUID))
+                .execute();
+    }
+
+    // 소셜 로그인 관련 쿼리문
+    @Override
+    public MemberEntity findByKakaoProviderId(String kakaoProviderId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memKakaoEmail.eq(kakaoProviderId))
+                .fetchOne();
+    }
+
+    public MemberEntity findByGoogleProviderId(String GoogleProviderId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memGoogleEmail.eq(GoogleProviderId))
+                .fetchOne();
+    }
+
+    public MemberEntity findByNaverProviderId(String NaverProviderId) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memNaverEmail.eq(NaverProviderId))
+                .fetchOne();
+    }
+
+
 }
