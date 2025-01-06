@@ -18,11 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -132,8 +130,53 @@ public class BookController {
                 ArrayList<Book> bookList = bookService.selectAllBookList(pageable);
                 log.info("bookList count : " + bookList.size());
 
+                // 파일담을 객체
+                List<Map<String, Object>> fileList = new ArrayList<>();
+
+                // FTP 서버 연결
+                FTPUtility ftpUtility = new FTPUtility();
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+                // 파일 리스트 만들기
+                for (Book book : bookList) {
+                    Map<String, Object> fileData = new HashMap<>();
+                    String originalFilename = book.getBookImage();
+                    String uuid = book.getBookNum();
+
+                    String mfRename = CreateRenameFileName.create(uuid,originalFilename);
+
+                    // mfRename 값 확인
+                    log.info("mfRename 값 확인: {}", mfRename);
+
+                    // 파일 경로 구성
+                    String remoteFilePath = ftpRemoteDir + "book/" + mfRename;
+                    log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
+
+                    // 파일 다운로드
+                    File tempFile = File.createTempFile("preview-", null);
+                    ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                    // 파일 읽기
+                    byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+
+                    tempFile.delete();
+
+                    // MIME 타입 결정
+                    String mimeType = getMimeType(book.getBookImage());
+                    if (mimeType == null) {
+                        mimeType = "application/octet-stream";
+                    }
+
+                    // 파일 데이터 구성
+                    fileData.put("fileName", book.getBookImage());
+                    fileData.put("mimeType", mimeType);
+                    fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
+                    fileList.add(fileData);
+                }
+
                 // map에 담아 전송
                 Map<String,Object> map = new HashMap<>();
+                map.put("fileList",fileList);
                 map.put("list",bookList);
                 map.put("search",search);
                 return ResponseEntity.ok(map);
@@ -160,7 +203,53 @@ public class BookController {
                 bookList = bookService.selectSearchBookList(search.getKeyword(),pageable);
                 log.info("bookList count : " + bookList.size());
 
+                // 파일 목록 만들기
+                // 파일담을 객체
+                List<Map<String, Object>> fileList = new ArrayList<>();
+
+                // FTP 서버 연결
+                FTPUtility ftpUtility = new FTPUtility();
+                ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+                // 파일 리스트 만들기
+                for (Book book : bookList) {
+                    Map<String, Object> fileData = new HashMap<>();
+                    String originalFilename = book.getBookImage();
+                    String uuid = book.getBookNum();
+
+                    String mfRename = CreateRenameFileName.create(uuid,originalFilename);
+
+                    // mfRename 값 확인
+                    log.info("mfRename 값 확인: {}", mfRename);
+
+                    // 파일 경로 구성
+                    String remoteFilePath = ftpRemoteDir + "book/" + mfRename;
+                    log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
+
+                    // 파일 다운로드
+                    File tempFile = File.createTempFile("preview-", null);
+                    ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                    // 파일 읽기
+                    byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+
+                    tempFile.delete();
+
+                    // MIME 타입 결정
+                    String mimeType = getMimeType(book.getBookImage());
+                    if (mimeType == null) {
+                        mimeType = "application/octet-stream";
+                    }
+
+                    // 파일 데이터 구성
+                    fileData.put("fileName", book.getBookImage());
+                    fileData.put("mimeType", mimeType);
+                    fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
+                    fileList.add(fileData);
+                }
+
                 Map<String,Object> map = new HashMap<>();
+                map.put("fileList",fileList);
                 map.put("list",bookList);
                 map.put("search",search);
                 log.info("map : " + map);
@@ -171,4 +260,45 @@ public class BookController {
             }
         }
     }
+
+    //MIME타입
+    private String getMimeType(String snrFileOGName) {
+        if (snrFileOGName == null || !snrFileOGName.contains(".")) {
+            return null;
+        }
+        String extension = snrFileOGName.substring(snrFileOGName.lastIndexOf(".") + 1).toLowerCase();
+
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+            case "bmp":
+            case "tif":
+            case "tiff":
+                return "image/" + extension;
+            case "xls":
+            case "xlsx":
+                return "application/vnd.ms-excel";
+            case "pdf":
+                return "application/pdf";
+            case "txt":
+                return "text/plain";
+            case "hwp":
+                return "application/x-hwp";
+            case "hwpx":
+                return "application/hwp+zip";
+            case "doc":
+            case "docx":
+                return "application/msword";
+            case "zip":
+            case "rar":
+            case "7z":
+            case "tar":
+            case "gz":
+                return "application/zip";
+            default:
+                return "application/octet-stream"; // 기본 MIME 타입
+        }
+    }//getMimeType end
 }
