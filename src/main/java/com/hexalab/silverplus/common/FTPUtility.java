@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.common;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,16 +10,23 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+@Slf4j
 public class FTPUtility implements AutoCloseable {
     private FTPClient ftpClient;
 
     public void connect(String server, int port, String username, String password) throws IOException {
-        ftpClient = new FTPClient();
-        ftpClient.connect(server, port);
-        ftpClient.login(username, password);
-        ftpClient.enterLocalPassiveMode(); // 패시브 모드 설정
-        ftpClient.setFileType(FTP.BINARY_FILE_TYPE); // 바이너리 파일 타입 설정
+        try {
+            ftpClient = new FTPClient();
+            ftpClient.connect(server, port);
+            ftpClient.login(username, password);
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        } catch (IOException e) {
+            log.error("FTP 서버 연결 실패: {}", e.getMessage());
+            throw e;
+        }
     }
+
 
     public String[] search(String remoteFilePath){
         try {

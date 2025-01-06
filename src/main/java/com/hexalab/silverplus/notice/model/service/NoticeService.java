@@ -101,7 +101,6 @@ public class NoticeService {
     }
     
     // 공지사항 조회수 증가
-    @Transactional
     public Notice upReadCount(String notId) {
         Optional<NoticeEntity> noticeEntity = noticeRepository.findById(notId);
         NoticeEntity notice = noticeEntity.get();

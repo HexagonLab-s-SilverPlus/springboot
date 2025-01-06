@@ -26,9 +26,11 @@ public class DocFileController {
     @PostMapping
     public ResponseEntity<ApiResponse<DocFile>> saveDocFile(
             @RequestParam("docId") String docId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("csvFilename") String csvFilename // Flask에서 전송된 csvFilename
+            ) {
         try {
-            DocFile savedDocFile = docFileService.saveDocFile(docId, file);
+            DocFile savedDocFile = docFileService.saveDocFile(docId, file, csvFilename);
             return ResponseEntity.ok(
                     ApiResponse.<DocFile>builder()
                             .success(true)
