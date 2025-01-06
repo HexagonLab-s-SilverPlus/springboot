@@ -13,12 +13,11 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @Builder
 public class Document {
-    private String docId;
-    private String docType;
-    private String docStatus;
-    private Timestamp docCreateAt;
-    private String isApproved;
-    private Timestamp docCompleted;
+    private String docId; // 문서 고유 ID
+    private String docType; // 문서 타입(전입신고서 등)
+    private Timestamp docCompletedAt; // 문서 생성날짜
+    private String isApproved; // 승인 여부(디폴트 '대기중')
+    private Timestamp approvedAt; // 담당자의 승인날짜
     private String writtenBy;
     private String approvedBy;
 
@@ -28,10 +27,9 @@ public class Document {
         return DocumentEntity.builder()
                 .docId(this.getDocId())
                 .docType(this.getDocType())
-                .docStatus(this.getDocStatus())
-                .docCreateAt(this.getDocCreateAt())
+                .docCompletedAt(this.getDocCompletedAt())
                 .isApproved(this.getIsApproved())
-                .docCompleted(this.getDocCompleted())
+                .approvedAt(this.getApprovedAt())
                 .writtenBy(this.getWrittenBy())
                 .approvedBy(this.getApprovedBy())
                 .build();
