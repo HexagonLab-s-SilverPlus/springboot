@@ -37,6 +37,7 @@ public class DocFileController {
                             .build()
             );
         } catch (IOException e) {
+            e.printStackTrace();
             log.error("파일 저장 중 오류 발생: {}", e.getMessage());
             return ResponseEntity.status(500).body(
                     ApiResponse.<DocFile>builder()
