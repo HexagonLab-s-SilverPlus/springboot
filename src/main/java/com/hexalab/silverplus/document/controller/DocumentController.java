@@ -5,21 +5,20 @@ import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/document")
-@CrossOrigin(origins = "*") // CORS 설정 (보안을 위해 필요한 대로 설정하기)
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+@Slf4j
 public class DocumentController {
-    @Autowired
-    private DocumentService documentService;
 
+    private final DocumentService documentService;
 
     /**
-     * 공문서 저장
+     * 공문서 메타 정보 저장
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Document>> saveDocument(@RequestBody Document document) {
@@ -27,14 +26,14 @@ public class DocumentController {
         return ResponseEntity.ok(
                 ApiResponse.<Document>builder()
                         .success(true)
-                        .message("Document saved successfully.")
+                        .message("문서 메타 정보가 성공적으로 저장되었습니다.")
                         .data(savedDocument)
                         .build()
         );
     }
 
     /**
-     * 공문서 조회
+     * 공문서 메타 정보 조회
      */
     @GetMapping("/{docId}")
     public ResponseEntity<ApiResponse<Document>> getDocumentById(@PathVariable String docId) {
@@ -42,7 +41,7 @@ public class DocumentController {
         return ResponseEntity.ok(
                 ApiResponse.<Document>builder()
                         .success(true)
-                        .message("Document retrieved successfully.")
+                        .message("문서 메타 정보를 성공적으로 조회했습니다.")
                         .data(document)
                         .build()
         );
@@ -59,7 +58,7 @@ public class DocumentController {
         return ResponseEntity.ok(
                 ApiResponse.<Document>builder()
                         .success(true)
-                        .message("Document status updated successfully.")
+                        .message("문서 상태가 성공적으로 업데이트되었습니다.")
                         .data(updatedDocument)
                         .build()
         );
@@ -76,7 +75,7 @@ public class DocumentController {
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .success(true)
-                        .message("Document sent to approver successfully.")
+                        .message("문서가 담당자에게 성공적으로 전송되었습니다.")
                         .build()
         );
     }
