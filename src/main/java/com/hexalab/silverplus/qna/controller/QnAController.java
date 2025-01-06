@@ -106,14 +106,7 @@ public class QnAController {
             FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
 
-            String[] fileNames = ftpUtility.search(ftpRemoteDir + "qna/");
-            ArrayList<String> fileList = new ArrayList<>();
-
-            for (String fileName : fileNames) {
-                if(fileName.startsWith(ftpRemoteDir + "qna/qna_" + qnaId)){
-                    fileList.add(fileName);
-                }
-            }
+            String[] fileList = ftpUtility.search(ftpRemoteDir + "qna/" + qnaId);
 
             Map<String, Object> map = new HashMap<>();
             map.put("qna", qna);
@@ -158,23 +151,24 @@ public class QnAController {
         QnA inserQnA = qnaService.insertQnA(qna);
         if(inserQnA != null) {
             if(files != null && files.length > 0) {
-                for (int i = 0; i < files.length; i++) {
-                    String ext = files[i].getOriginalFilename().substring(files[i].getOriginalFilename().indexOf(".") + 1);
-                    String fileName = "qna_" + inserQnA.getQnaId() + "_" + i  + "." + ext;
+                try {
+                    FTPUtility ftpUtility = new FTPUtility();
+                    ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+                    ftpUtility.uploadFile_mkDir(ftpRemoteDir + "qna/" + inserQnA.getQnaId());
 
-                    try {
-                        FTPUtility ftpUtility = new FTPUtility();
-                        ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+                    for (int i = 0; i < files.length; i++) {
+                        String ext = files[i].getOriginalFilename().substring(files[i].getOriginalFilename().indexOf(".") + 1);
+                        String fileName = "qna_" + inserQnA.getQnaId() + "_" + i  + "." + ext;
 
                         File tempFile = File.createTempFile("QnA-",null);
                         files[i].transferTo(tempFile);
                         // file upload
-                        String filePath = ftpRemoteDir + "qna/"+ fileName;
+                        String filePath = ftpRemoteDir + "qna/" + inserQnA.getQnaId() + "/" + fileName;
                         ftpUtility.uploadFile(tempFile.getAbsolutePath(), filePath);
                         tempFile.delete();
-                    }catch (Exception e){
-                        e.printStackTrace();
                     }
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
 
@@ -187,12 +181,13 @@ public class QnAController {
     public void updateQnA(
             @ModelAttribute QnA qna,
             @PathVariable String role,
-            @RequestParam(name="newFiles",required = false) MultipartFile[] files) {
-        log.info("updateQnA");
-        for (MultipartFile file : files) {
-            log.info("file : {}", file);
-        }
+            @RequestParam(name="newFiles",required = false) MultipartFile[] newFiles,
+            @RequestParam(name="deleteFiles", required = false) String[] deleteFiles) {
+
         try {
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
             QnA qnaO = qnaService.selectOne(qna.getQnaId());
             if(role.equals("ADMIN")) {
                 qnaO.setQnaADUpdateBy(qna.getQnaADUpdateBy());
@@ -208,23 +203,66 @@ public class QnAController {
                 qnaO.setQnaWUpdateAt(new Timestamp(System.currentTimeMillis()));
             }
 
-            for (int i = 0; i < files.length; i++) {
-                String ext = files[i].getOriginalFilename().substring(files[i].getOriginalFilename().indexOf(".") + 1);
-                String fileName = "qna_" + qnaO.getQnaId() + "_" + i  + "." + ext;
+            if(deleteFiles != null && deleteFiles.length > 0) {
 
-                try {
-                    FTPUtility ftpUtility = new FTPUtility();
-                    ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+                for (int i = 0; i < deleteFiles.length; i++) {
+                    int dotIndex = deleteFiles[i].lastIndexOf(".");
+                    int underscoreIndex = deleteFiles[i].lastIndexOf("_");
 
-                    File tempFile = File.createTempFile("QnA-",null);
-                    files[i].transferTo(tempFile);
-                    // file upload
-                    String filePath = ftpRemoteDir + "qna/"+ fileName;
-                    ftpUtility.uploadFile(tempFile.getAbsolutePath(), filePath);
-                    tempFile.delete();
-                }catch (Exception e){
-                    e.printStackTrace();
+                    String num =  deleteFiles[i].substring(underscoreIndex + 1, dotIndex);
+                    String ext =  deleteFiles[i].substring(dotIndex + 1);
+
+                    String deleteFileName = "qna_" + qnaO.getQnaId() + "_" + num + "." + ext;
+                    String deleteFilePath = ftpRemoteDir + "qna/" + qnaO.getQnaId() + "/" + deleteFileName;
+                    ftpUtility.deleteFile(deleteFilePath);
                 }
+
+                int idx = ftpUtility.search(ftpRemoteDir + "qna/" + qnaO.getQnaId()).length;
+                for(int i = 0; i < idx; i++) {
+                    String qnaFileName = "qna_" + qnaO.getQnaId() + "_" + i;
+                    String qnaFilePath =  ftpRemoteDir + "qna/" + qnaO.getQnaId() + "/" + qnaFileName;
+
+                    String[] qnaFileList = ftpUtility.search(ftpRemoteDir + "qna/" + qnaO.getQnaId());
+
+                    log.info("qnaFilePath : " + qnaFilePath);
+                    log.info("qnaOFilePath : " + qnaFileList[i].substring(0,qnaFileList[i].lastIndexOf(".")));
+                    if(!qnaFileList[i].substring(0,qnaFileList[i].lastIndexOf(".")).equals(qnaFilePath)){
+                        for(int j = i; j < qnaFileList.length; j++) {
+                            int numIdx = qnaFileList[j].lastIndexOf("_");
+                            int extIdx = qnaFileList[j].lastIndexOf(".");
+
+                            String fir = qnaFileList[j].substring(0,numIdx);
+                            String ext =  qnaFileList[i].substring(extIdx + 1);
+                            int num = Integer.parseInt(qnaFileList[j].substring(numIdx + 1, extIdx));
+
+                            String reQnAfile = fir + "_" + (num - 1) + "." + ext;
+                            ftpUtility.reName(qnaFileList[j], reQnAfile);
+                            log.info("asdad");
+                        }
+                        i -= 1;
+                    }
+                }
+            }
+
+            if(newFiles != null && newFiles.length > 0) {
+                int idx = ftpUtility.search(ftpRemoteDir + "qna/").length;
+
+                for (int i = 0; i < newFiles.length; i++) {
+                    String ext = newFiles[i].getOriginalFilename().substring(newFiles[i].getOriginalFilename().indexOf(".") + 1);
+                    String fileName = "qna_" + qnaO.getQnaId() + "_" + (i + idx)  + "." + ext;
+
+                    try {
+                        File tempFile = File.createTempFile("QnA-",null);
+                        newFiles[i].transferTo(tempFile);
+                        // file upload
+                        String filePath = ftpRemoteDir + "qna/" + qnaO.getQnaId() + "/" + fileName;
+                        ftpUtility.uploadFile(tempFile.getAbsolutePath(), filePath);
+                        tempFile.delete();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
             }
 
             qnaService.updateOne(qnaO);
