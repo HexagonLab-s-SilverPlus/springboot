@@ -39,15 +39,15 @@ public class DocumentService {
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
     }
 
-    @Transactional
-    public Document updateDocumentStatus(String docId, String newStatus) {
-        DocumentEntity entity = documentRepository.findById(docId)
-                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
-        entity.setDocStatus(newStatus);
-        DocumentEntity updatedEntity = documentRepository.save(entity);
-        log.info("문서 상태 업데이트: {}", updatedEntity);
-        return updatedEntity.toDto();
-    }
+//    @Transactional
+//    public Document updateDocumentStatus(String docId, String newStatus) {
+//        DocumentEntity entity = documentRepository.findById(docId)
+//                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+//        entity.setDocStatus(newStatus);
+//        DocumentEntity updatedEntity = documentRepository.save(entity);
+//        log.info("문서 상태 업데이트: {}", updatedEntity);
+//        return updatedEntity.toDto();
+//    }
 
     @Transactional
     public void sendDocumentToApprover(String docId, String approverId) {
