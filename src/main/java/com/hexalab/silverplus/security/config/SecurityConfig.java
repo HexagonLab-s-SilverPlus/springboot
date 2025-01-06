@@ -8,6 +8,10 @@ import com.hexalab.silverplus.security.jwt.filter.LoginFilter;
 import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
 import com.hexalab.silverplus.security.jwt.model.service.UserService;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
+import com.hexalab.silverplus.social.CustomOAuth2FailureHandler;
+import com.hexalab.silverplus.social.CustomOAuth2SuccessHandler;
+//import com.hexalab.silverplus.social.CustomOauth2UserService;
+import com.hexalab.silverplus.social.CustomOauth2UserService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +29,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -43,6 +48,7 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
+    private final CustomOauth2UserService oauth2UserService;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -56,12 +62,13 @@ public class SecurityConfig {
     }
 
     // 직접 생성자를 작성해서 초기화 선언함 (@RequiredArgsConstructor 를 사용하지 않을 경우)
-    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository, MemberService memberService) {
+    public SecurityConfig(RefreshService refreshService, UserService userService, JWTUtil jwtUtil, MemberRepository memberRepository, MemberService memberService, CustomOauth2UserService oauth2UserService) {
         this.refreshService = refreshService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
         this.memberService = memberService;
+        this.oauth2UserService = oauth2UserService;
     }
 
 //    @Bean
@@ -102,7 +109,7 @@ public class SecurityConfig {
     // HTTP 관련 보안 설정을 정의함
     // SecurityFilterChain 을 Bean 으로 등록하고, http 서비스 요청에 대한 보안 설정을 구성함
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)      // import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -122,7 +129,7 @@ public class SecurityConfig {
                 // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
                             // JWT 사용시 추가되는 설정임
-                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login", "/member/**", "/reissue",
+                            .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login/**", "/member/**", "/reissue",
                                                 "/api/**", "/program/**", "/dashboard/**", "/qna/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             // Notice
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
@@ -160,6 +167,7 @@ public class SecurityConfig {
                             // Member
                             .requestMatchers(HttpMethod.GET, "/member/adminList").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/member/update/{memUUID}").hasRole("ADMIN")
+                            .requestMatchers("/oauth2/authorization/**").permitAll()
 
                             // .permitAll() :  URL 의 접근을 허용한다는 의미(통과는 아님). 제일 처음 작동됨
                             // .permitAll() 에 등록되지 않은 url 은 서버에 접속 못하게 됨
@@ -169,9 +177,9 @@ public class SecurityConfig {
                             .anyRequest().authenticated();
                 })
                 // JWTFilter 와 LoginFilter 를 시큐리티 필터 체인에 추가 등록함
-                .addFilterBefore(new JWTFilter(jwtUtil, memberService), LoginFilter.class)
+                .addFilterAfter(new JWTFilter(jwtUtil, memberService), OAuth2LoginAuthenticationFilter.class)
                 // UsernamePasswordAuthenticationFilter.class : LoginFilter 를 UsernamePasswordAuthenticationFilter 로 형변환 함
-                .addFilterAt(new LoginFilter(userService, refreshService, memberRepository, authenticationManager(), jwtUtil, access_expiration, refresh_expiration), UsernamePasswordAuthenticationFilter.class)   // UsernamePasswordAuthenticationFilter : 스프링 부트에서 제공함
+                .addFilterBefore(new LoginFilter(userService, refreshService, memberRepository, authenticationManager(), jwtUtil, access_expiration, refresh_expiration), UsernamePasswordAuthenticationFilter.class)   // UsernamePasswordAuthenticationFilter : 스프링 부트에서 제공함
                 // service 가 두개여서 authenticationManager 가 service 혼동 으로 인한 스택 오버플로우 발생
                 // 로그아웃 처리는 커스터마이징함
                 .logout(logout -> logout
@@ -182,6 +190,18 @@ public class SecurityConfig {
                         }))
                 // 세션 정책을 STATELESS 로 설정하고, 세션을 사용하지 않는 것을 명시함
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oauth2UserService))
+                        .authorizationEndpoint(authorization -> authorization
+                                .baseUri("/oauth2/authorization") // OAuth2 요청 경로
+                        )
+                        .redirectionEndpoint(redirection -> redirection
+                                .baseUri("/login/oauth2/code/*") // 리다이렉트 처리 경로
+                        )
+                        .failureHandler(new CustomOAuth2FailureHandler())
+                .successHandler(customOAuth2SuccessHandler));
         return http.build();
     }   // securityFilterChain
 

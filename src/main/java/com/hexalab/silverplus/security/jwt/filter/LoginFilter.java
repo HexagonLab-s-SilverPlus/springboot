@@ -3,6 +3,7 @@ package com.hexalab.silverplus.security.jwt.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.member.jpa.repository.MemberRepository;
 import com.hexalab.silverplus.member.model.service.MemberService;
+import com.hexalab.silverplus.security.exception.CustomException;
 import com.hexalab.silverplus.security.jwt.filter.input.InputMember;
 import com.hexalab.silverplus.security.jwt.filter.output.CustomUserDetails;
 import com.hexalab.silverplus.security.jwt.jpa.entity.RefreshToken;
@@ -76,30 +77,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             log.info("authenticationManager: {}", authenticationManager);
             log.info("authentication : {}", authenticationManager.authenticate(authToken));
             return authenticationManager.authenticate(authToken);
-
-/*            // 요청 본문 읽기 (InputStream은 한 번만 읽을 수 있으므로 먼저 저장)
-            String requestBody = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            log.info("요청 본문: {}", requestBody);
-
-            // JSON 본문 파싱
-            ObjectMapper objectMapper = new ObjectMapper();
-            InputMember loginData = objectMapper.readValue(requestBody, InputMember.class);
-
-            // 사용자 인증 토큰 생성
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(loginData.getUserId(), loginData.getUserPwd());
-
-            // 사용자 정보 조회
-            Member member = memberService.selectMember(loginData.getUserId());
-            if (member == null) {
-                log.info("회원 정보가 없습니다.");
-                throw new DisabledException("사용할 수 없는 계정입니다.");
-            }
-
-            // 실제 인증 수행
-            return authenticationManager.authenticate(authToken);*/
         } catch (AuthenticationException e) {
-            log.info("인증확인");
+            log.info("인증에러 확인");
             log.error("인증 예외 발생: {}", e.getMessage());
             throw new AuthenticationServiceException("인증 처리 중 오류 발생", e);
         } catch (IOException e) {
@@ -183,28 +162,30 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             rootCause = rootCause.getCause();
         }
 
+        log.info("로그인 실패 메소드 작동 확인");
         // 전달받은 exception 을 기반으로 오류메세지를 설정함
-        String message = null;
-        if (exception instanceof UsernameNotFoundException || exception instanceof BadCredentialsException) {
-            message = "계정이 존재하지 않거나 잘못된 계정입니다.";
-        } else if (exception instanceof DisabledException) {
-            message = "계정이 비활성화되었습니다. 현재 로그인 할 수 없습니다. 관리자에게 문의하세요.";
-        } else if (exception instanceof LockedException) {
-            message = "계정이 잠겨 있습니다. 5회 접속 요청 실패이므로 10분 뒤에 다시 접속하세요.";
-        } else {
-            // 다른 예외들은 모두
-            message = "로그인 인증에 실패했습니다. 관리자에게 문의하세요.";
+        String message = "로그인 인증에 실패했습니다.";
+        String errorCode = "AUTHENTICATION_FAILED";
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        if (exception instanceof CustomException) {
+            log.info("예외처리 작동 확인");
+            CustomException customException = (CustomException) exception;
+            message = customException.getMessage();
+            errorCode = customException.getErrorCode();
+            status = customException.getHttpStatus();
         }
 
         // 응답 데이터 준비. 클라이언트 뷰 페이지에 사용할 데이터들로 저장 처리
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", message);
-        responseBody.put("status", HttpStatus.BAD_REQUEST.value());
-        responseBody.put("path", request.getRequestURI());
+        responseBody.put("errorCode", errorCode);
+        responseBody.put("httpStatus", status.value());
         responseBody.put("timestamp", LocalDateTime.now().toString());
-        responseBody.put("error", "Unauthorized");
+        responseBody.put("path", request.getRequestURI());
 
         // 응답 처리
+        response.setStatus(status.value());
         response.setContentType("application/json; charset=utf-8");
         response.setCharacterEncoding("utf-8");     // 응답 데이터에 한글이 존재할 경우
 

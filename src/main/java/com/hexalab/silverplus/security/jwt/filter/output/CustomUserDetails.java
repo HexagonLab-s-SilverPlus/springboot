@@ -5,20 +5,30 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 // Spring Security 에서 제공하는 UserDetails 인터페이스를 상속받아서 구현한 클래스
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final MemberEntity member;        // 사용자 정보를 담고 있는 Member 엔티티의 인스턴스임
+    private Map<String, Object> attributes;
 
     // 생성자를 이용한 의존성 주입
+    public CustomUserDetails(MemberEntity member, Map<String, Object> attributes) {
+        this.member = member;
+        this.attributes = attributes;
+    }
+
     public CustomUserDetails(MemberEntity member) {
         this.member = member;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 
     // 사용자의 권한목록을 반환하는 메소드
@@ -80,5 +90,10 @@ public class CustomUserDetails implements UserDetails {
         } else {
             return false;       // 비활성화(disable)
         }
+    }
+
+    @Override
+    public String getName() {
+        return "";
     }
 }

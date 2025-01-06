@@ -46,8 +46,6 @@ public class MemberController {
 
     private final CustomValidator validator;
 
-    @Value("${uploadDir}")
-    private String uploadDir;
 
     // file upload path valiable
     @Value("${ftp.server}")
@@ -153,16 +151,17 @@ public class MemberController {
     // 회원 탈퇴 처리 메소드
     @PutMapping("/remove/{memId}")
     public ResponseEntity memberRemoveMethod(@PathVariable String memId) {
+        log.info("전달온 아이디 값 확인(memberRemoveMethod) : {}", memId);
         try {
-            if (memberService.removeByMemId(memId) == 1) {
-                return ResponseEntity.ok().build();
+            if (memberService.removeByMemId(memId) > 0) {
+                return ResponseEntity.ok().header("Response", "success").build();
             } else {
                 log.info("회원 탈퇴 실패");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                return ResponseEntity.ok().header("Response", "failed").build();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Response", "error").build();
         }
 
     }
@@ -347,32 +346,93 @@ public class MemberController {
                 return ResponseEntity.ok().header("Response", "failed").build();
             }
         }
+        // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
         return ResponseEntity.ok().header("Response", "verifyError").build();
     }
-/*
 
-
-
-
-
-
-
-
-
-
-
-    @GetMapping("/minfo")
-    // 마이페이지(내 정보) 출력 처리 메소드
-    public ResponseEntity<?> memberInfoMethod() {}
-
-    @GetMapping("/fid")
-    // 아이디 찾기 처리 메소드
-    public ResponseEntity<?> memberFindIdMethod() {}
-
-    @PutMapping("/fpwd")
+    @PostMapping("/fpwd")
     // 비밀번호 찾기 처리 메소드
-    public ResponseEntity<?> memberFindPwdMethod() {}
-*/
+    public ResponseEntity memberFindPwdMethod(@RequestBody Member member) {
+        log.info("전달온 객체 확인(memberFindPwdMethod) : {}", member);
+
+        if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {        // 이메일 인증으로 비밀번호 찾기 시도 시
+            if (!memberService.findByEmailId(member.getMemEmail(), member.getMemId())) {        // 전달온 이메일 정보와 아이디 정보로 DB 조회
+                // 아이디 정보로 DB 조회하여 조회된 member 객체 저장
+                Member resultMember = memberService.findByMemId(member.getMemId());
+                // 조회된 member 객체에서 UUID 정보 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemUUID());
+            } else {
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {     // 휴대전화 인증으로 비밀번호 찾기 시도 시
+            if (!memberService.findByPhoneId(member.getMemCellphone(), member.getMemId())) {        // 전달온 휴대전화 정보와 아이디 정보로 DB 조회
+                // 아이디 정보로 DB 조회하여 조회된 member 객체 저장
+                Member resultMember = memberService.findByMemId(member.getMemId());
+                // 조회된 member 객체에서 UUID 정보 추출하여 클라이언트로 반환
+                return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemUUID());
+            } else {
+                // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        }
+        // DB 조회 실패시 반환(클라이언트의 AuthProvider 인터셉터를 피하기 위해 ok 결과로 반환. 헤더에 실패정보 함께 보냄)
+        return ResponseEntity.ok().header("Response", "verifyError").build();
+    }
+
+    // 비밀번호 수정 처리 메소드
+    @PutMapping("/pwdupdate/{memUUID}")
+    public ResponseEntity memberUpdatePwdMethod(@PathVariable String memUUID, @RequestBody Member member) {
+        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", member.getMemPw());
+        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", memUUID);
+
+
+        if (member.getMemPw() != null && member.getMemPw().length() > 0) {
+            String encodeMemPw = bCryptPasswordEncoder.encode(member.getMemPw());
+            log.info("암호화 처리된 비밀번호 확인(memberUpdatePwdMethod) : {}", encodeMemPw);
+            int result = memberService.updateMemPw(encodeMemPw, memUUID);
+            if (result > 0) {
+                log.info("비밀번호 수정 성공 여부(memberUpdatePwdMethod) : {}", result);
+                return ResponseEntity.ok().header("Response", "success").build();
+            } else {
+                return ResponseEntity.ok().header("Response", "failed").build();
+            }
+        }
+        return ResponseEntity.ok().header("Response", "verifyError").build();
+    }
+
+
+    // 비밀번호 체크 메소드
+    @PostMapping("/pwdCheck")
+    public ResponseEntity memberCheckPwdMethod(@RequestBody Member member) {
+        log.info("전달 온 member 객체 데이터 확인(memberCheckPwdMethod) : {}", member);
+        // 전달 온 UUID 로 DB 조회
+        Member resultMember = memberService.selectMember(member.getMemUUID());
+        log.info("DB 에 저장된 비밀번호 확인(memberCheckPwdMethod) : {}", resultMember.getMemPw());
+        // 전달 온 비밀번호 암호화처리
+//        member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+//        log.info("암호화 처리한 비밀번호 확인(memberCheckPwdMethod) : {}", member.getMemPw());
+        if (bCryptPasswordEncoder.matches(member.getMemPw(), resultMember.getMemPw())) {
+            return ResponseEntity.ok().header("Response", "true").build();
+        } else {
+            return ResponseEntity.ok().header("Response", "false").build();
+        }
+    }
+
+
+    @GetMapping("/minfo/{memUUID}")
+    // 마이페이지(내 정보) 출력 처리 메소드
+    public ResponseEntity memberInfoMethod(@PathVariable String memUUID) {
+        log.info("전달 온 UUID 확인(memberInfoMethod) : {}", memUUID);
+        if (memUUID != null && memUUID.length() > 0) {
+            Member member = memberService.selectMember(memUUID);
+            return ResponseEntity.ok().header("Response", "success").body(member);
+        }
+        return ResponseEntity.ok().header("Response", "failed").build();
+    }
 
 
 }
+
+
+
