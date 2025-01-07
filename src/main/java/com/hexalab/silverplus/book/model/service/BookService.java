@@ -60,4 +60,8 @@ public class BookService {
         }
         return books;
     }
+
+    public Book selectBook(String bookNum) {
+        return bookRepository.findById(bookNum).get().toDto();
+    }
 }
