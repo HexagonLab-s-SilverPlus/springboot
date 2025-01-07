@@ -1,23 +1,32 @@
 package com.hexalab.silverplus.common;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+@Slf4j
 public class FTPUtility implements AutoCloseable {
     private FTPClient ftpClient;
 
     public void connect(String server, int port, String username, String password) throws IOException {
-        ftpClient = new FTPClient();
-        ftpClient.connect(server, port);
-        ftpClient.login(username, password);
-        ftpClient.enterLocalPassiveMode(); // 패시브 모드 설정
-        ftpClient.setFileType(FTP.BINARY_FILE_TYPE); // 바이너리 파일 타입 설정
+        try {
+            ftpClient = new FTPClient();
+            ftpClient.connect(server, port);
+            ftpClient.login(username, password);
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        } catch (IOException e) {
+            log.error("FTP 서버 연결 실패: {}", e.getMessage());
+            throw e;
+        }
     }
+
 
     public String[] search(String remoteFilePath){
         try {
@@ -29,11 +38,28 @@ public class FTPUtility implements AutoCloseable {
         }
     }
 
+    public void reName(String oPath, String rePath){
+        try {
+            ftpClient.rename(oPath, rePath);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     public void uploadFile(String localFilePath, String remoteFilePath) throws IOException {
         try (var inputStream = new FileInputStream(localFilePath)) {
             boolean success = ftpClient.storeFile(remoteFilePath, inputStream);
             if (!success) {
                 throw new IOException("파일 업로드 실패: " + ftpClient.getReplyString());
+            }
+        }
+    }
+
+    public void uploadFile_mkDir(String remoteDirectory) throws IOException {
+        if (!ftpClient.changeWorkingDirectory(remoteDirectory)) {
+            // 디렉토리가 없으면 생성
+            if (!ftpClient.makeDirectory(remoteDirectory)) {
+                throw new IOException("디렉토리 생성 실패: " + ftpClient.getReplyString());
             }
         }
     }

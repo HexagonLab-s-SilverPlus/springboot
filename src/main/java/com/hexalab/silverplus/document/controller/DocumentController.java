@@ -1,23 +1,13 @@
 package com.hexalab.silverplus.document.controller;
 
 import com.hexalab.silverplus.common.ApiResponse;
-import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -90,13 +80,4 @@ public class DocumentController {
                         .build()
         );
     }
-
-    @GetMapping()
-    public ResponseEntity<Map<String, Object>> documentList() {
-        List<Map<String, Object>> list = documentService.getCustomDocumentList();
-        Map<String, Object> map = new HashMap<>();
-        map.put("list", list);
-        return ResponseEntity.ok(map);
-    }
-
 }

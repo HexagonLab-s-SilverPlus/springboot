@@ -24,16 +24,13 @@ public class DocumentEntity {
     @Column(name = "DOC_TYPE", nullable = false)
     private String docType;
 
-    @Column(name = "DOC_STATUS")
-    private String docStatus;
-
-    @Column(name = "DOC_CREATE_AT", nullable = false)
-    private Timestamp docCreateAt;
+    @Column(name = "DOC_COMPLETED_AT", nullable = false)
+    private Timestamp docCompletedAt;
 
     @Column(name = "IS_APPROVED")
     private String isApproved;
 
-    @Column(name = "DOC_COMPLETED_AT")
+    @Column(name = "DOC_COMPLETED")
     private Timestamp docCompleted;
 
     @Column(name = "WRITTEN_BY", nullable = false)
@@ -49,10 +46,9 @@ public class DocumentEntity {
         return Document.builder()
                 .docId(this.getDocId())
                 .docType(this.getDocType())
-                .docStatus(this.getDocStatus())
-                .docCreateAt(this.getDocCreateAt())
+                .docCompletedAt(this.getDocCompletedAt())
                 .isApproved(this.getIsApproved())
-                .docCompleted(this.getDocCompleted())
+                .approvedAt(this.getApprovedAt())
                 .writtenBy(this.getWrittenBy())
                 .approvedBy(this.getApprovedBy())
                 .build();

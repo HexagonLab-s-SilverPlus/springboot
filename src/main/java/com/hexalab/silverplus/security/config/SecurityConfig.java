@@ -8,6 +8,7 @@ import com.hexalab.silverplus.security.jwt.filter.LoginFilter;
 import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
 import com.hexalab.silverplus.security.jwt.model.service.UserService;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
+import com.hexalab.silverplus.social.CustomOAuth2AuthorizationRequestResolver;
 import com.hexalab.silverplus.social.CustomOAuth2FailureHandler;
 import com.hexalab.silverplus.social.CustomOAuth2SuccessHandler;
 //import com.hexalab.silverplus.social.CustomOauth2UserService;
@@ -15,6 +16,7 @@ import com.hexalab.silverplus.social.CustomOauth2UserService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +31,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -69,12 +72,18 @@ public class SecurityConfig {
         this.memberRepository = memberRepository;
         this.memberService = memberService;
         this.oauth2UserService = oauth2UserService;
+//        this.authorizationRequestResolver = authorizationRequestResolver;
     }
 
 //    @Bean
 //    public BCryptPasswordEncoder passwordEncoder() {
 //        return new BCryptPasswordEncoder();
 //    }
+
+    @Bean
+    public CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+        return new CustomOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+    }
 
     // 인증 (Authentication) 관리자를 스프링 부트 컨테이너에 Bean 으로 등록해야 함
     // 인증 과정에서 중요한 클래스임
@@ -93,6 +102,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000"); // React 클라이언트 URL
+        configuration.addAllowedOrigin("http://localhost:5000"); // Flask 서버 URL 추가
         configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
         configuration.addAllowedHeader("*"); // 모든 헤더 허용
         configuration.setAllowCredentials(true); // 인증 정보 허용
@@ -109,7 +119,9 @@ public class SecurityConfig {
     // HTTP 관련 보안 설정을 정의함
     // SecurityFilterChain 을 Bean 으로 등록하고, http 서비스 요청에 대한 보안 설정을 구성함
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler, CustomOAuth2AuthorizationRequestResolver resolver) throws Exception {
+
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)      // import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -158,11 +170,23 @@ public class SecurityConfig {
 
                             // Workspace
                             .requestMatchers(HttpMethod.POST, "/api/workspace/create").hasAnyRole("ADMIN", "SENIOR")    // ADMIN 추후 삭제
-                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}/status").hasAnyRole("ADMIN", "SENIOR")  // TODO: (From.은영) 제가 수정했습니다. 노션에도 업뎃은 해놨어요. ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}/status").hasAnyRole("ADMIN", "SENIOR")
 
                             // Chat
                             .requestMatchers(HttpMethod.POST, "/api/chat/save").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
                             .requestMatchers(HttpMethod.GET, "/api/chat/history/{workspaceId}").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+
+
+                            // Document (은영이가 작성함 총총)
+                            .requestMatchers(HttpMethod.POST, "/api/document").hasAnyRole("SENIOR", "ADMIN") // saveDocument
+                            .requestMatchers(HttpMethod.GET, "/api/document/{docId}").hasAnyRole("SENIOR", "MANAGER", "ADMIN") // getDocumentById
+                            .requestMatchers(HttpMethod.POST, "/api/document/{docId}/send").hasAnyRole("SENIOR", "ADMIN") // sendDocumentToApprove
+
+                            // DocFile (은영이가 작성함 총총)
+                            .requestMatchers(HttpMethod.POST, "/api/doc-files").hasAnyRole("SENIOR", "ADMIN") // saveDocFile
+                            .requestMatchers(HttpMethod.GET, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "MANAGER", "ADMIN") // getDocFileById
+                            .requestMatchers(HttpMethod.DELETE, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "ADMIN") // deleteDocFileById
+
 
                             // Member
                             .requestMatchers(HttpMethod.GET, "/member/adminList").hasRole("ADMIN")
@@ -190,12 +214,13 @@ public class SecurityConfig {
                         }))
                 // 세션 정책을 STATELESS 로 설정하고, 세션을 사용하지 않는 것을 명시함
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        // 소셜 로그인
         http
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oauth2UserService))
                         .authorizationEndpoint(authorization -> authorization
-                                .baseUri("/oauth2/authorization") // OAuth2 요청 경로
+                                .authorizationRequestResolver(resolver)
                         )
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/login/oauth2/code/*") // 리다이렉트 처리 경로

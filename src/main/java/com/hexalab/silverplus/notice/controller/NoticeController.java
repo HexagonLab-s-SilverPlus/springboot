@@ -180,7 +180,7 @@ public class NoticeController {
             }
 
         // 검색조건 있을시
-        } else if(search.getKeyword() != null){
+        } else {
             try{
                 int listCount = 0;
                 // 목록 갯수 출력
@@ -219,7 +219,6 @@ public class NoticeController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
         }
-        return null;
     }
 
     // 공지사항 상세보기
