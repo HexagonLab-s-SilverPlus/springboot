@@ -54,6 +54,21 @@ public class ChatSessionService {
         chatSessionRepository.save(session);
     }
 
+
+    /**
+     * 특정 워크스페이스의 활성화 상태인 세션 조회
+     * @param workspaceId
+     */
+    @Transactional
+    public void incrementSessionMessages(String workspaceId) {
+        ChatSessionEntity session = chatSessionRepository.findActiveSessionByWorkspaceId(workspaceId)
+                .orElseThrow(() -> new IllegalArgumentException("활성 세션을 찾을 수 없습니다."));
+        session.setSessTotMsgs(session.getSessTotMsgs() + 1);
+        chatSessionRepository.save(session);
+    }
+
+
+
     /**
      * 활성화 상태인 세션 리스트 조회 메소드
      * @return

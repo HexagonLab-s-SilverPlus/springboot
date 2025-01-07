@@ -48,6 +48,9 @@ public class ChatService {
                     .orElseThrow(() -> new IllegalArgumentException("워크스페이스 ID:  " + chatMessage.getMsgWorkspaceId()
                             + "에 해당하는 워크스페이스가 존재하지 않습니다."));
 
+            // 워크스페이스
+            //chatMessage.setMsgWorkspaceId(workspace.getWorkspaceId());
+
             // 메시지 저장
             ChatMessageEntity chatMessageEntity = chatMessage.toEntity();
 

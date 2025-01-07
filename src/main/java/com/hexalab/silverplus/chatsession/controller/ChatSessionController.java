@@ -58,6 +58,27 @@ public class ChatSessionController {
         }
     }
 
+
+    @PatchMapping("/update-messages")
+    public ResponseEntity<ApiResponse<String>> updateSessionMessages(@RequestParam String workspaceId) {
+        try {
+            chatSessionService.incrementSessionMessages(workspaceId);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .success(true)
+                    .message("세션 메시지 수 업데이트 성공")
+                    .build());
+        } catch (Exception e) {
+            log.error("세션 메시지 수 업데이트 실패:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<String>builder()
+                            .success(false)
+                            .message("세션 메시지 수 업데이트 실패")
+                            .build());
+        }
+    }
+
+
+
     // 활성 세션 조회
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<ChatSession>>> getActiveSessions() {
