@@ -4,6 +4,8 @@ import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.document.jpa.entity.DocumentEntity;
 import com.hexalab.silverplus.document.jpa.repository.DocumentRepository;
 import com.hexalab.silverplus.document.model.dto.Document;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.DynamicUpdate;
@@ -12,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j    //Logger 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
 @Service
@@ -59,7 +61,7 @@ public class DocumentService {
         Optional<DocumentEntity> documentOpt = documentRepository.findById(docId);
         if (documentOpt.isPresent()) {
             DocumentEntity entity = documentOpt.get();
-            entity.setDocStatus(newStatus);
+//            entity.setDocStatus(newStatus);
             DocumentEntity updatedEntity = documentRepository.save(entity);
             log.info("Document status updated: {}", updatedEntity);
             return updatedEntity.toDto();
@@ -85,5 +87,28 @@ public class DocumentService {
             throw new IllegalArgumentException("Document not found.");
         }
     }
+
+
+        private final EntityManager entityManager;
+        @Transactional
+
+        public List<Map<String, Object>> getCustomDocumentList() {
+            // Native Query를 사용해 필요한 컬럼만 선택
+            String sql = "SELECT DOC_ID, DOC_TYPE, WRITTEN_BY, DOC_COMPLETED_AT AS CREATE_AT FROM DOCUMENT";
+            Query query = entityManager.createNativeQuery(sql);
+
+            // 결과를 Map 형식으로 변환
+            List<Object[]> result = query.getResultList();
+            List<Map<String, Object>> documents = new ArrayList<>();
+            for (Object[] row : result) {
+                Map<String, Object> document = new HashMap<>();
+                document.put("docId", row[0]);
+                document.put("docType", row[1]);
+                document.put("writtenBy", row[2]);
+                document.put("createAt", row[3]);
+                documents.add(document);
+            }
+            return documents;
+        }
 
 }

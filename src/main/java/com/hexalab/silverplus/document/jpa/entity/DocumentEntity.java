@@ -1,10 +1,8 @@
 package com.hexalab.silverplus.document.jpa.entity;
 
 import com.hexalab.silverplus.document.model.dto.Document;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +33,7 @@ public class DocumentEntity {
     @Column(name = "IS_APPROVED")
     private String isApproved;
 
-    @Column(name = "DOC_COMPLETED")
+    @Column(name = "DOC_COMPLETED_AT")
     private Timestamp docCompleted;
 
     @Column(name = "WRITTEN_BY", nullable = false)
