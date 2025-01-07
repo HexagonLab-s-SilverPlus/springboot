@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.*;
@@ -172,8 +173,23 @@ public class BookController {
                         mimeType = "application/octet-stream";
                     }
 
+                    // text파일 텍스트 뽑아서 전송
+                    String refilename = CreateRenameFileName.create(book.getBookNum(),book.getBookDetail());
+                    String remotetextPath = ftpRemoteDir + "book/" + refilename;
+                    File temptext = File.createTempFile("preview2-", null);
+                    ftpUtility.downloadFile(remotetextPath, temptext.getAbsolutePath());
+                    log.info("test1111111111111111111111111111111111111");
+                    byte[] filetext = Files.readAllBytes(temptext.toPath());
+                    log.info("test222222222222222222222222222222222222222");
+                    String textContexnt = new String(filetext, StandardCharsets.UTF_8);
+                    temptext.delete();
+                    log.info(textContexnt);
+
+
+
                     // 파일 데이터 구성
                     fileData.put("book", book);
+                    fileData.put("textContexnt", textContexnt);
                     fileData.put("fileName", book.getBookImage());
                     fileData.put("mimeType", mimeType);
                     fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
@@ -248,8 +264,21 @@ public class BookController {
                         mimeType = "application/octet-stream";
                     }
 
+                    // text파일 텍스트 뽑아서 전송
+                    String refilename = CreateRenameFileName.create(book.getBookNum(),book.getBookDetail());
+                    String remotetextPath = ftpRemoteDir + "book/" + refilename;
+                    File temptext = File.createTempFile("preview2-", null);
+                    ftpUtility.downloadFile(remotetextPath, temptext.getAbsolutePath());
+                    log.info("test1111111111111111111111111111111111111");
+                    byte[] filetext = Files.readAllBytes(temptext.toPath());
+                    log.info("test222222222222222222222222222222222222222");
+                    String textContexnt = new String(filetext, StandardCharsets.UTF_8);
+                    temptext.delete();
+                    log.info(textContexnt);
+
                     // 파일 데이터 구성
                     fileData.put("book", book);
+                    fileData.put("textContexnt", textContexnt);
                     //fileData.put("uuid", book.getBookNum());
                     fileData.put("fileName", book.getBookImage());
                     fileData.put("mimeType", mimeType);
@@ -333,11 +362,22 @@ public class BookController {
 
     @DeleteMapping("/{bookNum}")
     public ResponseEntity deleteBook(
-            @PathVariable("bookNum") String bookNum
+            @PathVariable("bookNum") String bookNum,
+            @RequestParam("text") String text,
+            @RequestParam("image") String image
     ){
         log.info("bookNum : " + bookNum);
         try{
             if(bookService.bookDelete(bookNum)==1){
+                // nas ftp connect
+                FTPUtility ftpUtility = new FTPUtility();
+                ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+                String textrename = CreateRenameFileName.create(bookNum,image);
+                String imagename = CreateRenameFileName.create(bookNum,text);
+                String textFilePath = ftpRemoteDir + "book/" + textrename;
+                String imageFilePath = ftpRemoteDir + "book/" + imagename;
+                ftpUtility.deleteFile(textFilePath);
+                ftpUtility.deleteFile(imageFilePath);
                 return ResponseEntity.ok().build();
             } else{
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -348,6 +388,74 @@ public class BookController {
         }
     };
 
+
+    @PutMapping("/{bookNum}")
+    public ResponseEntity updateBook(
+            @ModelAttribute Book book,
+            @RequestParam(name="bookfile",required=false) MultipartFile bookfile,
+            @RequestParam(name="bookimage",required=false) MultipartFile bookimage
+    ){
+        log.info("book : " + book);
+        log.info("bookfile : " + bookfile);
+        log.info("bookimage : " + bookimage);
+
+        try{
+            // nas ftp connect
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+            if (bookfile!=null){
+                // 기존파일 삭제
+                String textrename = CreateRenameFileName.create(book.getBookNum(),book.getBookDetail());
+                String textFilePath = ftpRemoteDir + "book/" + textrename;
+                ftpUtility.deleteFile(textFilePath);
+                // create file
+                File tempFile1 = File.createTempFile("book-",null);
+                // 파일변경
+                bookfile.transferTo(tempFile1);
+                // 파일이름 생성
+                String renameFile1 = CreateRenameFileName.create(book.getBookNum(),bookfile.getOriginalFilename());
+                // 패스설정
+                String remoteFilePath1 = ftpRemoteDir + "book/"+renameFile1;
+                // 파일 업로드
+                ftpUtility.uploadFile(tempFile1.getAbsolutePath(),remoteFilePath1);
+                // 임시파일 삭제
+                tempFile1.delete();
+                book.setBookDetail(bookfile.getOriginalFilename());
+            }
+            if (bookimage!=null){
+                // 기존파일 삭제
+                String imagename = CreateRenameFileName.create(book.getBookNum(),book.getBookImage());
+                String imageFilePath = ftpRemoteDir + "book/" + imagename;
+                ftpUtility.deleteFile(imageFilePath);
+                // create file
+                File tempFile1 = File.createTempFile("book-",null);
+                // 파일변경
+                bookimage.transferTo(tempFile1);
+                // 파일이름 생성
+                String renameFile1 = CreateRenameFileName.create(book.getBookNum(),bookimage.getOriginalFilename());
+                // 패스설정
+                String remoteFilePath1 = ftpRemoteDir + "book/"+renameFile1;
+                // 파일 업로드
+                ftpUtility.uploadFile(tempFile1.getAbsolutePath(),remoteFilePath1);
+                // 임시파일 삭제
+                tempFile1.delete();
+                book.setBookImage(bookimage.getOriginalFilename());
+            }
+            book.setBookUpdateAt(new Timestamp(System.currentTimeMillis()));
+
+            if (bookService.updatebook(book)==1){
+                log.info("책등록 성공");
+                return ResponseEntity.ok().build();
+            } else{
+                log.info("책 등록 실패");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
+        } catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 
     //MIME타입
