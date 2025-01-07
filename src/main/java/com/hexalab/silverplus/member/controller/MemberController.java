@@ -9,7 +9,11 @@ import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.dto.MemberFiles;
 import com.hexalab.silverplus.member.model.service.MemberFilesService;
 import com.hexalab.silverplus.member.model.service.MemberService;
+import com.hexalab.silverplus.security.jwt.jpa.entity.RefreshToken;
+import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
+import com.hexalab.silverplus.security.jwt.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,12 +43,20 @@ import java.util.*;
 public class MemberController {
 
     private final MemberService memberService;
-
+    private final RefreshService refreshService;
     private final MemberFilesService memberFilesService;
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     private final CustomValidator validator;
+
+    private final JWTUtil jwtUtil;
+
+    @Value("${jwt.access-token.expiration}")
+    private long access_expiration;
+    @Value("${jwt.refresh-token.expiration}")
+    private long refresh_expiration;
+
 
 
     // file upload path valiable
@@ -432,6 +444,51 @@ public class MemberController {
     }
 
 
+    // 소셜 연동해제 처리 메소드
+    @PutMapping("/social/{memUUID}")
+    public ResponseEntity memberSocialUpdateMethod(@PathVariable String memUUID, @RequestParam("provider") String provider) {
+        log.info("전달온 provider 값 확인 (memberSocialUpdateMethod) : {}", provider);
+        Member member = memberService.selectMember(memUUID);
+        switch (provider) {
+            case "google" -> {
+                memberService.updateSocial(false, provider, member.getMemGooglePi(), memUUID);
+                return ResponseEntity.ok().header("Response", "success").build();
+            }
+            case "naver" -> {
+                memberService.updateSocial(false, provider, member.getMemNaverPi(), memUUID);
+                return ResponseEntity.ok().header("Response", "success").build();
+            }
+            case "kakao" -> {
+                memberService.updateSocial(false, provider, member.getMemKakaoPi(), memUUID);
+                return ResponseEntity.ok().header("Response", "success").build();
+            }
+        }
+        return ResponseEntity.ok().header("Response", "failed").build();
+    }
+
+
+    // 페이스 로그인 처리 메소드
+    @PostMapping("/facelogin")
+    public ResponseEntity memberFaceLoginMethod(@RequestBody Member member, HttpServletResponse response) {
+        String profile = member.getMemSeniorProfile();
+        Member resultMember = memberService.findByProfile(profile);
+
+        String memId = resultMember.getMemId();
+
+        String access = jwtUtil.generateToken(memId, "access", access_expiration);
+        String refresh = jwtUtil.generateToken(memId, "refresh", refresh_expiration);
+
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .tokenUuid(UUID.randomUUID().toString())
+                .tokenStatus("activated")
+                .tokenValue(refresh)
+                .tokenExpIn(refresh_expiration)
+                .tokenMemUuid(resultMember.getMemUUID())
+                .build();
+        refreshService.save(refreshTokenEntity);
+
+        return ResponseEntity.ok().header("Authorization", "Bearer " + access).header("Response", refresh).build();
+    }
 }
 
 

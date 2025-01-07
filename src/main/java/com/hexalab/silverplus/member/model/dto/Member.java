@@ -49,6 +49,10 @@ public class Member implements java.io.Serializable {
     private String memGoogleEmail;      // MEM_GOOGLE_EMAIL	VARCHAR2(50 BYTE)
     private String memUUIDFam;      // MEM_UUID_FAM	VARCHAR2(100 BYTE)
     private String memUUIDMgr;      // MEM_UUID_MGR	VARCHAR2(100 BYTE)
+    private String memGooglePi;
+    private String memKakaoPi;
+    private String memNaverPi;
+    private String memSeniorProfile;
 
     public MemberEntity toEntity() {
         return MemberEntity.builder()
@@ -75,6 +79,10 @@ public class Member implements java.io.Serializable {
                 .memGoogleEmail(memGoogleEmail)
                 .memUUIDFam(memUUIDFam)
                 .memUUIDMgr(memUUIDMgr)
+                .memGooglePi(memGooglePi)
+                .memKakaoPi(memKakaoPi)
+                .memNaverPi(memNaverPi)
+                .memSeniorProfile(memSeniorProfile)
                 .build();
     }
 }

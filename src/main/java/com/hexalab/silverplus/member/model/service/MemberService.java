@@ -145,8 +145,8 @@ public class MemberService {
     }
 
     // 소셜 로그인 관련 메소드
-    public Member findByKakaoProviderId(String kakaoProviderId) {
-        MemberEntity memberEntity = memberRepository.findByKakaoProviderId(kakaoProviderId);
+    public Member findBySocialPi(String provider ,String SocialPi) {
+        MemberEntity memberEntity = memberRepository.findBySocialPi(provider, SocialPi);
         if(memberEntity != null) {
             return memberEntity.toDto();
         } else {
@@ -154,21 +154,16 @@ public class MemberService {
         }
     }
 
-    public Member findByGoogleProviderId(String GoogleProviderId) {
-        MemberEntity memberEntity = memberRepository.findByGoogleProviderId(GoogleProviderId);
+    public int updateSocial(Boolean linking, String provider, String socialPi, String memUUID) {
+        return (int) memberRepository.updateSocial(linking, provider, socialPi, memUUID);
+    }
+
+    public Member findByProfile(String memSeniorProfile) {
+        MemberEntity memberEntity = memberRepository.findByProfile(memSeniorProfile);
         if(memberEntity != null) {
             return memberEntity.toDto();
         } else {
             return null;
         }
-    }
-
-    public Member findByNaverProviderId(String NaverProviderId) {
-       MemberEntity memberEntity = memberRepository.findByNaverProviderId(NaverProviderId);
-       if(memberEntity != null) {
-           return memberEntity.toDto();
-       } else {
-           return null;
-       }
     }
 }

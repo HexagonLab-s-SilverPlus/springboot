@@ -8,6 +8,7 @@ import com.hexalab.silverplus.security.jwt.filter.LoginFilter;
 import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
 import com.hexalab.silverplus.security.jwt.model.service.UserService;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
+import com.hexalab.silverplus.social.CustomOAuth2AuthorizationRequestResolver;
 import com.hexalab.silverplus.social.CustomOAuth2FailureHandler;
 import com.hexalab.silverplus.social.CustomOAuth2SuccessHandler;
 //import com.hexalab.silverplus.social.CustomOauth2UserService;
@@ -15,6 +16,7 @@ import com.hexalab.silverplus.social.CustomOauth2UserService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +31,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -69,12 +72,18 @@ public class SecurityConfig {
         this.memberRepository = memberRepository;
         this.memberService = memberService;
         this.oauth2UserService = oauth2UserService;
+//        this.authorizationRequestResolver = authorizationRequestResolver;
     }
 
 //    @Bean
 //    public BCryptPasswordEncoder passwordEncoder() {
 //        return new BCryptPasswordEncoder();
 //    }
+
+    @Bean
+    public CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+        return new CustomOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+    }
 
     // 인증 (Authentication) 관리자를 스프링 부트 컨테이너에 Bean 으로 등록해야 함
     // 인증 과정에서 중요한 클래스임
@@ -109,7 +118,9 @@ public class SecurityConfig {
     // HTTP 관련 보안 설정을 정의함
     // SecurityFilterChain 을 Bean 으로 등록하고, http 서비스 요청에 대한 보안 설정을 구성함
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2SuccessHandler customOAuth2SuccessHandler, CustomOAuth2AuthorizationRequestResolver resolver) throws Exception {
+
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)      // import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -190,12 +201,13 @@ public class SecurityConfig {
                         }))
                 // 세션 정책을 STATELESS 로 설정하고, 세션을 사용하지 않는 것을 명시함
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        // 소셜 로그인
         http
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oauth2UserService))
                         .authorizationEndpoint(authorization -> authorization
-                                .baseUri("/oauth2/authorization") // OAuth2 요청 경로
+                                .authorizationRequestResolver(resolver)
                         )
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/login/oauth2/code/*") // 리다이렉트 처리 경로
