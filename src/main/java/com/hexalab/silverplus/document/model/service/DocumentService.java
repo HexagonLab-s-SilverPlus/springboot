@@ -16,19 +16,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-<<<<<<< HEAD
 import java.util.*;
 
-@Slf4j    //Logger 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
-=======
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
->>>>>>> dev
+@Slf4j    //Logger 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
@@ -57,7 +54,7 @@ public class DocumentService {
 //        return updatedEntity.toDto();
 //    }
 
-<<<<<<< HEAD
+
     /**
      * 공문서 상태 업데이트(승인, 반려)
      */
@@ -79,8 +76,7 @@ public class DocumentService {
     /**
      * 담당자에게 공문서 전송
      */
-=======
->>>>>>> dev
+
     @Transactional
     public void sendDocumentToApprover(String docId, String approverId) {
         DocumentEntity entity = documentRepository.findById(docId)
@@ -89,7 +85,7 @@ public class DocumentService {
         documentRepository.save(entity);
         log.info("문서 담당자 전송 완료: {}", approverId);
     }
-<<<<<<< HEAD
+
 
 
         private final EntityManager entityManager;
@@ -114,6 +110,5 @@ public class DocumentService {
             return documents;
         }
 
-=======
->>>>>>> dev
+
 }
