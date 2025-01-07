@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/document")
@@ -79,5 +83,20 @@ public class DocumentController {
                         .message("Document sent to approver successfully.")
                         .build()
         );
+    }
+
+
+
+
+
+
+
+    // 수진이 작업
+    @GetMapping()
+    public ResponseEntity<Map<String, Object>> documentList() {
+        List<Map<String, Object>> list = documentService.getCustomDocumentList();
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", list);
+        return ResponseEntity.ok(map);
     }
 }

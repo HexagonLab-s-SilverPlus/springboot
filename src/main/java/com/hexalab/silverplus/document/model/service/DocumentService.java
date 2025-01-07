@@ -1,7 +1,5 @@
 package com.hexalab.silverplus.document.model.service;
 
-import com.hexalab.silverplus.common.ApiResponse;
-import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.document.jpa.entity.DocumentEntity;
 import com.hexalab.silverplus.document.jpa.repository.DocumentRepository;
 import com.hexalab.silverplus.document.model.dto.Document;
@@ -9,18 +7,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.DynamicUpdate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
 @Slf4j    //Logger 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log
 @Service
@@ -109,6 +101,12 @@ public class DocumentService {
             }
             return documents;
         }
+
+
+
+
+
+
 
 
 }
