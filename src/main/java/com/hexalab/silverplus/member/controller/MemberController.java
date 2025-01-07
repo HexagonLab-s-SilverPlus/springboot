@@ -489,7 +489,109 @@ public class MemberController {
 
         return ResponseEntity.ok().header("Authorization", "Bearer " + access).header("Response", refresh).build();
     }
+
+    // 어르신 목록 출력 메소드
+    @GetMapping("/seniorList")
+    public ResponseEntity<Map<String, Object>> managementListMethod(@ModelAttribute Search search) {
+        if (search.getPageNumber()==0) {
+            search.setPageNumber(1);
+            search.setPageSize(10);
+        }
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1, search.getPageSize(), Sort.by(Sort.Direction.ASC, "memEnrollDate"));
+        Map<String, Object> result = new HashMap<>();
+
+        log.info("전달 온 search 값 확인(managementListMethod) : {}", search);
+
+        try {
+            List<Member> list = new ArrayList<Member>();
+            if(search.getAction() == null || search.getAction().isEmpty()){
+                search.setAction("all");
+                search.setListCount(memberService.selectAllSeniorCount());
+                list = memberService.selectAllSenior(pageable, search);
+                log.info("조회해 온 리스트 확인(전체)(managementListMethod) : {}", list);
+            } else if (search.getAction().equals("이름")) {
+                search.setListCount(memberService.selectSeniorNameCount(search.getKeyword()));
+                list = memberService.selectAllSenior(pageable, search);
+                log.info("조회해 온 리스트 확인(이름)(managementListMethod) : {}", list);
+            } else if (search.getAction().equals("성별")) {
+                search.setListCount(memberService.selectSeniorGenderCount(search.getKeyword()));
+                list = memberService.selectAllSenior(pageable, search);
+                log.info("조회해 온 리스트 확인(성별)(managementListMethod) : {}", list);
+            } else if (search.getAction().equals("나이")) {
+                search.setListCount(memberService.selectSeniorAgeCount(search.getKeyword()));
+                list = memberService.selectAllSenior(pageable, search);
+                log.info("조회해 온 리스트 확인(나이)(managementListMethod) : {}", list);
+            } else if (search.getAction().equals("주소")) {
+                search.setListCount(memberService.selectSeniorAddressCount(search.getKeyword()));
+                list = memberService.selectAllSenior(pageable, search);
+                log.info("조회해 온 리스트 확인(주소)(managementListMethod) : {}", list);
+            }
+
+            result.put("list", list);
+            result.put("search", search);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("회원목록 출력 실패 : {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // 어르신 등록 메소드
+    @PostMapping("/sregist")
+    public ResponseEntity managementRegistMethod(@ModelAttribute Member member,
+                                       @RequestParam("profile") MultipartFile sprofile) {
+        try {
+            log.info("전송온 member 데이터 확인(managementRegistMethod) : {}", member);    // 전송온 member 데이터 확인
+            // 패스워드 암호화 처리
+            member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+            log.info("member(managementRegistMethod) : {}", member);    // 암호화처리 정상 작동 확인
+
+
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+            if(sprofile != null) {
+                // MemberFiles 객체 생성
+                MemberFiles memberFiles = new MemberFiles();
+                memberFiles.setMfId(UUID.randomUUID().toString());
+                String fileName = sprofile.getOriginalFilename();
+                String renamFileName = CreateRenameFileName.create(memberFiles.getMfId(), fileName);
+
+                member.setMemUUID(UUID.randomUUID().toString());
+                member.setMemSocialKakao("N");  // 소셜 연동 여부 default 값 처리
+                member.setMemSocialGoogle("N");     // 소셜 연동 여부 default 값 처리
+                member.setMemSocialNaver("N");      // 소셜 연동 여부 default 값 처리
+                member.setMemFamilyApproval("N");       // 가족 승인 여부 default 값 처리
+                member.setMemSeniorProfile(fileName);       // 프로필 사진 이름 저장
+
+                memberService.insertMember(member);
+
+                memberFiles.setMfOriginalName(fileName);
+                memberFiles.setMfRename(renamFileName);
+                memberFiles.setMfMemUUID(member.getMemUUID());
+
+                File tempFile = File.createTempFile("member-", null);
+                sprofile.transferTo(tempFile);
+
+                String remoteFilePath = ftpRemoteDir + "member/" + renamFileName;
+                ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
+
+                memberFilesService.insertMemberFiles(memberFiles);
+                tempFile.delete();
+            }
+            log.info("저장할 member 객체 확인(managementRegistMethod) : {}", member);
+
+            return new ResponseEntity<String>("어르신 등록 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
+
+
 
 
 
