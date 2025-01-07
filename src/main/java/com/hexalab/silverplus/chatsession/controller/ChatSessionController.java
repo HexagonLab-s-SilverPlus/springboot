@@ -39,6 +39,28 @@ public class ChatSessionController {
         }
     }
 
+
+    @PatchMapping("/update-status")
+    public ResponseEntity<ApiResponse<String>> updateSessionStatus(
+            @RequestParam String workspaceId,
+            @RequestParam String status) {
+        try {
+            // 세션 상태 업데이트 서비스 호출
+            chatSessionService.updateSessionStatus(workspaceId, status);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .success(true)
+                    .message("세션이 성공적으로 업데이트됨")
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<String>builder()
+                            .success(false)
+                            .message("세션 업데이트 실패")
+                            .build());
+        }
+    }
+
+
     // 세션 종료
     @PatchMapping("/end")
     public ResponseEntity<ApiResponse<String>> endSession(@RequestParam String sessId, @RequestParam String status) {

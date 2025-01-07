@@ -22,6 +22,7 @@ public class ChatSession {
     private String sessType;            // 세션 타입 (TEXT/VOICE)
     private String workspaceId;         // 워크스페이스 고유 ID
     private String sessMemUUID;         // 세션 주인 UUID
+    private Timestamp lastUpdated;      // 마지막 업데이트 시간
 
     public ChatSessionEntity toEntity() {
         return ChatSessionEntity.builder()
@@ -34,6 +35,7 @@ public class ChatSession {
                 .sessType(this.sessType)
                 .workspaceId(this.workspaceId)
                 .sessMemUUID(this.sessMemUUID)
+                .lastUpdated(this.lastUpdated)
                 .build();
     }
 }

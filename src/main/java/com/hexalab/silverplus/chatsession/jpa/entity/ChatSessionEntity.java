@@ -44,6 +44,9 @@ public class ChatSessionEntity {
     @Column(name = "SESS_MEM_UUID", nullable = false, length = 100)
     private String sessMemUUID;         // 세션 주인 UUID
 
+    @Column(name = "LAST_UPDATED", nullable = false)
+    private Timestamp lastUpdated;      // 마지막 업데이트 시간
+
     public ChatSession toDto() {
         return ChatSession.builder()
                 .sessId(this.sessId)
@@ -55,6 +58,7 @@ public class ChatSessionEntity {
                 .sessType(this.sessType)
                 .workspaceId(this.workspaceId)
                 .sessMemUUID(this.sessMemUUID)
+                .lastUpdated(this.lastUpdated)
                 .build();
     }
 }
