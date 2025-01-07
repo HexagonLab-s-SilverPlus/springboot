@@ -25,10 +25,10 @@ public class WorkspaceController {
     /**
      * 특정 상태의 워크스페이스 조회 (페이징)
      *
-     * @param memUuid 사용자 UUID
+     * @param memUuid         사용자 UUID
      * @param workspaceStatus 워크스페이스 상태 (ACTIVE, ARCHIVED, DELETED)
-     * @param page 페이지 번호 (1-based)
-     * @param size 페이지 크기
+     * @param page            페이지 번호 (1-based)
+     * @param size            페이지 크기
      * @return 페이징된 워크스페이스 목록
      */
     @GetMapping("/{memUuid}/status")
@@ -44,10 +44,10 @@ public class WorkspaceController {
             log.info("size: {}", size);
 
             // 1-based page -> 0-based offset 계산
-            int offset=(page-1) * size;
+            int offset = (page - 1) * size;
 
             // 서비스 호출
-            List<Workspace> workspaces = workspaceService.getWorkspacesPagedWithStatus(memUuid , offset, size, workspaceStatus);
+            List<Workspace> workspaces = workspaceService.getWorkspacesPagedWithStatus(memUuid, offset, size, workspaceStatus);
             log.info("조회된 워크스페이스:{}", workspaces);
 
             // 결과가 없는 경우
@@ -71,7 +71,7 @@ public class WorkspaceController {
             log.error(workspaceStatus, "의 워크스페이스 조회 실패", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<List<Workspace>>builder()
                     .success(false)
-                    .message(workspaceStatus+"의 워크스페이스 조회 실패")
+                    .message(workspaceStatus + "의 워크스페이스 조회 실패")
                     .build());
         }
     }
@@ -146,18 +146,19 @@ public class WorkspaceController {
 
     /**
      * 워크스페이스를 ARCHIVED 상태로 변경
+     *
      * @param workspaceId 워크스페이스 ID
      * @return
      */
     @PatchMapping("/{workspaceId}/archived")
     public ResponseEntity<ApiResponse<String>> archiveWorkspace(@PathVariable String workspaceId) {
-        try{
+        try {
             workspaceService.setWorkspaceAsFavorite(workspaceId);
             return ResponseEntity.ok(ApiResponse.<String>builder()
                     .success(true)
                     .message("워크스페이스가 ARCHIVED 상태로 설정되었습니다.")
                     .build());
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.error("워크스페이스 즐겨찾기 설정 실패:", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<String>builder()
@@ -168,12 +169,11 @@ public class WorkspaceController {
     }
 
 
-
-
     /**
      * 워크스페이스를 ACTIVE 상태로 변경 (즐겨찾기 해제)
+     *
      * @param workspaceId 워크스페이스 ID
-     * @return ResponseEntity<ApiResponse<String>>
+     * @return ResponseEntity<ApiResponse < String>>
      */
     @PatchMapping("/{workspaceId}/active")
     public ResponseEntity<ApiResponse<String>> setWorkspaceAsActive(@PathVariable String workspaceId) {

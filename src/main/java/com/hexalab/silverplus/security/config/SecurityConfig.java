@@ -102,6 +102,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000"); // React 클라이언트 URL
+        configuration.addAllowedOrigin("http://localhost:5000"); // Flask 서버 URL 추가
         configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
         configuration.addAllowedHeader("*"); // 모든 헤더 허용
         configuration.setAllowCredentials(true); // 인증 정보 허용
@@ -169,11 +170,23 @@ public class SecurityConfig {
 
                             // Workspace
                             .requestMatchers(HttpMethod.POST, "/api/workspace/create").hasAnyRole("ADMIN", "SENIOR")    // ADMIN 추후 삭제
-                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}/status").hasAnyRole("ADMIN", "SENIOR")  // TODO: (From.은영) 제가 수정했습니다. 노션에도 업뎃은 해놨어요. ADMIN 추후 삭제
+                            .requestMatchers(HttpMethod.GET, "/api/workspace/{memUuid}/status").hasAnyRole("ADMIN", "SENIOR")
 
                             // Chat
                             .requestMatchers(HttpMethod.POST, "/api/chat/save").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
                             .requestMatchers(HttpMethod.GET, "/api/chat/history/{workspaceId}").hasAnyRole("ADMIN", "SENIOR")   // ADMIN 추후 삭제
+
+
+                            // Document (은영이가 작성함 총총)
+                            .requestMatchers(HttpMethod.POST, "/api/document").hasAnyRole("SENIOR", "ADMIN") // saveDocument
+                            .requestMatchers(HttpMethod.GET, "/api/document/{docId}").hasAnyRole("SENIOR", "MANAGER", "ADMIN") // getDocumentById
+                            .requestMatchers(HttpMethod.POST, "/api/document/{docId}/send").hasAnyRole("SENIOR", "ADMIN") // sendDocumentToApprove
+
+                            // DocFile (은영이가 작성함 총총)
+                            .requestMatchers(HttpMethod.POST, "/api/doc-files").hasAnyRole("SENIOR", "ADMIN") // saveDocFile
+                            .requestMatchers(HttpMethod.GET, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "MANAGER", "ADMIN") // getDocFileById
+                            .requestMatchers(HttpMethod.DELETE, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "ADMIN") // deleteDocFileById
+
 
                             // Member
                             .requestMatchers(HttpMethod.GET, "/member/adminList").hasRole("ADMIN")
