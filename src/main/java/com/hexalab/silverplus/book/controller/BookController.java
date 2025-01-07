@@ -331,10 +331,22 @@ public class BookController {
 
     }
 
-//    @DeleteMapping("/{bookNum}")
-//    public ResponseEntity deleteBook(
-//            @PathVariable
-//    ){};
+    @DeleteMapping("/{bookNum}")
+    public ResponseEntity deleteBook(
+            @PathVariable("bookNum") String bookNum
+    ){
+        log.info("bookNum : " + bookNum);
+        try{
+            if(bookService.bookDelete(bookNum)==1){
+                return ResponseEntity.ok().build();
+            } else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch ( Exception e ){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    };
 
 
 
