@@ -115,10 +115,14 @@ public class BookController {
                 log.info("listCount : " + listCount);
                 log.info("getPageNumber : " + search.getPageNumber());
                 //search setting
-                if(search.getPageNumber()==0){
-                    search.setPageNumber(1);
-                    search.setPageSize(8);
-                }
+//                if(search.getPageNumber()==0){
+//                    search.setPageNumber(1);
+//                    search.setPageSize(8);
+//                }
+
+                log.info("getPageSize : " + search.getPageSize());
+                log.info("getPageSize : " + search.getPageNumber());
+
                 search.setListCount(listCount);
 
                 //pageable 객체 생성
@@ -169,6 +173,7 @@ public class BookController {
                     }
 
                     // 파일 데이터 구성
+                    fileData.put("book", book);
                     fileData.put("fileName", book.getBookImage());
                     fileData.put("mimeType", mimeType);
                     fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
@@ -178,7 +183,8 @@ public class BookController {
                 // map에 담아 전송
                 Map<String,Object> map = new HashMap<>();
                 map.put("fileList",fileList);
-                map.put("list",bookList);
+                //map.put("fileList",fileList);
+                //map.put("list",bookList);
                 map.put("search",search);
                 return ResponseEntity.ok(map);
             } catch (Exception e){
@@ -243,6 +249,8 @@ public class BookController {
                     }
 
                     // 파일 데이터 구성
+                    fileData.put("book", book);
+                    //fileData.put("uuid", book.getBookNum());
                     fileData.put("fileName", book.getBookImage());
                     fileData.put("mimeType", mimeType);
                     fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
@@ -251,7 +259,7 @@ public class BookController {
 
                 Map<String,Object> map = new HashMap<>();
                 map.put("fileList",fileList);
-                map.put("list",bookList);
+                //map.put("list",bookList);
                 map.put("search",search);
                 log.info("map : " + map);
                 return ResponseEntity.ok(map);
@@ -261,6 +269,86 @@ public class BookController {
             }
         }
     }
+
+    //detail
+    @GetMapping("/{bookNum}")
+    public ResponseEntity<Map> bookDetail(
+            @PathVariable("bookNum") String bookNum
+    ){
+        log.info("bookNum : " + bookNum);
+
+        // 담을객체
+        Map<String,Object> map = new HashMap<>();
+        try{
+            // 북정보 불러오기
+            Book book = bookService.selectBook(bookNum);
+            log.info("book : " + book);
+
+            // FTP 서버 연결
+            FTPUtility ftpUtility = new FTPUtility();
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            String originalFilename = book.getBookImage();
+            String uuid = book.getBookNum();
+
+            String mfRename = CreateRenameFileName.create(uuid,originalFilename);
+
+            // mfRename 값 확인
+            log.info("mfRename 값 확인: {}", mfRename);
+
+            // 파일 경로 구성
+            String remoteFilePath = ftpRemoteDir + "book/" + mfRename;
+            log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
+
+            // 파일 다운로드
+            File tempFile = File.createTempFile("preview-", null);
+            ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+            // 파일 읽기
+            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+
+            tempFile.delete();
+
+            // MIME 타입 결정
+            String mimeType = getMimeType(book.getBookImage());
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
+            }
+
+            // 파일 데이터 구성
+            map.put("book", book);
+            //fileData.put("uuid", book.getBookNum());
+            map.put("fileName", book.getBookImage());
+            map.put("mimeType", mimeType);
+            map.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+
+    }
+
+    @DeleteMapping("/{bookNum}")
+    public ResponseEntity deleteBook(
+            @PathVariable("bookNum") String bookNum
+    ){
+        log.info("bookNum : " + bookNum);
+        try{
+            if(bookService.bookDelete(bookNum)==1){
+                return ResponseEntity.ok().build();
+            } else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch ( Exception e ){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    };
+
+
 
     //MIME타입
     private String getMimeType(String snrFileOGName) {

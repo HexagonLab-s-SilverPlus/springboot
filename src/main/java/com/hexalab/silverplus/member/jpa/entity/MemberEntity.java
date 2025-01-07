@@ -67,6 +67,14 @@ public class MemberEntity {
     private String memUUIDFam;      // MEM_UUID_FAM	VARCHAR2(100 BYTE)
     @Column(name = "MEM_UUID_MGR")
     private String memUUIDMgr;      // MEM_UUID_MGR	VARCHAR2(100 BYTE)
+    @Column(name = "MEM_GOOGLE_PI")
+    private String memGooglePi;
+    @Column(name = "MEM_KAKAO_PI")
+    private String memKakaoPi;
+    @Column(name = "MEM_NAVER_PI")
+    private String memNaverPi;
+    @Column(name = "MEM_SENIOR_PROFILE")
+    private String memSeniorProfile;
 
     @PrePersist
     public void prePersist() {
@@ -98,6 +106,10 @@ public class MemberEntity {
                 .memGoogleEmail(memGoogleEmail)
                 .memUUIDFam(memUUIDFam)
                 .memUUIDMgr(memUUIDMgr)
+                .memGooglePi(memGooglePi)
+                .memKakaoPi(memKakaoPi)
+                .memNaverPi(memNaverPi)
+                .memSeniorProfile(memSeniorProfile)
                 .build();
     }
 }

@@ -20,6 +20,15 @@ import java.util.List;
 public class BookService {
 
     private final BookRepository bookRepository;
+    public int bookDelete(String bookNum){
+        try{
+            bookRepository.deleteById(bookNum);
+            return 1;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return 0;
+        }
+    };
 
     // 책 등록
     public int bookInsert(Book book) {
@@ -59,5 +68,9 @@ public class BookService {
             books.add(bookEntity.toDto());
         }
         return books;
+    }
+
+    public Book selectBook(String bookNum) {
+        return bookRepository.findById(bookNum).get().toDto();
     }
 }

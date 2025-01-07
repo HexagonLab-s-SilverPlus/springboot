@@ -3,9 +3,7 @@ package com.hexalab.silverplus.member.jpa.repository;
 import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.entity.QMemberEntity;
-import com.hexalab.silverplus.member.model.dto.Member;
-import com.querydsl.core.QueryFactory;
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -194,26 +191,101 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
     // 소셜 로그인 관련 쿼리문
     @Override
-    public MemberEntity findByKakaoProviderId(String kakaoProviderId) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memKakaoEmail.eq(kakaoProviderId))
-                .fetchOne();
+    public MemberEntity findBySocialPi(String provider, String socialPi) {
+        switch (provider) {
+            case "google" -> {
+                return queryFactory.selectFrom(member)
+                        .where(member.memGooglePi.eq(socialPi))
+                        .fetchOne();
+            }
+            case "naver" -> {
+                return queryFactory.selectFrom(member)
+                        .where(member.memNaverPi.eq(socialPi))
+                        .fetchOne();
+            }
+            case "kakao" -> {
+                return queryFactory.selectFrom(member)
+                        .where(member.memKakaoPi.eq(socialPi))
+                        .fetchOne();
+            }
+        }
+        return null;
     }
 
-    public MemberEntity findByGoogleProviderId(String GoogleProviderId) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memGoogleEmail.eq(GoogleProviderId))
-                .fetchOne();
+    // 소셜 연동 처리 메소드
+    @Override
+    public long updateSocial(Boolean linking, String provider, String socialPi, String memUUID) {
+        log.info("넘어오는 값 확인(repositoryCustomImpl.updateSocial)   linking: {}, provider: {}, socialPi: {}, memUUID: {}", linking, provider, socialPi, memUUID);
+        if (linking) {
+            log.info("소셜 연동 관련 쿼리문 작동 확인(repositoryCustomImpl.updateSocial)");
+            switch (provider) {
+                case "google" -> {
+                    log.info("소셜 연동 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - google");
+                    return queryFactory.update(member)
+                            .set(member.memSocialGoogle, "Y")
+                            .set(member.memGooglePi, socialPi)
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+                case "naver" -> {
+                    log.info("소셜 연동 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - naver");
+                    return queryFactory.update(member)
+                            .set(member.memSocialNaver, "Y")
+                            .set(member.memNaverPi, socialPi)
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+                case "kakao" -> {
+                    log.info("소셜 연동 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - kakao");
+                    return queryFactory.update(member)
+                            .set(member.memSocialKakao, "Y")
+                            .set(member.memKakaoPi, socialPi)
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+            }
+        } else {
+            log.info("소셜 연동해제 관련 쿼리문 작동 확인(repositoryCustomImpl.updateSocial)");
+            switch (provider) {
+                case "google" -> {
+                    log.info("소셜 연동해제 관련 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - google");
+                    return queryFactory.update(member)
+                            .set(member.memSocialGoogle, "N")
+                            .set(member.memGooglePi, Expressions.nullExpression(String.class))
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+                case "naver" -> {
+                    log.info("소셜 연동해제 관련 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - naver");
+                    return queryFactory.update(member)
+                            .set(member.memSocialNaver, "N")
+                            .set(member.memNaverPi, Expressions.nullExpression(String.class))
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+                case "kakao" -> {
+                    log.info("소셜 연동해제 관련 쿼리문 작동 확인(repositoryCustomImpl.updateSocial) - kakao");
+                    return queryFactory.update(member)
+                            .set(member.memSocialKakao, "N")
+                            .set(member.memKakaoPi, Expressions.nullExpression(String.class))
+                            .where(member.memUUID.eq(memUUID))
+                            .execute();
+                }
+            }
+        }
+        return 0;
     }
 
-    public MemberEntity findByNaverProviderId(String NaverProviderId) {
+    @Override
+    public MemberEntity findByProfile(String memSeniorProfile) {
         return queryFactory
                 .selectFrom(member)
-                .where(member.memNaverEmail.eq(NaverProviderId))
+                .where(member.memSeniorProfile.eq(memSeniorProfile))
                 .fetchOne();
     }
 
 
 }
+
+
+
