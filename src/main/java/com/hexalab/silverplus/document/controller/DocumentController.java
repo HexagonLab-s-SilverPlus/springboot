@@ -1,17 +1,29 @@
 package com.hexalab.silverplus.document.controller;
 
 import com.hexalab.silverplus.common.ApiResponse;
+import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
+import com.hexalab.silverplus.member.model.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.nurigo.sdk.message.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static kotlin.reflect.jvm.internal.impl.builtins.StandardNames.FqNames.map;
 
 @Slf4j
 @RestController
@@ -20,6 +32,8 @@ import java.util.Map;
 public class DocumentController {
     @Autowired
     private DocumentService documentService;
+    @Autowired
+    private MemberService memberService;
 
 
     /**
@@ -86,17 +100,44 @@ public class DocumentController {
     }
 
 
-
-
-
-
-
-    // 수진이 작업
+    // 수진 작업
     @GetMapping()
-    public ResponseEntity<Map<String, Object>> documentList() {
-        List<Map<String, Object>> list = documentService.getCustomDocumentList();
-        Map<String, Object> map = new HashMap<>();
-        map.put("list", list);
-        return ResponseEntity.ok(map);
+    public Map<String, Object> documentList(
+            @RequestParam(name = "page", defaultValue = "1") int currentPage,
+            @RequestParam(name = "limit", defaultValue = "10") int limit)
+    {
+        // 받은 값을 로그로 확인
+        System.out.println("Received pageNumber: " + currentPage);
+        System.out.println("Received limit: " + limit);
+
+        int listCount = documentService.dselectListCount();
+        System.out.println("Total list count: " + listCount);
+
+        Paging paging = new Paging(listCount, limit, currentPage);
+        paging.calculate();
+        System.out.println("Paging after calculate: " + paging);
+
+        Pageable pageable = PageRequest.of(paging.getCurrentPage() - 1, paging.getLimit(),
+                Sort.by(Sort.Direction.DESC, "docId"));
+        System.out.println("Created Pageable: " + pageable);
+
+        Page<Document> page = documentService.selectList(pageable);
+        List<Document> list = page.getContent();
+        System.out.println("Data for current page: " + list);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("list", list);
+        response.put("paging", Map.of(
+                "currentPage", page.getNumber() + 1,
+                "listCount", (int) page.getTotalElements(),
+                "pageSize", page.getSize(),
+                "totalPages", page.getTotalPages()
+        ));
+
+        return response;
     }
+
+
+
+
 }
