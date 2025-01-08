@@ -84,4 +84,29 @@ public class MedicalController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }//insertMedical end
+
+    //isPublic update
+    @PutMapping("/medical/{mediSnrUUID}")
+    public ResponseEntity<Map<String, Object>> updateMedicalPrivacy(
+        @PathVariable String mediSnrUUID,
+        @RequestBody Map<String, String> requestBody
+    ) {
+        log.info("Update Medical Privacy - mediSnrUUID: {}, mediPrivacy: {}", mediSnrUUID, requestBody.get("mediPrivacy"));
+
+        try {
+            String mediPrivacy = requestBody.get("mediPrivacy");
+            Member snrMember = memberService.selectMember(mediSnrUUID);
+
+            if (medicalService.updateMedicalPrivacy(mediSnrUUID, mediPrivacy) > 0) {
+                log.info("Medical Privacy updated");
+                return ResponseEntity.status(HttpStatus.OK).build();
+            } else {
+                log.info("Medical Privacy update failed");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }//updateMedicalPrivacy end
 }//MedicalController end

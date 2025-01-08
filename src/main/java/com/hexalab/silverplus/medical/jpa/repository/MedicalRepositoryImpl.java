@@ -25,7 +25,18 @@ public class MedicalRepositoryImpl implements MedicalRepositoryCustom {
         return queryFactory
                 .selectFrom(medical)
                 .where(medical.mediSnrUUID.eq(mediSnrUUID))
-                .orderBy(medical.mediCreatedAt.desc())
+                .orderBy(medical.mediDiagDate.desc())
                 .fetch();
+    }
+
+    @Override
+    public int updateMedicalPrivacy(String mediSnrUUID, String mediPrivacy) {
+        long updatedRows = queryFactory
+                .update(medical)
+                .set(medical.mediPrivacy, mediPrivacy)
+                .where(medical.mediSnrUUID.eq(mediSnrUUID))
+                .execute();
+
+        return (int) updatedRows;
     }
 }//MedicalRepositoryImpl end

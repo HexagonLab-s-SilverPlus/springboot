@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface MedicalRepositoryCustom {
     List<MedicalEntity> selectAllMedicalList(String mediSnrUUID);
+    int updateMedicalPrivacy(String mediSnrUUID, String mediPrivacy);
 }//MedicalRepositoryCustom end

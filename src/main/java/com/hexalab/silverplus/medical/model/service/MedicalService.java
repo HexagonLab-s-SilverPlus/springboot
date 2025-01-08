@@ -38,4 +38,15 @@ public class MedicalService {
             return 0;
         }
     }
+
+    public int updateMedicalPrivacy(String mediSnrUUID, String mediPrivacy) {
+        try {
+            int updatedRows = medicalRepository.updateMedicalPrivacy(mediSnrUUID, mediPrivacy);
+            return updatedRows;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return 0;
+        }
+    }
 }//MedicalService end
