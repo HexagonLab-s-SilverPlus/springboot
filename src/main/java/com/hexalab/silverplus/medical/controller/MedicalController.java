@@ -11,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -84,4 +81,87 @@ public class MedicalController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }//insertMedical end
+
+    //isPublic update
+    @PutMapping("/medical/privacy/{mediSnrUUID}")
+    public ResponseEntity<Map<String, Object>> updateMedicalPrivacy(
+        @PathVariable String mediSnrUUID,
+        @RequestBody Map<String, String> requestBody
+    ) {
+        log.info("Update Medical Privacy - mediSnrUUID: {}, mediPrivacy: {}", mediSnrUUID, requestBody.get("mediPrivacy"));
+
+        try {
+            String mediPrivacy = requestBody.get("mediPrivacy");
+            Member snrMember = memberService.selectMember(mediSnrUUID);
+
+            if (medicalService.updateMedicalPrivacy(mediSnrUUID, mediPrivacy) > 0) {
+                log.info("Medical Privacy updated");
+                return ResponseEntity.status(HttpStatus.OK).build();
+            } else {
+                log.info("Medical Privacy update failed");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }//updateMedicalPrivacy end
+
+    //Update Medical
+    @PutMapping("/medical/{mediSnrUUID}")
+    public ResponseEntity<Map<String, Object>> updateMedical(
+            @PathVariable String mediSnrUUID,
+            @RequestBody Medical updatedMedical
+    ) {
+        log.info("Update Medical - mediSnrUUID: {}, updatedMedical: {}", mediSnrUUID, updatedMedical);
+
+        try {
+            //변경전 정보
+            Medical prevMedical = medicalService.selectMedicalBymediId(updatedMedical.getMediId());
+            if (prevMedical == null) {
+                log.info("prevMedical is null");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            //업데이트
+            updatedMedical.setMediUpdatedAt(new Timestamp(System.currentTimeMillis()));
+            if (medicalService.updateMedical(updatedMedical) > 0) {
+                log.info("Medical updated");
+                return ResponseEntity.status(HttpStatus.OK).build();
+            } else {
+                log.info("Medical update failed");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }//updateMedical end
+
+    //Delete Medical
+    @DeleteMapping("/medical")
+    public ResponseEntity<Map<String, Object>> deleteMedicals(
+            @RequestBody List<String> mediIds
+    ) {
+        log.info("Delete Selected Medicals mediIds: {}", mediIds);
+
+        try {
+            int deletedCount = medicalService.deleteMedicals(mediIds);
+
+            if (deletedCount == mediIds.size()) {
+                log.info("Medical deleted");
+                return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
+            } else {
+                log.info("Some medical delete failed");
+                return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(Map.of("deletedCount", deletedCount));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }//deleteMedicals end
+
 }//MedicalController end
