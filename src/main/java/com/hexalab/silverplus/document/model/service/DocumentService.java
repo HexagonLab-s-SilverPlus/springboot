@@ -90,10 +90,13 @@ public class DocumentService {
     private final EntityManager entityManager;
     @Transactional
 
-    public List<Map<String, Object>> getCustomDocumentList() {
+    public List<Map<String, Object>> getCustomDocumentList(int pageNumber, int pageSize) {
         // Native Query를 사용해 필요한 컬럼만 선택
-        String sql = "SELECT DOC_ID, DOC_TYPE, WRITTEN_BY, DOC_COMPLETED_AT AS CREATE_AT FROM DOCUMENT";
+        String sql = "SELECT d.DOC_ID, d.DOC_TYPE, d.WRITTEN_BY, d.DOC_COMPLETED_AT, m.MEM_UUID, m.MEM_NAME " +
+                "FROM DOCUMENT d " +
+                "LEFT JOIN MEMBER m ON d.WRITTEN_BY = m.MEM_UUID";
         Query query = entityManager.createNativeQuery(sql);
+
 
         // 결과를 Map 형식으로 변환
         List<Object[]> result = query.getResultList();
@@ -104,7 +107,13 @@ public class DocumentService {
             document.put("docType", row[1]);
             document.put("writtenBy", row[2]);
             document.put("createAt", row[3]);
+            document.put("memberUuid", row[4]);
+            document.put("memberName", row[5] != null ? row[5] : "Unknown");
             documents.add(document);
+            log.warn("Row: " + Arrays.toString(row));
+            log.warn("Document Data:" + document);
+
+
         }
         return documents;
     }

@@ -2,6 +2,7 @@ package com.hexalab.silverplus.dashboard.controller;
 
 import com.hexalab.silverplus.dashboard.model.dto.DashBoard;
 import com.hexalab.silverplus.dashboard.model.service.DashBoardService;
+import com.hexalab.silverplus.document.model.service.DocumentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +117,16 @@ public class DashBoardCotroller {
             log.error("Update failed: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    //공문서 목록 카운트
+    private final DocumentService documentService;
+
+
+    @GetMapping("/count")
+    public Map<String, Object> getDocumentCount() {
+        int documentCount = documentService.dselectListCount();
+        return Map.of("documentCount", documentCount);
     }
 
 

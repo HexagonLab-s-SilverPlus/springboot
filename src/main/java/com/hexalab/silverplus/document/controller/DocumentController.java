@@ -2,9 +2,12 @@ package com.hexalab.silverplus.document.controller;
 
 import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.common.Paging;
+import com.hexalab.silverplus.document.model.dto.DocFile;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
+import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.message.service.MessageService;
@@ -101,6 +104,10 @@ public class DocumentController {
 
 
     // 수진 작업
+    @Autowired
+    public DocumentController(DocumentService documentService) {
+        this.documentService = documentService;
+    }
     @GetMapping()
     public Map<String, Object> documentList(
             @RequestParam(name = "page", defaultValue = "1") int currentPage,
@@ -121,12 +128,17 @@ public class DocumentController {
                 Sort.by(Sort.Direction.DESC, "docId"));
         System.out.println("Created Pageable: " + pageable);
 
+
+        List<Map<String, Object>> document = documentService.getCustomDocumentList(currentPage, limit);
+
+
         Page<Document> page = documentService.selectList(pageable);
         List<Document> list = page.getContent();
         System.out.println("Data for current page: " + list);
 
         Map<String, Object> response = new HashMap<>();
         response.put("list", list);
+        response.put("list", document);
         response.put("paging", Map.of(
                 "currentPage", page.getNumber() + 1,
                 "listCount", (int) page.getTotalElements(),
@@ -134,8 +146,38 @@ public class DocumentController {
                 "totalPages", page.getTotalPages()
         ));
 
+
         return response;
     }
+
+    //어르신 관리 뷰에서 공문서 승인 반려 처리
+    @GetMapping("/document/{memUUID}")
+    public ResponseEntity<Map> docManagedList(@PathVariable String memUUID
+//            @PathVariable("docId") String docId
+    ){
+        log.info("Received docId: " + memUUID);
+        Map<String,Object> map = new HashMap<>();
+        List<Map<String, Object>> fileList = new ArrayList<>();
+
+        try{
+            //공문서 요청목록 불러오기
+            Document document = documentService.getDocumentById(memUUID);
+            log.info("doc : " + document);
+            map.put("doc", document);
+
+            //공문서 갯수 확인
+//            ArrayList<DocFile> docFiles = new ArrayList<>();
+//            int fileCount = documentfile
+            return ResponseEntity.ok(map);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    //공문서 파일 다운로드 로직
+
+
 
 
 
