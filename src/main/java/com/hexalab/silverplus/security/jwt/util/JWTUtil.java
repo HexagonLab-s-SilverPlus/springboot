@@ -203,6 +203,7 @@ public class JWTUtil {
             log.error("JWT 파싱 중 오류: 토큰 형식이 잘못되었습니다. {}", e.getMessage());
             return true; // 오류 발생 시 만료로 간주
         } catch (Exception e) {
+            e.printStackTrace();
             log.error("JWT 파싱 중 예상치 못한 오류: {}", e.getMessage());
             return true; // 기타 오류도 만료로 간주
         }

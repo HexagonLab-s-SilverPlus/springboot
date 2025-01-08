@@ -51,6 +51,49 @@ public class DocumentController {
         );
     }
 
+
+    /**
+     * 사용자 UUID로 작성된 문서 목록 조회
+     *
+     * @param memUuid 노인 사용자 UUID
+     * @return 문서 목록
+     */
+    @GetMapping("/doc/{memUuid}")
+    public ResponseEntity<ApiResponse<List<Document>>> getDocumentsByUser(
+            @PathVariable String memUuid) {
+        List<Document> documents = documentService.getDocumentsByMemUuid(memUuid);
+        return ResponseEntity.ok(
+                ApiResponse.<List<Document>>builder()
+                        .success(true)
+                        .message("문서 목록 조회 성공")
+                        .data(documents)
+                        .build()
+        );
+    }
+
+
+    /**
+     * 사용자 UUID로 작성된 문서와 파일 목록 조회
+     *
+     * @param memUuid 노인 사용자 UUID
+     * @return 문서 및 파일 목록
+     */
+    @GetMapping("/user/{memUuid}/with-files")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocumentsWithFiles(
+            @PathVariable String memUuid) {
+        List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles(memUuid);
+        return ResponseEntity.ok(
+                ApiResponse.<List<Map<String, Object>>>builder()
+                        .success(true)
+                        .message("문서와 파일 목록 조회 성공")
+                        .data(documentsWithFiles)
+                        .build()
+        );
+    }
+
+
+
+
     /**
      * 공문서 조회
      */
@@ -82,6 +125,8 @@ public class DocumentController {
                         .build()
         );
     }
+
+
 
     /**
      * 담당자에게 공문서 전송
