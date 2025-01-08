@@ -186,6 +186,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/doc-files").hasAnyRole("SENIOR", "ADMIN") // saveDocFile
                             .requestMatchers(HttpMethod.GET, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "MANAGER", "ADMIN") // getDocFileById
                             .requestMatchers(HttpMethod.DELETE, "/api/doc-files/{dfId}").hasAnyRole("SENIOR", "ADMIN") // deleteDocFileById
+                            .requestMatchers(HttpMethod.GET, "/api/doc-files/download/{fileName}").hasAnyRole("SENIOR", "ADMIN") // deleteDocFileById
 
 
                             // Member

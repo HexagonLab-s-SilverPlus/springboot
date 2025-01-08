@@ -166,4 +166,20 @@ public class MemberService {
             return null;
         }
     }
+
+
+
+
+    /* 2025-01-08.
+    은영이가 공문서 쪽에서 memUUID로 memName 조회할 일이 있어서 추가.
+    */
+    public Member findByMemUUID(String memUUID) {
+        MemberEntity memberEntity = memberRepository.findByMemUUID(memUUID);
+        if(memberEntity != null) {
+            return memberEntity.toDto();
+        } else {
+            return null;
+        }
+    }
+
 }
