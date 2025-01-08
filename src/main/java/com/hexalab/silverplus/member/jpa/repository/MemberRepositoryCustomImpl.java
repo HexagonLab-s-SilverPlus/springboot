@@ -24,14 +24,21 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     private final EntityManager entityManager;
     private final QMemberEntity member = QMemberEntity.memberEntity;
 
+
+    private StringExpression extractSubstring(StringPath column, int start, int length) {
+        // 직접 SQL 표현식으로 substring 작성
+        return Expressions.stringTemplate("substring({0}, {1}, {2})", column, start, length);
+    }
+
+
     // 주민등록번호를 가지고 성별 추출하는 함수
     private BooleanExpression extractGenderCondition(StringPath memRnn, String gender) {
         // 주민등록번호 뒷자리 첫 번째 숫자 추출
-        NumberExpression<Integer> genderCode = memRnn.substring(7, 8).castToNum(Integer.class);
+        NumberExpression<Integer> genderCode = extractSubstring(memRnn, 8, 1).castToNum(Integer.class);
 
-        if ("MALE".equalsIgnoreCase(gender)) {
+        if ("남성".equalsIgnoreCase(gender)) {
             return genderCode.in(1, 3); // 남성 코드
-        } else if ("FEMALE".equalsIgnoreCase(gender)) {
+        } else if ("여성".equalsIgnoreCase(gender)) {
             return genderCode.in(2, 4); // 여성 코드
         } else {
             return null; // 성별 필터 없음
@@ -39,25 +46,29 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     }
 
     // 주민등록번호를 가지고 나이 계산하는 함수
-    private BooleanExpression calculateAgeCondition(StringPath memRnn, int ageThreshold) {
+    private BooleanExpression calculateAgeCondition(StringPath memRnn, int minAge, int maxAge) {
         LocalDate today = LocalDate.now(); // 현재 날짜
         int currentYear = today.getYear();
 
-
         // 출생 연도를 계산하는 식
-        NumberExpression<Integer> yearOfBirth = memRnn.substring(0, 2).castToNum(Integer.class)
-                .add(
-                        memRnn.substring(7, 8).eq("1").or(memRnn.substring(7, 8).eq("2"))
-                                .when(memRnn.substring(7, 8).eq("1").or(memRnn.substring(7, 8).eq("2"))).then(1900)
-                                .otherwise(2000)
-                );
+//        NumberExpression<Integer> yearOfBirth = memRnn.substring(1, 2).castToNum(Integer.class)
+//                .add(
+//                        memRnn.substring(8, 1).eq("1").or(memRnn.substring(8, 1).eq("2"))
+//                                .when(memRnn.substring(8, 1).eq("1").or(memRnn.substring(8, 1).eq("2"))).then(1900)
+//                                .otherwise(2000)
+//                );
 
+        // 출생 연도 계산
+        NumberExpression<Integer> yearOfBirth = new CaseBuilder()
+                .when(extractSubstring(memRnn, 8, 1).eq("1").or(extractSubstring(memRnn, 8, 1).eq("2")))
+                .then(extractSubstring(memRnn, 1, 2).castToNum(Integer.class).add(1900))
+                .otherwise(extractSubstring(memRnn, 1, 2).castToNum(Integer.class).add(2000));
 
         // 나이 계산
         NumberExpression<Integer> calculatedAge = yearOfBirth.subtract(currentYear).multiply(-1);
 
-        // 나이가 특정 기준 이상인 조건
-        return calculatedAge.goe(ageThreshold);
+        // 나이 범위 조건
+        return calculatedAge.goe(minAge).and(calculatedAge.loe(maxAge));
     }
 
     // 아이디 중복 체크용 쿼리문
@@ -377,9 +388,16 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 log.info("조회하는 값 확인(성별)(selectAllSenior) : {}", list);
             }
             case "나이" -> {
+                int minAge = Integer.parseInt(search.getKeyword());
+                int maxAge;
+                if (minAge == 100) {
+                    maxAge = 99999;
+                } else {
+                    maxAge = minAge + 9;
+                }
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, Integer.parseInt(search.getKeyword()))))
+                        .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -404,7 +422,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     public long selectAllSeniorCount(){
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.ne("ADMIN"))
+                .where(member.memType.eq("SENIOR"))
                 .fetchCount();
     }
 
@@ -429,9 +447,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     // 어르신 나이로 카운트하는 쿼리문
     @Override
     public long selectSeniorAgeCount(String keyword) {
+        int minAge = Integer.parseInt(keyword);
+        int maxAge = minAge + 9;
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, Integer.parseInt(keyword))))
+                .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
                 .fetchCount();
     }
 
@@ -442,6 +462,34 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .selectFrom(member)
                 .where(member.memType.eq("SENIOR").and(member.memAddress.like("%" + keyword + "%")))
                 .fetchCount();
+    }
+
+    // 가족 계정 승인처리 쿼리문
+    @Override
+    public long updateApproval(String memUUID, String status) {
+        log.info("승인처리 작동확인 (updateApproval)");
+        switch (status) {
+            case "승인" -> {
+                log.info("승인처리 작동확인 (updateApproval) : {}", status);
+                return queryFactory
+                        .update(member)
+                        .set(member.memFamilyApproval, "APPROVED")
+                        .where(member.memUUID.eq(memUUID))
+                        .execute();
+            }
+            case "반려" -> {
+                log.info("반려처리 작동확인 (updateApproval) : {}", status);
+                return queryFactory
+                    .update(member)
+                    .set(member.memFamilyApproval, "REJECTED")
+                    .where(member.memUUID.eq(memUUID))
+                    .execute();
+            }
+            default -> {
+                return 0;
+            }
+        }
+
     }
 
 

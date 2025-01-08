@@ -51,6 +51,7 @@ public class MemberController {
     private final CustomValidator validator;
 
     private final JWTUtil jwtUtil;
+    private final FTPUtility ftpUtility;
 
     @Value("${jwt.access-token.expiration}")
     private long access_expiration;
@@ -71,30 +72,6 @@ public class MemberController {
     @Value("${ftp.remote-dir}")
     private String ftpRemoteDir;
 
-
-    private String getMimeType(String fileName) {
-        String mimeType;
-        try {
-            mimeType = Files.probeContentType(Paths.get(fileName));
-        } catch (IOException e) {
-            mimeType = null;
-        }
-
-        // 파일 확장자를 기준으로 MIME 타입 설정
-        if (mimeType == null || mimeType.equals("application/octet-stream")) {
-            if (fileName.endsWith(".png")) {
-                mimeType = "image/png";
-            } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-                mimeType = "image/jpeg";
-            } else if (fileName.endsWith(".gif")) {
-                mimeType = "image/gif";
-            } else {
-                mimeType = "application/octet-stream";
-            }
-        }
-        return mimeType;
-    }
-
     // 회원가입 처리 메소드
     @PostMapping("/enroll")
     public ResponseEntity<String> memberEnrollMethod(
@@ -113,7 +90,6 @@ public class MemberController {
             member.setMemFamilyApproval("N");
 
             memberService.insertMember(member);
-            FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
 
             if(memFiles != null && memFiles.length > 0) {
@@ -274,62 +250,12 @@ public class MemberController {
     @GetMapping("/mdetail/{memUUID}")
     // 회원 상세정보 출력 처리 메소드 (관리자)
     public ResponseEntity memberDetailViewMethod(@PathVariable String memUUID) {
-//        try {
-//            // 파일 미리보기 코드
-//            List<Map<String, Object>> fileList = new ArrayList<>();
-//            List<MemberFilesEntity> mfiles = memberFilesService.findByMemUuid(memUUID);
-//
-//            // FTP 서버 연결
-//            FTPUtility ftpUtility = new FTPUtility();
-//            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
-//
-//            for (MemberFilesEntity memberFilesEntity : mfiles) {
-//                // 리스트에 저장하기 위한 Map 객체 생성
-//                Map<String, Object> fileData = new HashMap<>();
-//
-//                // 파일 불러오기 위한 리네임 추출
-//                String mfRename = memberFilesEntity.getMfRename();
-//
-//                // mfRename 값 확인
-//                log.info("mfRename 값 확인: {}", mfRename);
-//
-//                // 파일 경로 구성
-//                String remoteFilePath = ftpRemoteDir + "member/" + mfRename;
-//                log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
-//
-//                // 파일 다운로드
-//                File tempFile = File.createTempFile("preview-", null);
-//                ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
-//
-//                // 파일 읽기
-//                byte[] fileContent = Files.readAllBytes(tempFile.toPath());
-//                tempFile.delete();
-//
-//                // MIME 타입 결정
-//                String mimeType = getMimeType(memberFilesEntity.getMfOriginalName());
-//                if (mimeType == null) {
-//                    mimeType = "application/octet-stream";
-//                }
-//
-//                // 파일 데이터 구성
-//                fileData.put("fileName", memberFilesEntity.getMfOriginalName());
-//                fileData.put("mimeType", mimeType);
-//                fileData.put("fileContent", Base64.getEncoder().encodeToString(fileContent)); // Base64로 인코딩
-//                fileList.add(fileData);
-//
-//            }
-//
-//            return ResponseEntity.ok(fileList);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-        log.info("전달온 UUID 확인(memberDetailViewMethod) : {}", memUUID);
-        Member member = memberService.selectMember(memUUID);
-        log.info("조회해 온 정보 확인(memberDetailViewMethod) : {}", member);
 
-        return ResponseEntity.ok(member);
+            log.info("전달온 UUID 확인(memberDetailViewMethod) : {}", memUUID);
+            Member member = memberService.selectMember(memUUID);
+            log.info("조회해 온 정보 확인(memberDetailViewMethod) : {}", member);
+
+            return ResponseEntity.ok(member);
     }
 
     @PostMapping("/fid")
@@ -548,8 +474,6 @@ public class MemberController {
             member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
             log.info("member(managementRegistMethod) : {}", member);    // 암호화처리 정상 작동 확인
 
-
-            FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
 
             if(sprofile != null) {
@@ -575,7 +499,7 @@ public class MemberController {
                 File tempFile = File.createTempFile("member-", null);
                 sprofile.transferTo(tempFile);
 
-                String remoteFilePath = ftpRemoteDir + "member/" + renamFileName;
+                String remoteFilePath = ftpRemoteDir + "member/profile/" + renamFileName;
                 ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
 
                 memberFilesService.insertMemberFiles(memberFiles);
@@ -589,6 +513,194 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    // 어르신 정보 수정 처리 메소드
+    @PutMapping("/seniorUpdate/{memUUID}")
+    public ResponseEntity managementUpdateMethod(@ModelAttribute Member member, BindingResult result,
+                                                 @RequestParam(name="profile", required = false) MultipartFile sprofile) {
+        log.info("수정 메소드 작동, 전달온 값 확인(managementUpdateMethod) : {}", member);
+        try {
+            // 비밀번호 변경 요청 시
+            if (!member.getMemPw().equals(memberService.findByMemId(member.getMemId()).getMemPw()))  {
+                // 수정하고자 하는 비밀번호 암호화처리
+                log.info("비밀번호 변경요청처리 확인(managementUpdateMethod)");
+                member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
+            } else {
+                log.info("비밀번호 변경요청안함 처리 확인(managementUpdateMethod)");
+            }
+
+            member.setMemSocialKakao("N");  // 소셜 연동 여부 default 값 처리
+            member.setMemSocialGoogle("N");     // 소셜 연동 여부 default 값 처리
+            member.setMemSocialNaver("N");      // 소셜 연동 여부 default 값 처리
+            member.setMemFamilyApproval("N");       // 가족 승인 여부 default 값 처리
+
+            ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+
+            if(sprofile != null) {
+                // MemberFiles 객체 생성
+                MemberFilesEntity mFiles = memberFilesService.findByProfileMemUuid(member.getMemUUID());
+                String fileName = sprofile.getOriginalFilename();
+                String renamFileName = CreateRenameFileName.create(mFiles.getMfId(), fileName);
+
+                member.setMemSeniorProfile(fileName);       // 프로필 사진 이름 저장
+
+                memberService.insertMember(member);
+
+                mFiles.setMfOriginalName(fileName);
+                mFiles.setMfRename(renamFileName);
+                mFiles.setMfMemUUID(member.getMemUUID());
+
+                File tempFile = File.createTempFile("member-", null);
+                sprofile.transferTo(tempFile);
+
+                String remoteFilePath = ftpRemoteDir + "member/profile/" + renamFileName;
+                ftpUtility.uploadFile(tempFile.getAbsolutePath(), remoteFilePath);
+
+                memberFilesService.insertMemberFiles(mFiles.toDto());
+                tempFile.delete();
+            }
+
+            // 클라이언트로 넘어오는 "null" 값 처리
+            validator.validate(member, result);
+            log.info("전송보내는 memeber 객체 확인(managementUpdateMethod) : {}", member);
+
+            memberService.updateMember(member);
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("회원정보 수정 실패(managementUpdateMethod) : {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 회원 상세정보 출력 처리 메소드 (관리자)
+    @GetMapping("/sdetail/{memUUID}")
+    public ResponseEntity<Map<String, Object>> managementDetailMethod(@PathVariable String memUUID) {
+        try {            
+            log.info("전달온 UUID 확인(managementDetailMethod) : {}", memUUID);
+            Member member = memberService.selectMember(memUUID);
+            log.info("조회해 온 정보 확인(managementDetailMethod) : {}", member);
+            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> profileData = new HashMap<>();
+            MemberFilesEntity profile = memberFilesService.findByProfileMemUuid(memUUID);
+
+            // 파일 미리보기 코드
+            // FTP 서버 연결
+            ftpUtility.connect(ftpServer, ftpPort, ftpUsername, ftpPassword);
+
+            if (profile != null) {
+                String mfRename = profile.getMfRename();
+
+                // 파일 경로 구성
+                String remoteFilePath = ftpRemoteDir + "member/profile/" + mfRename;
+                log.info("다운로드 시도 - 파일 경로: {}", remoteFilePath);
+
+                // 파일 다운로드
+                File tempFile = File.createTempFile("preview-", null);
+                ftpUtility.downloadFile(remoteFilePath, tempFile.getAbsolutePath());
+
+                // 파일 읽기
+                byte[] fileContent = Files.readAllBytes(tempFile.toPath());
+                tempFile.delete();
+
+                // MIME 타입 결정
+                String mimeType = getMimeType(profile.getMfOriginalName());
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+
+                profileData.put("mimeType", mimeType);
+                profileData.put("fileContent", fileContent);
+            }
+
+
+            map.put("profileData", profileData);        // 프로필 사진 데이터 전송
+            map.put("member", member);      // 어르신 정보 객체 전송
+            if (member.getMemUUIDFam() != null) {
+                Member familyInfo = memberService.selectMember(member.getMemUUIDFam());
+                map.put("familyInfo", familyInfo);      // 가족 정보 객체 전송
+            }
+            if (member.getMemUUIDMgr() != null) {
+                Member managerInfo = memberService.selectMember(member.getMemUUIDMgr());
+                map.put("managerInfo", managerInfo);    // 담당자 정보 객체 전송
+            }
+
+            
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 가족 계정 승인/반려 처리 메소드
+    @PutMapping("/approval/{memUUID}")
+    public ResponseEntity managementApprovalMethod(@PathVariable String memUUID, @RequestParam("status") String status) {
+        try {
+            memberService.updateApproval(memUUID, status);      // memUUID = 가족계정 UUID . status = 승인 또는 반려
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //MIME타입
+    private String getMimeType(String snrFileOGName) {
+        if (snrFileOGName == null || !snrFileOGName.contains(".")) {
+            return null;
+        }
+        String extension = snrFileOGName.substring(snrFileOGName.lastIndexOf(".") + 1).toLowerCase();
+
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+            case "bmp":
+            case "tif":
+            case "tiff":
+                return "image/" + extension;
+            case "xls":
+            case "xlsx":
+                return "application/vnd.ms-excel";
+            case "pdf":
+                return "application/pdf";
+            case "txt":
+                return "text/plain";
+            case "hwp":
+                return "application/x-hwp";
+            case "hwpx":
+                return "application/hwp+zip";
+            case "doc":
+            case "docx":
+                return "application/msword";
+            case "zip":
+            case "rar":
+            case "7z":
+            case "tar":
+            case "gz":
+                return "application/zip";
+            default:
+                return "application/octet-stream"; // 기본 MIME 타입
+        }
+    }//getMimeType end
+
+
 }
 
 

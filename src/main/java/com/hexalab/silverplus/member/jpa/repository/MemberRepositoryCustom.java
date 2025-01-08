@@ -34,4 +34,6 @@ public interface MemberRepositoryCustom {
     long selectSeniorNameCount(String keyword);
     long selectSeniorAgeCount(String keyword);
     long selectSeniorAddressCount(String keyword);
+    long updateApproval(String memUUID, String status);
+
 }

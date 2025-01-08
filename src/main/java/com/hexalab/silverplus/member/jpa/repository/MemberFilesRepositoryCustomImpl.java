@@ -27,4 +27,12 @@ public class MemberFilesRepositoryCustomImpl implements MemberFilesRepositoryCus
                 .where(memberFiles.mfMemUUID.eq(memUuid))
                 .fetch();
     }
+
+    @Override
+    public MemberFilesEntity findByProfileMemUuid(String memUuid) {
+        return queryFactory
+                .selectFrom(memberFiles)
+                .where(memberFiles.mfMemUUID.eq(memUuid))
+                .fetchOne();
+    }
 }

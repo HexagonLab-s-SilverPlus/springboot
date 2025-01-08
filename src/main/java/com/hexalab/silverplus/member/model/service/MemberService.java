@@ -205,6 +205,9 @@ public class MemberService {
         return (int) memberRepository.selectSeniorAddressCount(keyword);
     }
 
-
+    // 가족계정 승인처리 메소드
+    public int updateApproval(String memUUID, String status) {
+        return (int) memberRepository.updateApproval(memUUID, status);
+    }
 
 }
