@@ -35,6 +35,7 @@ public class DocumentService {
 
     @Transactional
     public Document saveDocument(Document document) {
+        document.setIsApproved(document.getIsApproved() != null ? document.getIsApproved() : "대기중");
         DocumentEntity entity = document.toEntity();
         DocumentEntity savedEntity = documentRepository.save(entity);
         log.info("문서 메타 정보 저장: {}", savedEntity);
