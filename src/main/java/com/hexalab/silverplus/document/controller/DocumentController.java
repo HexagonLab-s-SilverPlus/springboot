@@ -5,6 +5,7 @@ import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
+import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -119,6 +120,30 @@ public class DocumentController {
             );
         }
     }
+
+
+    @GetMapping("/mgrName/{memUuid}")
+    public ResponseEntity<ApiResponse<Member>> getMemberByUUID(@PathVariable String memUuid) {
+        try{
+            Member member = memberService.findByMemUUID(memUuid);
+            return ResponseEntity.ok(
+                    ApiResponse.<Member>builder()
+                            .success(true)
+                            .message("멤버 조회 성공")
+                            .data(member)
+                            .build()
+            );
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<Member>builder()
+                           .success(false)
+                           .message("멤버 조회 실패")
+                           .build()
+            );
+        }
+    }
+
 
 
 
