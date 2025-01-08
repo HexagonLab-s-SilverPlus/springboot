@@ -1,7 +1,9 @@
 package com.hexalab.silverplus.document.model.service;
 
+import com.hexalab.silverplus.document.jpa.entity.DocFileEntity;
 import com.hexalab.silverplus.document.jpa.entity.DocumentEntity;
 import com.hexalab.silverplus.document.jpa.repository.DocumentRepository;
+import com.hexalab.silverplus.document.model.dto.DocFile;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.notice.jpa.entity.NoticeEntity;
 import com.hexalab.silverplus.notice.model.dto.Notice;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final DocFileService docFileService;
 
     @Transactional
     public Document saveDocument(Document document) {
@@ -43,6 +46,35 @@ public class DocumentService {
         return documentOpt.map(DocumentEntity::toDto)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
     }
+
+    /**
+     * memUuid로 노인사용자가 작성한 Document 리스트 조회
+     * @param memUuid
+     * @return
+     */
+    public List<Document> getDocumentsByMemUuid(String memUuid) {
+        List<DocumentEntity> documentEntities = documentRepository.findByWrittenBy(memUuid);
+        return documentEntities.stream()
+                .map(DocumentEntity::toDto)
+                .toList();
+    }
+
+
+
+    public List<Map<String, Object>> getDocumentsWithFiles(String memUuid){
+        List<Document> documents=getDocumentsByMemUuid(memUuid);
+        return documents.stream()
+                .map(document -> {
+                    DocFile docFile=docFileService.getDocFilesByDocId(document.getDocId());
+                    return Map.of(
+                            "document", document,
+                            "file", docFile
+                    );
+                })
+                .toList();
+    }
+
+
 
 //    @Transactional
 //    public Document updateDocumentStatus(String docId, String newStatus) {

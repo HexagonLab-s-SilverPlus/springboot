@@ -14,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -99,6 +101,18 @@ public class DocFileService {
                 .orElseThrow(() -> new IllegalArgumentException("DocFile not found"));
         return entity.toDto();
     }
+
+
+    /**
+     * docId로 Document에 해당하는 파일 조회
+     * @param docId
+     * @return
+     */
+    public DocFile getDocFilesByDocId(String docId) {
+        DocFileEntity docFileEntities = docFileRepository.findByDocId(docId);
+        return docFileEntities.toDto();
+    }
+
 
     @Transactional
     public void deleteDocFileById(String dfId) {

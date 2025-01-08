@@ -18,8 +18,8 @@ public class Document {
     private Timestamp docCompletedAt; // 문서 생성날짜
     private String isApproved; // 승인 여부(디폴트 '대기중')
     private Timestamp approvedAt; // 담당자의 승인날짜
-    private String writtenBy;
-    private String approvedBy;
+    private String writtenBy; // 작성한 노인사용자 UUID
+    private String approvedBy; // 승인 또는 반려한 담당자 UUID
 
 
     // Dto -> Entity 변환
