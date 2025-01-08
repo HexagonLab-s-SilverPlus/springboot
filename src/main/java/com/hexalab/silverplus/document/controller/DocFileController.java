@@ -50,6 +50,37 @@ public class DocFileController {
         }
     }
 
+
+    /**
+     * 문서 ID로 파일 조회
+     *
+     * @param docId 연결된 문서 ID
+     * @return 파일 정보
+     */
+    @GetMapping("/document/{docId}")
+    public ResponseEntity<ApiResponse<DocFile>> getDocFileByDocId(@PathVariable String docId) {
+        try{
+            DocFile docFile = docFileService.getDocFilesByDocId(docId);
+            return ResponseEntity.ok(
+                    ApiResponse.<DocFile>builder()
+                            .success(true)
+                            .message("파일 조회 성공")
+                            .data(docFile)
+                            .build()
+            );
+
+        }catch(Exception e){
+            e.printStackTrace();
+            log.error("파일 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(
+                    ApiResponse.<DocFile>builder()
+                           .success(false)
+                           .message("파일 조회 중 오류가 발생했습니다.")
+                           .build()
+            );
+        }
+    }
+
     /**
      * 공문서 파일 조회
      */
