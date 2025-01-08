@@ -26,7 +26,7 @@ public class MedicalRepositoryImpl implements MedicalRepositoryCustom {
         return queryFactory
                 .selectFrom(medical)
                 .where(medical.mediSnrUUID.eq(mediSnrUUID))
-                .orderBy(medical.mediDiagDate.desc())
+                .orderBy(medical.mediDiagDate.desc(), medical.mediCreatedAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
