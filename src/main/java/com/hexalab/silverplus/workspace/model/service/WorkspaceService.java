@@ -91,9 +91,7 @@ public class WorkspaceService {
      * 기준으로 페이징 처리해서 워크스페이스 조회 메소드
      */
     public List<Workspace> getWorkspacesPagedWithStatus(String memUuid, int offset, int limit, String workspaceStatus) {
-        // offset과 limit을 검증
-        int page = offset / limit; // 페이지 번호 계산
-        Pageable pageable = PageRequest.of(page, limit); // Spring Data Pageable 생성
+        Pageable pageable = PageRequest.of(offset / limit, limit); // offset을 페이지로 변환
 
         return workspaceRepository.findByWorkspaceMemUuidAndWorkspaceStatus(memUuid, workspaceStatus, pageable)
                 .stream()
