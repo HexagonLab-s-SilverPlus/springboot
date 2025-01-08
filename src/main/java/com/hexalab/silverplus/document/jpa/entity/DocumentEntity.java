@@ -41,6 +41,9 @@ public class DocumentEntity {
     @Column(name = "APPROVED_BY")
     private String approvedBy;
 
+    @Column(name = "SUBMITTED_AT")
+    private Timestamp submittedAt;
+
 
 
     // Entity -> DTO 변환
@@ -53,6 +56,7 @@ public class DocumentEntity {
                 .approvedAt(this.getApprovedAt())
                 .writtenBy(this.getWrittenBy())
                 .approvedBy(this.getApprovedBy())
+                .submittedAt(this.submittedAt)
                 .build();
     }
 }
