@@ -17,9 +17,9 @@ import java.sql.Timestamp;
 public class Book {
     private String bookNum;         // BOOK_NUM	VARCHAR2(100 BYTE)
     private String bookTitle;       // BOOK_TITLE	VARCHAR2(250 BYTE)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp bookCreateAt; // BOOK_CREATED_AT	TIMESTAMP(6)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp bookUpdateAt; // BOOK_UPDATED_AT	TIMESTAMP(6)
     private String bookDetail;      // BOOK_DETAIL	VARCHAR2(1000 BYTE)
     private String bookImage;       // BOOK_IMAGE	VARCHAR2(1000 BYTE)

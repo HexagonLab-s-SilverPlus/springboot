@@ -73,4 +73,12 @@ public class BookService {
     public Book selectBook(String bookNum) {
         return bookRepository.findById(bookNum).get().toDto();
     }
+
+    public int updatebook(Book book) {
+        if(bookRepository.save(book.toEntity()) != null){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
 }
