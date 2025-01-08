@@ -1,11 +1,15 @@
 package com.hexalab.silverplus.medical.controller;
 
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.medical.model.dto.Medical;
 import com.hexalab.silverplus.medical.model.service.MedicalService;
 import com.hexalab.silverplus.member.model.dto.Member;
 import com.hexalab.silverplus.member.model.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,25 +28,54 @@ public class MedicalController {
     private final MemberService memberService;
 
     //Medical list
+//    @GetMapping("/medical/{mediSnrUUID}")
+//    public ResponseEntity<Map<String, Object>> selectMedicalList(
+//            @PathVariable String mediSnrUUID
+//    ) {
+//        log.info("mediSnrUUID: {}", mediSnrUUID);
+//
+//        try {
+//            Member snrMember = memberService.selectMember(mediSnrUUID);
+//
+//            ArrayList<Medical> medicalList = medicalService.selectAllMedicalList(snrMember.getMemUUID());
+//            if (medicalList == null || medicalList.isEmpty()) {
+//                return ResponseEntity.ok(Map.of("list", new ArrayList<>()));
+//            }
+//
+//            log.info("medicalList: {}", medicalList);
+//            log.info("medicalList size: {}", medicalList.size());
+//
+//            Map<String, Object> map = new HashMap<>();
+//            map.put("list", medicalList);
+//
+//            return ResponseEntity.ok(map);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }//selectMedicalList end
+
     @GetMapping("/medical/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> selectMedicalList(
-            @PathVariable String mediSnrUUID
+            @RequestParam String mediSnrUUID,
+            @ModelAttribute Search search
     ) {
         log.info("mediSnrUUID: {}", mediSnrUUID);
+        log.info("Search parameters: {}", search);
 
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
+                search.getPageSize(), Sort.by(Sort.Direction.DESC, "mediDiagDate"));
         try {
-            Member snrMember = memberService.selectMember(mediSnrUUID);
+            ArrayList<Medical> medicalList = medicalService.selectAllMedicalList(mediSnrUUID, pageable);
+            search.setListCount(medicalService.selectAllCount(mediSnrUUID));
 
-            ArrayList<Medical> medicalList = medicalService.selectAllMedicalList(snrMember.getMemUUID());
             if (medicalList == null || medicalList.isEmpty()) {
                 return ResponseEntity.ok(Map.of("list", new ArrayList<>()));
             }
 
-            log.info("medicalList: {}", medicalList);
-            log.info("medicalList size: {}", medicalList.size());
-
             Map<String, Object> map = new HashMap<>();
             map.put("list", medicalList);
+            map.put("search", search);
 
             return ResponseEntity.ok(map);
         } catch (Exception e) {
