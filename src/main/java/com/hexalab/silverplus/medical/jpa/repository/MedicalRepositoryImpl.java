@@ -25,6 +25,7 @@ public class MedicalRepositoryImpl implements MedicalRepositoryCustom {
         return queryFactory
                 .selectFrom(medical)
                 .where(medical.mediSnrUUID.eq(mediSnrUUID))
+                .orderBy(medical.mediCreatedAt.desc())
                 .fetch();
     }
 }//MedicalRepositoryImpl end
