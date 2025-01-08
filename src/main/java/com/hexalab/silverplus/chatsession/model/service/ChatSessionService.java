@@ -34,6 +34,7 @@ public class ChatSessionService {
                 .isEmergency("N") // Y/N (비상상황 여부)
                 .sessTotMsgs(0)
                 .sessType("T") // T/V (텍스트인지 보이스인지)
+                .lastUpdated(Timestamp.from(Instant.now()))
                 .workspaceId(workspaceId)
                 .sessMemUUID(memUUID)
                 .build();

@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.document.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.document.model.dto.DocFile;
@@ -54,6 +55,101 @@ public class DocumentController {
         );
     }
 
+
+    /**
+     * 사용자 UUID로 작성된 문서 목록 조회
+     *
+     * @param memUuid 노인 사용자 UUID
+     * @return 문서 목록
+     */
+    @GetMapping("/doc/{memUuid}")
+    public ResponseEntity<ApiResponse<List<Document>>> getDocumentsByUser(
+            @PathVariable String memUuid) {
+        try{
+            List<Document> documents = documentService.getDocumentsByMemUuid(memUuid);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<Document>>builder()
+                            .success(true)
+                            .message("문서 목록 조회 성공")
+                            .data(documents)
+                            .build()
+            );
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<Document>>builder()
+                           .success(false)
+                           .message("문서 목록 조회 실패")
+                           .build()
+                    );
+        }
+    }
+
+
+    /**
+     * 사용자 UUID로 작성된 문서와 파일 목록 조회
+     *
+     * @param memUuid 노인 사용자 UUID
+     * @return 문서 및 파일 목록
+     */
+    @GetMapping("/{memUuid}/with-files")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocumentsWithFiles(
+            @PathVariable String memUuid) {
+        try{
+            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles(memUuid);
+
+            // JSON 직렬화로 보기 좋게 출력
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
+
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<Map<String, Object>>>builder()
+                            .success(true)
+                            .message("문서와 파일 목록 조회 성공")
+                            .data(documentsWithFiles)
+                            .build()
+            );
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<Map<String, Object>>>builder()
+                            .success(false)
+                            .message("문서와 파일 목록 조회 실패")
+                            .build()
+            );
+        }
+    }
+
+
+    @GetMapping("/mgrName/{memUuid}")
+    public ResponseEntity<ApiResponse<Member>> getMemberByUUID(@PathVariable String memUuid) {
+        try{
+            Member member = memberService.findByMemUUID(memUuid);
+            return ResponseEntity.ok(
+                    ApiResponse.<Member>builder()
+                            .success(true)
+                            .message("멤버 조회 성공")
+                            .data(member)
+                            .build()
+            );
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<Member>builder()
+                           .success(false)
+                           .message("멤버 조회 실패")
+                           .build()
+            );
+        }
+    }
+
+
+
+
+
     /**
      * 공문서 조회
      */
@@ -85,6 +181,8 @@ public class DocumentController {
                         .build()
         );
     }
+
+
 
     /**
      * 담당자에게 공문서 전송
