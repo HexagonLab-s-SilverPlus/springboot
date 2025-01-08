@@ -122,6 +122,11 @@ public class DocumentController {
     }
 
 
+    /**
+     * memUuid로 Member 객체 조회
+     * @param memUuid
+     * @return
+     */
     @GetMapping("/mgrName/{memUuid}")
     public ResponseEntity<ApiResponse<Member>> getMemberByUUID(@PathVariable String memUuid) {
         try{
@@ -186,16 +191,27 @@ public class DocumentController {
      * 담당자에게 공문서 전송
      */
     @PostMapping("/{docId}/send")
-    public ResponseEntity<ApiResponse<Void>> sendDocumentToApprover(
-            @PathVariable String docId,
-            @RequestParam String approverId) {
-        documentService.sendDocumentToApprover(docId, approverId);
-        return ResponseEntity.ok(
-                ApiResponse.<Void>builder()
-                        .success(true)
-                        .message("Document sent to approver successfully.")
-                        .build()
-        );
+    public ResponseEntity<ApiResponse<Document>> submitDocumentToMgr(
+            @PathVariable String docId) {
+        try{
+            Document document = documentService.submitDocumentToMgr(docId);
+            return ResponseEntity.ok(
+                    ApiResponse.<Document>builder()
+                            .success(true)
+                            .message("Document sent to approver successfully.")
+                            .data(document)
+                            .build()
+            );
+
+        }catch(Exception e){
+            log.error("Error submitting document to manager");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<Document>builder()
+                           .success(false)
+                           .message("Document submission failed")
+                           .build()
+            );
+        }
     }
 
 
