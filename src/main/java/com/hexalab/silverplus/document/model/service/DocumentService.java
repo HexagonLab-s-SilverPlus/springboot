@@ -169,4 +169,68 @@ public class DocumentService {
     public int dselectListCount() {
         return (int) documentRepository.count();
     }
+
+
+    public List<Map<String, Object>> getDocumentsWithFiles2(String memUuid, String status) {
+        List<Document> documents = getDocumentsByMemUuid(memUuid);
+
+        log.info("All Documents: {}", documents); // 전체 문서 확인
+
+        if (status != null && !status.trim().isEmpty()) {
+            documents = documents.stream()
+                    .filter(doc -> doc.getIsApproved() != null)
+                    .filter(doc -> "대기중".equals(doc.getIsApproved()))  // "대기중" 상태만 필터링
+                    .collect(Collectors.toList());
+
+        }
+
+        log.info("Filtered Documents by status '{}': {}", status, documents);
+        log.info("Fetched Documents: {}", documents);
+        return documents.stream()
+                .map(document -> {
+                    DocFile docFile = docFileService.getDocFilesByDocId(document.getDocId());
+
+
+                    return Map.of(
+                            "document", document,
+                            "file", docFile
+                    );
+                })
+                .toList();
+
+    }
+
+
+//    public List<Map<String, Object>> getDocumentsWithFiles(String memUuid, String status) {
+//        List<Document> documents = getDocumentsByMemUuid(memUuid);
+//
+//        // 상태 필터링
+//        if (status != null) {
+//            documents = documents.stream()
+//                    .filter(doc -> doc.getIsApproved().equalsIgnoreCase(status))
+//                    .collect(Collectors.toList());
+//        }
+//
+//        return documents.stream()
+//                .map(document -> {
+//                    DocFile docFile = docFileService.getDocFilesByDocId(document.getDocId());
+//                    return Map.of(
+//                            "document", document,
+//                            "file", docFile
+//                    );
+//                })
+//                .collect(Collectors.toList());
+//    }
+
+//    public void updateDocumentStatus(String docId, String status) {
+//        Document document = documentRepository.findById(docId)
+//                .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + docId));
+//        document.setIsApproved(status);
+//        documentRepository.save(document);
+//    }
+
+
+
+
+
 }

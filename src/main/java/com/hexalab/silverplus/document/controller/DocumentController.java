@@ -248,32 +248,91 @@ public class DocumentController {
         return response;
     }
 
-    //어르신 관리 뷰에서 공문서 승인 반려 처리
-    @GetMapping("/document/{memUUID}")
-    public ResponseEntity<Map> docManagedList(@PathVariable String memUUID
-//            @PathVariable("docId") String docId
-    ){
-        log.info("Received docId: " + memUUID);
-        Map<String,Object> map = new HashMap<>();
-        List<Map<String, Object>> fileList = new ArrayList<>();
+//    //어르신 관리 뷰에서 공문서 승인 반려 처리
+//    @GetMapping("/document/{memUUID}")
+//    public ResponseEntity<Map> docManagedList(@PathVariable String memUUID
+////            @PathVariable("docId") String docId
+//    ){
+//        log.info("Received docId: " + memUUID);
+//        Map<String,Object> map = new HashMap<>();
+//        List<Map<String, Object>> fileList = new ArrayList<>();
+//
+//        try{
+//            //공문서 요청목록 불러오기
+//            Document document = documentService.getDocumentById(memUUID);
+//            log.info("doc : " + document);
+//            map.put("doc", document);
+//
+//            //공문서 갯수 확인
+////            ArrayList<DocFile> docFiles = new ArrayList<>();
+////            int fileCount = documentfile
+//            return ResponseEntity.ok(map);
+//        }catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }
 
+    //공문서 파일 다운로드 및 승인 반려 처리
+    @GetMapping("/{memUuid}/request")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocManagedList(
+            @PathVariable String memUuid) {
         try{
-            //공문서 요청목록 불러오기
-            Document document = documentService.getDocumentById(memUUID);
-            log.info("doc : " + document);
-            map.put("doc", document);
+            log.info("Fetching documents for memUuid: {}", memUuid);
+            // 대기중 상태의 문서만 필터링해서 반환
+            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, "대기중");
+            log.info("Documents with status '대기중': {}", documentsWithFiles); // 여기서 필터링된 결과를 확인
 
-            //공문서 갯수 확인
-//            ArrayList<DocFile> docFiles = new ArrayList<>();
-//            int fileCount = documentfile
-            return ResponseEntity.ok(map);
-        }catch (Exception e) {
+            // JSON 직렬화로 보기 좋게 출력
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
+
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<Map<String, Object>>>builder()
+                            .success(true)
+                            .message("공문서 목록 조회 성공")
+                            .data(documentsWithFiles)
+                            .build()
+            );
+
+        }catch(Exception e){
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<Map<String, Object>>>builder()
+                            .success(false)
+                            .message("공문서와 목록 조회 실패")
+                            .build()
+            );
         }
     }
 
-    //공문서 파일 다운로드 로직
+    @PutMapping("/{docId}/approve")
+    public ResponseEntity<ApiResponse<Void>> approveDocument(
+            @PathVariable String docId,
+            @RequestParam String status // "승인" 또는 "반려"
+    ) {
+        try {
+            documentService.updateDocumentStatus(docId, status);
+
+            return ResponseEntity.ok(
+                    ApiResponse.<Void>builder()
+                            .success(true)
+                            .message("문서 상태 업데이트 성공")
+                            .build()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<Void>builder()
+                            .success(false)
+                            .message("문서 상태 업데이트 실패")
+                            .build()
+            );
+        }
+    }
+
 
 
 
