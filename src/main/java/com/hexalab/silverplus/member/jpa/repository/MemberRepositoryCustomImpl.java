@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -354,13 +355,13 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     // management
     // 검색 처리용 쿼리문(담당자용)
     @Override
-    public List<MemberEntity> selectAllSenior(Pageable pageable, Search search) {
+    public List<MemberEntity> selectAllSenior(Pageable pageable, Search search, String memUUID) {
         List<MemberEntity> list = new ArrayList<>();
         switch (search.getAction()) {
             case "all" -> {
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR"))
+                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -370,7 +371,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             case "이름" -> {
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memName.like("%" + search.getKeyword() + "%")))
+                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memName.like("%" + search.getKeyword() + "%")))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -380,7 +381,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             case "성별" -> {
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(extractGenderCondition(member.memRnn, search.getKeyword())))
+                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(member.memRnn, search.getKeyword())))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -397,7 +398,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 }
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
+                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -407,7 +408,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             case "주소" -> {
                 list = queryFactory
                         .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memAddress.like("%" + search.getKeyword() + "%")))
+                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memAddress.like("%" + search.getKeyword() + "%")))
                         .orderBy(member.memEnrollDate.asc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -419,48 +420,48 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     }
 
     // 어르신 전체목록 카운트하는 쿼리문
-    public long selectAllSeniorCount(){
+    public long selectAllSeniorCount(String memUUID) {
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR"))
+                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)))
                 .fetchCount();
     }
 
     // 어르신 이름으로 카운트하는 쿼리문
     @Override
-    public long selectSeniorNameCount(String keyword) {
+    public long selectSeniorNameCount(String keyword, String memUUID) {
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memName.like("%" + keyword + "%")))
+                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memName.like("%" + keyword + "%")))
                 .fetchCount();
     }
 
     // 어르신 성별로 카운트하는 쿼리문
     @Override
-    public long selectSeniorGenderCount(String keyword) {
+    public long selectSeniorGenderCount(String keyword, String memUUID) {
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(extractGenderCondition(member.memRnn, keyword)))
+                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(member.memRnn, keyword)))
                 .fetchCount();
     }
 
     // 어르신 나이로 카운트하는 쿼리문
     @Override
-    public long selectSeniorAgeCount(String keyword) {
+    public long selectSeniorAgeCount(String keyword, String memUUID) {
         int minAge = Integer.parseInt(keyword);
         int maxAge = minAge + 9;
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
+                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
                 .fetchCount();
     }
 
     // 어르신 주소로 카운트하는 쿼리문
     @Override
-    public long selectSeniorAddressCount(String keyword) {
+    public long selectSeniorAddressCount(String keyword, String memUUID) {
         return queryFactory
                 .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memAddress.like("%" + keyword + "%")))
+                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memAddress.like("%" + keyword + "%")))
                 .fetchCount();
     }
 
@@ -490,6 +491,55 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             }
         }
 
+    }
+
+    // 담당자가 관리하는 어르신의 가족계정 승인여부 조회하는 쿼리문
+    @Override
+    public long selectNeedApprovalCount(String memUUID) {
+        QMemberEntity manager = new QMemberEntity("manager");       // 동일한 entity 객체를 사용할 경우 이와같이 별칭 사용 필수
+        QMemberEntity senior = new QMemberEntity("senior");
+        QMemberEntity family = new QMemberEntity("family");
+        return Optional.ofNullable(
+                queryFactory
+                        .select(family.memUUID.count())
+                        .from(manager)
+                        .join(senior).on(manager.memUUID.eq(senior.memUUIDMgr))
+                        .join(family).on(senior.memUUIDFam.eq(family.memUUID))
+                        .where(
+                                manager.memUUID.eq(memUUID).and(family.memFamilyApproval.eq("PENDING"))
+                        ) .groupBy(manager.memUUID)
+                        .fetchOne()
+        ).orElse(0L);
+    }
+
+    // family enroll
+    // 가족 회원가입 시 어르신 검색 쿼리
+    @Override
+    public List<MemberEntity> selectAllSeniorFam(Pageable pageable, Search search) {
+        List<MemberEntity> list = new ArrayList<>();
+        switch (search.getAction()) {
+            case "전체" -> {
+                log.info("검색옵션 확인(전체)(selectAllSeniorFam) : {}", search.getAction());
+                list = queryFactory.selectFrom(member).where(member.memType.eq("SENIOR")).fetch();
+                log.info("전체목록 출력 쿼리 작동(selectAllSeniorFam)");
+            }
+            case "이름" -> {
+                log.info("검색옵션 확인(이름)(selectAllSeniorFam) : {}", search.getAction());
+                list = queryFactory.selectFrom(member).where(member.memType.eq("SENIOR").and(member.memName.like("%" + search.getKeyword() + "%"))).fetch();
+                log.info("이름검색 목록 출력 쿼리 작동(selectAllSeniorFam)");
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public long selectAllSeniorFamCount() {
+        return queryFactory.selectFrom(member).where(member.memType.eq("SENIOR")).fetchCount();
+    }
+
+    @Override
+    public long selectSeniorNameFamCount(String keyword) {
+        return queryFactory.selectFrom(member).where(member.memType.eq("SENIOR").and(member.memName.like("%" + keyword + "%"))).fetchCount();
     }
 
 

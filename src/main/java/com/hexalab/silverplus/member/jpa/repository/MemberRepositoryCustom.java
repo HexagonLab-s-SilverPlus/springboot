@@ -28,12 +28,16 @@ public interface MemberRepositoryCustom {
     MemberEntity findBySocialPi(String provider, String socialPi);
     long updateSocial(Boolean linking, String provider, String socialPi, String memUUID);
     MemberEntity findByProfile(String memSeniorProfile);
-    List<MemberEntity> selectAllSenior(Pageable pageable, Search search);
-    long selectAllSeniorCount();
-    long selectSeniorGenderCount(String keyword);
-    long selectSeniorNameCount(String keyword);
-    long selectSeniorAgeCount(String keyword);
-    long selectSeniorAddressCount(String keyword);
+    List<MemberEntity> selectAllSenior(Pageable pageable, Search search, String memUUID);
+    long selectAllSeniorCount(String memUUID);
+    long selectSeniorGenderCount(String keyword, String memUUID);
+    long selectSeniorNameCount(String keyword, String memUUID);
+    long selectSeniorAgeCount(String keyword, String memUUID);
+    long selectSeniorAddressCount(String keyword, String memUUID);
     long updateApproval(String memUUID, String status);
+    long selectNeedApprovalCount(String memUUID);
+    List<MemberEntity> selectAllSeniorFam(Pageable pageable, Search search);
+    long selectAllSeniorFamCount();
+    long selectSeniorNameFamCount(String keyword);
 
 }
