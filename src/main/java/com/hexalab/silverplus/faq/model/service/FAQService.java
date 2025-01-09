@@ -5,6 +5,8 @@ import com.hexalab.silverplus.faq.jpa.repository.FAQRepository;
 import com.hexalab.silverplus.faq.model.dto.FAQ;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +28,10 @@ public class FAQService {
         }
     }
 
-    public List<FAQ> selectAll() {
-        List< FAQEntity> faqEntities = faqRepository.findAll();
+    public List<FAQ> selectAll(Pageable pageable) {
+        log.info("selectAll"+ pageable.toString());
+        Page<FAQEntity> faqEntities = faqRepository.findAll(pageable);
+        log.info("selectAll22222222222222222"+faqEntities);
         List<FAQ> faq = new ArrayList<>();
         for (FAQEntity faqEntity : faqEntities) {
             faq.add(faqEntity.toDto());
@@ -46,5 +50,9 @@ public class FAQService {
 
     public void updateFAQ(FAQ faq) {
         faqRepository.save(faq.toEntity());
+    }
+
+    public int selectCountAll() {
+        return (int)faqRepository.count();
     }
 }
