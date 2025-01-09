@@ -576,7 +576,7 @@ public class MemberController {
         }
     }
 
-    // 회원 상세정보 출력 처리 메소드 (관리자)
+    // 어르신 상세정보 출력 처리 메소드 (담당자)
     @GetMapping("/sdetail/{memUUID}")
     public ResponseEntity<Map<String, Object>> managementDetailMethod(@PathVariable String memUUID) {
         try {            
@@ -619,11 +619,11 @@ public class MemberController {
 
             map.put("profileData", profileData);        // 프로필 사진 데이터 전송
             map.put("member", member);      // 어르신 정보 객체 전송
-            if (member.getMemUUIDFam() != null) {
+            if (member.getMemUUIDFam() != null && !member.getMemUUIDFam().equals("N/A")) {
                 Member familyInfo = memberService.selectMember(member.getMemUUIDFam());
                 map.put("familyInfo", familyInfo);      // 가족 정보 객체 전송
             }
-            if (member.getMemUUIDMgr() != null) {
+            if (member.getMemUUIDMgr() != null && !member.getMemUUIDMgr().equals("N/A")) {
                 Member managerInfo = memberService.selectMember(member.getMemUUIDMgr());
                 map.put("managerInfo", managerInfo);    // 담당자 정보 객체 전송
             }

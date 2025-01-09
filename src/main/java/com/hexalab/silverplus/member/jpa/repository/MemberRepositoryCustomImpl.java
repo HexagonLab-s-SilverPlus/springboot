@@ -475,17 +475,17 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             case "승인" -> {
                 log.info("승인처리 작동확인 (updateApproval) : {}", status);
                 return queryFactory
-                        .update(member)
-                        .set(member.memFamilyApproval, "APPROVED")
-                        .where(member.memUUID.eq(memUUID))
+                        .update(senior)
+                        .set(senior.memFamilyApproval, "APPROVED")
+                        .where(senior.memUUID.eq(memUUID))
                         .execute();
             }
             case "반려" -> {
                 log.info("반려처리 작동확인 (updateApproval) : {}", status);
                 return queryFactory
-                    .update(member)
-                    .set(member.memFamilyApproval, "REJECTED")
-                    .where(member.memUUID.eq(memUUID))
+                    .update(senior)
+                    .set(senior.memFamilyApproval, "REJECTED")
+                    .where(senior.memUUID.eq(memUUID))
                     .execute();
             }
             default -> {
@@ -500,12 +500,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     public long selectNeedApprovalCount(String memUUID) {
         return Optional.ofNullable(
                 queryFactory
-                        .select(family.memUUID.count())
-                        .from(manager)
-                        .join(senior).on(manager.memUUID.eq(senior.memUUIDMgr))
-                        .join(family).on(senior.memUUIDFam.eq(family.memUUID))
+                        .select(senior.memUUID.count())
+                        .from(senior)
+                        .join(manager).on(manager.memUUID.eq(senior.memUUIDMgr))
                         .where(
-                                manager.memUUID.eq(memUUID).and(family.memFamilyApproval.eq("PENDING"))
+                                manager.memUUID.eq(memUUID).and(senior.memFamilyApproval.eq("PENDING"))
                         ) .groupBy(manager.memUUID)
                         .fetchOne()
         ).orElse(0L);
