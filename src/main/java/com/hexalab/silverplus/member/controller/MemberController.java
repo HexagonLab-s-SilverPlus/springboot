@@ -12,6 +12,7 @@ import com.hexalab.silverplus.member.model.service.MemberService;
 import com.hexalab.silverplus.security.jwt.jpa.entity.RefreshToken;
 import com.hexalab.silverplus.security.jwt.model.service.RefreshService;
 import com.hexalab.silverplus.security.jwt.util.JWTUtil;
+import com.querydsl.core.Tuple;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -418,7 +419,8 @@ public class MemberController {
 
     // 어르신 목록 출력 메소드
     @GetMapping("/seniorList")
-    public ResponseEntity<Map<String, Object>> managementListMethod(@ModelAttribute Search search, @RequestParam("UUID")String memUUID) {
+    public ResponseEntity<Map<String, Object>> managementListMethod(@ModelAttribute Search search, @RequestParam("memUUID")String memUUID) {
+        log.info("전달 온 담당자 UUID 확인 : {}", memUUID);
         if (search.getPageNumber()==0) {
             search.setPageNumber(1);
             search.setPageSize(10);
@@ -637,6 +639,7 @@ public class MemberController {
     // 가족 계정 승인/반려 처리 메소드
     @PutMapping("/approval/{memUUID}")
     public ResponseEntity managementApprovalMethod(@PathVariable String memUUID, @RequestParam("status") String status) {
+        log.info("전달 온 승인/반려 status 값 확인 : {}", status);
         try {
             memberService.updateApproval(memUUID, status);      // memUUID = 가족계정 UUID . status = 승인 또는 반려
             return ResponseEntity.ok().build();
@@ -664,19 +667,17 @@ public class MemberController {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            List<Member> list = new ArrayList<Member>();
             if(search.getAction() == null || search.getAction().isEmpty()){
                 search.setAction("전체");
                 search.setListCount(memberService.selectAllSeniorFamCount());
-                list = memberService.selectAllSeniorFam(pageable, search);
-                log.info("조회해 온 리스트 확인(전체)(familyEnrollSeniorSearch) : {}", list);
+                result = memberService.selectAllSeniorFam(pageable, search);
+                log.info("조회해 온 리스트 확인(전체)(familyEnrollSeniorSearch) : {}", result);
             } else if (search.getAction().equals("이름")) {
                 search.setListCount(memberService.selectSeniorNameFamCount(search.getKeyword()));
-                list = memberService.selectAllSeniorFam(pageable, search);
-                log.info("조회해 온 리스트 확인(이름)(familyEnrollSeniorSearch) : {}", list);
+                result = memberService.selectAllSeniorFam(pageable, search);
+                log.info("조회해 온 리스트 확인(이름)(familyEnrollSeniorSearch) : {}", result);
             }
 
-            result.put("list", list);
             result.put("search", search);
             return ResponseEntity.ok(result);
 

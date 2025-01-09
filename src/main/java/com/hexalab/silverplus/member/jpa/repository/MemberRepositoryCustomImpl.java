@@ -3,6 +3,7 @@ package com.hexalab.silverplus.member.jpa.repository;
 import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.entity.QMemberEntity;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -12,9 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +23,9 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private final EntityManager entityManager;
     private final QMemberEntity member = QMemberEntity.memberEntity;
+    QMemberEntity manager = new QMemberEntity("manager");       // 동일한 entity 객체를 사용할 경우 이와같이 별칭 사용 필수
+    QMemberEntity senior = new QMemberEntity("senior");
+    QMemberEntity family = new QMemberEntity("family");
 
 
     private StringExpression extractSubstring(StringPath column, int start, int length) {
@@ -496,9 +498,6 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     // 담당자가 관리하는 어르신의 가족계정 승인여부 조회하는 쿼리문
     @Override
     public long selectNeedApprovalCount(String memUUID) {
-        QMemberEntity manager = new QMemberEntity("manager");       // 동일한 entity 객체를 사용할 경우 이와같이 별칭 사용 필수
-        QMemberEntity senior = new QMemberEntity("senior");
-        QMemberEntity family = new QMemberEntity("family");
         return Optional.ofNullable(
                 queryFactory
                         .select(family.memUUID.count())
@@ -515,31 +514,63 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     // family enroll
     // 가족 회원가입 시 어르신 검색 쿼리
     @Override
-    public List<MemberEntity> selectAllSeniorFam(Pageable pageable, Search search) {
-        List<MemberEntity> list = new ArrayList<>();
+    public Map<String, Object> selectAllSeniorFam(Pageable pageable, Search search) {
+        List<Tuple> list = new ArrayList<>();
+
         switch (search.getAction()) {
             case "전체" -> {
                 log.info("검색옵션 확인(전체)(selectAllSeniorFam) : {}", search.getAction());
-                list = queryFactory.selectFrom(member).where(member.memType.eq("SENIOR")).fetch();
+                list = queryFactory
+                        .select(senior, family)
+                        .from(senior)
+                        .leftJoin(family)
+                        .on(senior.memUUIDFam.eq(family.memUUID))
+                        .where(senior.memType.eq("SENIOR"))
+                        .fetch();
                 log.info("전체목록 출력 쿼리 작동(selectAllSeniorFam)");
             }
             case "이름" -> {
                 log.info("검색옵션 확인(이름)(selectAllSeniorFam) : {}", search.getAction());
-                list = queryFactory.selectFrom(member).where(member.memType.eq("SENIOR").and(member.memName.like("%" + search.getKeyword() + "%"))).fetch();
+                list = queryFactory
+                        .select(senior, family)
+                        .from(senior)
+                        .leftJoin(family)
+                        .on(senior.memUUID.eq(family.memUUIDMgr))
+                        .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + search.getKeyword() + "%")))
+                        .fetch();
                 log.info("이름검색 목록 출력 쿼리 작동(selectAllSeniorFam)");
             }
         }
-        return list;
+        Map<String, Object> result = new HashMap<>();
+        ArrayList<MemberEntity> senior = new ArrayList<>();
+        ArrayList<MemberEntity> family = new ArrayList<>();
+        for (Tuple tuple : list) {
+            senior.add(tuple.get(0, MemberEntity.class));
+            family.add(tuple.get(1, MemberEntity.class));
+        }
+
+        result.put("senior", senior);
+        result.put("family", family);
+
+        return result;
     }
 
     @Override
     public long selectAllSeniorFamCount() {
-        return queryFactory.selectFrom(member).where(member.memType.eq("SENIOR")).fetchCount();
+        return queryFactory
+                .select(senior)
+                .from(senior)
+                .where(senior.memType.eq("SENIOR"))
+                .fetchCount();
     }
 
     @Override
     public long selectSeniorNameFamCount(String keyword) {
-        return queryFactory.selectFrom(member).where(member.memType.eq("SENIOR").and(member.memName.like("%" + keyword + "%"))).fetchCount();
+        return queryFactory
+                .select(senior)
+                .from(senior)
+                .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + keyword + "%")))
+                .fetchCount();
     }
 
 

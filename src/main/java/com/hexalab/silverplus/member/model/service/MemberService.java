@@ -4,6 +4,7 @@ import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.repository.MemberRepository;
 import com.hexalab.silverplus.member.model.dto.Member;
+import com.querydsl.core.Tuple;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -218,11 +220,11 @@ public class MemberService {
 
     // 가족 회원가입시 어르신 검색
     // 전체 검색 메소드
-    public List<Member> selectAllSeniorFam(Pageable pageable, Search search) {
+    public Map<String, Object> selectAllSeniorFam(Pageable pageable, Search search) {
         try {
-            List<MemberEntity> list = memberRepository.selectAllSeniorFam(pageable, search);
+            Map<String, Object> list = memberRepository.selectAllSeniorFam(pageable, search);
             log.info("조회하는 값 확인(서비스)(selectAllSeniorFam) : {}", list);
-            return toList(list);
+            return list;
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
