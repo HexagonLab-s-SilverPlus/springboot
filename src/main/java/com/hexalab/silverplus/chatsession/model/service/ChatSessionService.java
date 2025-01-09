@@ -109,4 +109,15 @@ public class ChatSessionService {
                 .map(ChatSessionEntity::toDto)
                 .toList();
     }
+
+
+    /**
+     * 워크스페이스ID로 활성화 상태인 세션 조회
+     */
+    public ChatSession getSessionsByWorkspaceId(String workspaceId) {
+        return chatSessionRepository.findActiveSessionByWorkspaceId(workspaceId)
+               .map(ChatSessionEntity::toDto)
+               .orElse(null);
+
+    }
 }
