@@ -1,27 +1,18 @@
 package com.hexalab.silverplus.emg.controller;
 
-import com.hexalab.silverplus.book.model.dto.Book;
-import com.hexalab.silverplus.book.model.service.BookService;
-import com.hexalab.silverplus.common.CreateRenameFileName;
-import com.hexalab.silverplus.common.FTPUtility;
 import com.hexalab.silverplus.common.Search;
 
 import com.hexalab.silverplus.emg.model.dto.EMG;
 import com.hexalab.silverplus.emg.model.service.EMGService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.sql.Timestamp;
 import java.util.*;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임

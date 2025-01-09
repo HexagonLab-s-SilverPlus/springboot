@@ -100,7 +100,6 @@ public class ChatSessionController {
     }
 
 
-
     // 활성 세션 조회
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<ChatSession>>> getActiveSessions() {
@@ -119,5 +118,30 @@ public class ChatSessionController {
                             .message("활성 세션 조회 실패")
                             .build());
         }
+    }
+
+
+
+    // 워크스페이스ID로 활성화중인 세션 조회
+    @GetMapping("/{workspaceId}")
+    public ResponseEntity<ApiResponse<ChatSession>> getSessionsByWorkspaceId(@PathVariable String workspaceId) {
+        try {
+            ChatSession activeSessions = chatSessionService.getSessionsByWorkspaceId(workspaceId);
+            return ResponseEntity.ok(ApiResponse.<ChatSession>builder()
+                    .success(true)
+                    .message("활성 세션 조회 성공")
+                    .data(activeSessions)
+                    .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("활성 세션 조회 오류:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ChatSession>builder()
+                            .success(false)
+                            .message("활성 세션 조회 실패")
+                            .build());
+        }
+
+
     }
 }

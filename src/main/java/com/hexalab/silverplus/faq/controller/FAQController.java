@@ -1,21 +1,22 @@
 package com.hexalab.silverplus.faq.controller;
 
-import com.hexalab.silverplus.common.FTPUtility;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.faq.model.dto.FAQ;
 import com.hexalab.silverplus.faq.model.service.FAQService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.File;
-import java.net.URLEncoder;
+;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
 @RequiredArgsConstructor
@@ -26,10 +27,17 @@ public class FAQController {
     private final FAQService faqService;
 
     @GetMapping
-    public ResponseEntity<List<FAQ>> selectAll() {
-        List<FAQ> faq = faqService.selectAll();
-        log.info(faq.toString());
-        return ResponseEntity.ok(faq);
+    public ResponseEntity<Map<String,Object>> selectAll(@ModelAttribute Search search) {
+
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
+                search.getPageSize(), Sort.by(Sort.Direction.DESC, "faqCreatedAt"));
+        search.setListCount(faqService.selectCountAll());
+        List<FAQ> faq = faqService.selectAll(pageable);
+        Map<String,Object> map = new HashMap<>();
+        map.put("list", faq);
+        map.put("search", search);
+
+        return ResponseEntity.ok(map);
     }
 
     @PostMapping
