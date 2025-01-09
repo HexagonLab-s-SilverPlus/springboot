@@ -224,11 +224,18 @@ public class DocumentService {
         documentRepository.save(documentEntity);  // 문서 정보를 저장
     }
 
+    public Integer selectDocListCountByAction(String memUuid, String action) {
+        if (memUuid == null || action == null) {
+            throw new IllegalArgumentException("memUuid와 action은 null일 수 없습니다.");
+        }
 
+        // Native Query with Positional Parameters
+        String sql = "SELECT COUNT(*) FROM document d WHERE d.written_by = ? AND d.is_approved = ?";
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter(1, memUuid); // 위치 기반 1번 파라미터
+        query.setParameter(2, action); // 위치 기반 2번 파라미터
 
-
-
-
-
+        return ((Number) query.getSingleResult()).intValue();
+    }
 
 }

@@ -269,9 +269,9 @@ public class DocumentController {
 
 
     @GetMapping("/{memUuid}/request")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocManagedList(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDocManagedList(
             @PathVariable String memUuid,
-            @RequestParam(required = false) String status, // status가 전달되지 않으면 대기중 상태로 기본값 설정
+            @RequestParam(required = false) String action, // status가 전달되지 않으면 대기중 상태로 기본값 설정
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer pageNumber,
             @RequestParam(required = false) Integer pageSize,
@@ -279,52 +279,70 @@ public class DocumentController {
 
     ) {
         try {
-            log.info("Fetching documents for memUuid: {}, status: {}", memUuid, status);
+            log.info("Fetching documents for memUuid: {}, status: {}", memUuid, action);
             log.info("Received pageNumber: {}", pageNumber);  // pageNumber 로그 찍기
             log.info("Received pageSize: {}", pageSize);
             log.info("Received listCount: {}", listCount);
 
             // status가 null 또는 빈 값이면 대기중으로 기본값 설정
-            if (status == null || status.trim().isEmpty()) {
-                status = "값없음";
+            if (action == null || action.trim().isEmpty()) {
+                action = "값없음";
             }
+
+            //총 갯수 조회
+            listCount = documentService.selectDocListCountByAction(memUuid, action);
+            if (listCount == null || listCount < 1) {
+                listCount = 1;
+            } else {
+                listCount = listCount;
+            }
+            log.info("selectDocListCountByAction: {}", listCount);
 
             // 기본값 설정 (null일 경우)
             pageNumber = pageNumber == null ? 1 : pageNumber;
             pageSize = pageSize == null ? 5 : pageSize;
-            listCount = listCount == null ? 0 : listCount;
+//            listCount = listCount == null ? 0 : listCount;
+            log.info("pageNumber: {}", pageNumber);
+            log.info("pageSize: {}", pageSize);
+            log.info("listCount: {}", listCount);
 
             //Paging 객체를 생성하고 페이징 계산
             Paging paging = new Paging(listCount, pageSize, pageNumber);
             paging.calculate(); // 페이지 계산
+            log.info("Paging after calculate: " + paging);
 
             // 상태에 맞는 문서만 필터링하고, 페이징 처리된 결과 반환
-            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, status, paging);
+            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, action, paging);
 
-            log.info("Documents with status '{}': {}", status, documentsWithFiles);
+            log.info("Documents with status '{}': {}", action, documentsWithFiles);
 
+            // 응답 데이터 구성
             Map<String, Object> response = new HashMap<>();
-            response.put("totalElements", listCount); // 총 데이터 개수
-            response.put("totalPages", paging.getMaxPage()); // 전체 페이지 수
-            response.put("currentPage", pageNumber); // 현재 페이지 번호
-            response.put("pageSize", pageSize); // 페이지 크기
+            response.put("action", action);                // 상태
+            response.put("listCount", listCount);          // 총 데이터 개수
+            response.put("pageNumber", paging.getCurrentPage()); // 현재 페이지
+            response.put("pageSize", pageSize);            // 페이지 크기
+            response.put("startPage", paging.getStartPage());    // 시작 페이지
+            response.put("endPage", paging.getEndPage());        // 끝 페이지
+            response.put("maxPage", paging.getMaxPage());        // 최대 페이지
+            response.put("documents", documentsWithFiles);       // 문서 데이터
 
             // JSON 직렬화로 보기 좋게 출력
-            ObjectMapper objectMapper = new ObjectMapper();
-            log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<Map<String, Object>>>builder()
+                    ApiResponse.<Map<String, Object>>builder()
                             .success(true)
                             .message("공문서 목록 조회 성공")
-                            .data(documentsWithFiles)
+                            .data(response)
                             .build()
             );
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    ApiResponse.<List<Map<String, Object>>>builder()
+                    ApiResponse.<Map<String, Object>>builder()
                             .success(false)
                             .message("공문서 목록 조회 실패")
                             .build()
