@@ -525,6 +525,8 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                         .leftJoin(family)
                         .on(senior.memUUIDFam.eq(family.memUUID))
                         .where(senior.memType.eq("SENIOR"))
+                        .offset(pageable.getOffset())
+                        .limit(pageable.getPageSize())
                         .fetch();
                 log.info("전체목록 출력 쿼리 작동(selectAllSeniorFam)");
             }
@@ -536,6 +538,8 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                         .leftJoin(family)
                         .on(senior.memUUID.eq(family.memUUIDMgr))
                         .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + search.getKeyword() + "%")))
+                        .offset(pageable.getOffset())
+                        .limit(pageable.getPageSize())
                         .fetch();
                 log.info("이름검색 목록 출력 쿼리 작동(selectAllSeniorFam)");
             }
@@ -570,6 +574,61 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .from(senior)
                 .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + keyword + "%")))
                 .fetchCount();
+    }
+
+    // 가족이 회원가입 시 선택한 어르신의 정보 수정 쿼리
+    @Override
+    public long updateSeniorFamApproval(String memUUID, String relationship, String memUUIDFam) {
+        long result;
+        switch (relationship) {
+            case "자녀" -> {
+                result = queryFactory
+                        .update(senior)
+                        .set(senior.memSenFamRelationship, "child")
+                        .set(senior.memFamilyApproval, "PENDING")
+                        .set(senior.memUUIDFam, memUUIDFam)
+                        .where(senior.memUUID.eq(memUUID))
+                        .execute();
+            }
+            case "형제자매" -> {
+                result = queryFactory
+                        .update(senior)
+                        .set(senior.memSenFamRelationship, "brosis")
+                        .set(senior.memFamilyApproval, "PENDING")
+                        .set(senior.memUUIDFam, memUUIDFam)
+                        .where(senior.memUUID.eq(memUUID))
+                        .execute();
+            }
+            case "배우자" -> {
+                result = queryFactory
+                        .update(senior)
+                        .set(senior.memSenFamRelationship, "partner")
+                        .set(senior.memFamilyApproval, "PENDING")
+                        .set(senior.memUUIDFam, memUUIDFam)
+                        .where(senior.memUUID.eq(memUUID))
+                        .execute();
+            }
+            case "며느리" -> {
+                result = queryFactory
+                        .update(senior)
+                        .set(senior.memSenFamRelationship, "bride")
+                        .set(senior.memFamilyApproval, "PENDING")
+                        .set(senior.memUUIDFam, memUUIDFam)
+                        .where(senior.memUUID.eq(memUUID))
+                        .execute();
+            }
+            case "사위" -> {
+                result = queryFactory
+                        .update(senior)
+                        .set(senior.memSenFamRelationship, "groom")
+                        .set(senior.memFamilyApproval, "PENDING")
+                        .set(senior.memUUIDFam, memUUIDFam)
+                        .where(senior.memUUID.eq(memUUID))
+                        .execute();
+            }
+            default -> {result=0;}
+        }
+        return result;
     }
 
 

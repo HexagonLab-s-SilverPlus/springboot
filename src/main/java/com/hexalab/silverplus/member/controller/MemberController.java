@@ -1,5 +1,7 @@
 package com.hexalab.silverplus.member.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.common.CreateRenameFileName;
 import com.hexalab.silverplus.common.CustomValidator;
 import com.hexalab.silverplus.common.FTPUtility;
@@ -77,18 +79,56 @@ public class MemberController {
     @PostMapping("/enroll")
     public ResponseEntity<String> memberEnrollMethod(
             @ModelAttribute Member member, HttpServletRequest request,
-            @RequestParam(name="memFiles", required = false) MultipartFile[] memFiles) {
+            @RequestParam(name="memFiles", required = false) MultipartFile[] memFiles,
+            @RequestParam(value = "seniorRelationshipData", required = false) String seniorRelationshipData,
+            @RequestParam(name="orgData", required = false) String orgData) {
         try {
+
             log.info("전송온 member 데이터 확인 : " + member);    // 전송온 member 데이터 확인
+            log.info("전송온 seniorRelationshipData 데이터 확인 : " + seniorRelationshipData);    // 전송온 seniorRelationshipData 데이터 확인
             // 패스워드 암호화 처리
             member.setMemPw(bCryptPasswordEncoder.encode(member.getMemPw()));
             log.info("member" + member);    // 암호화처리 정상 작동 확인
 
             member.setMemUUID(UUID.randomUUID().toString());
-            member.setMemSocialKakao("N");
-            member.setMemSocialGoogle("N");
-            member.setMemSocialNaver("N");
-            member.setMemFamilyApproval("N");
+            member.setMemSocialKakao("N");      // 카카오 소셜 연동 여부 초기값 설정
+            member.setMemKakaoEmail("N/A");
+            member.setMemSocialGoogle("N");     // 구글 소셜 연동 여부 초기값 설정
+            member.setMemGoogleEmail("N/A");
+            member.setMemSocialNaver("N");      // 네이버 소셜 연동 여부 초기값 설정
+            member.setMemNaverEmail("N/A");
+            member.setMemKakaoPi("N/A");        // 카카오 소셜 고유 ID 초기값 설정
+            member.setMemGooglePi("N/A");       // 구글 소셜 고유 ID 초기값 설정
+            member.setMemNaverPi("N/A");        // 네이버 소셜 고유 ID 초기값 설정
+            member.setMemSeniorProfile("N/A");      // 어르신 프로필파일 정보 초기값 설정
+            member.setMemSenFamRelationship("N/A");     // 어르신과 가족계정의 관계정보 초기값 설정
+            member.setMemFamilyApproval("N/A");     // 가족계정 승인여부 초기값 설정
+            member.setMemPhone("N/A");      // 일반전화번호 초기값 설정
+            member.setMemUUIDFam("N/A");        // 어르신의 가족 UUID 초기값 설정
+            member.setMemUUIDMgr("N/A");        // 어르신의 담당자 UUID 초기값 설정
+            if (member.getMemType().equals("MANAGER")) {    // 회원가입 하는 사용자가 담당자일 경우
+                if (orgData != null) {
+                    Map<String, String> orgDataSet =new ObjectMapper().readValue(orgData, Map.class);
+                    String orgName = orgDataSet.get("name");
+                    String orgAddress = orgDataSet.get("add");
+                    member.setMemAddress(orgAddress);
+                    member.setMemOrgName(orgName);
+                }
+
+            } else if(member.getMemType().equals("FAMILY")) {       // 회원가입 하는 사용자가 가족일 경우
+                if (seniorRelationshipData != null) {
+                    List<Map<String, String>> relationship = new ObjectMapper().readValue(seniorRelationshipData, new TypeReference<List<Map<String, String>>>() {});
+                    for (Map<String, String> data : relationship) {
+                        String memUUID = data.get("memUUID");
+                        String relationshipData = data.get("relationship");
+                        String memUUIDFam = member.getMemUUID();
+                        memberService.updateSeniorFamApproval(memUUID, relationshipData, memUUIDFam);
+                    }
+                }
+            }
+
+
+
 
             memberService.insertMember(member);
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
@@ -661,8 +701,9 @@ public class MemberController {
     public ResponseEntity<Map<String, Object>> familyEnrollSeniorSearch(@ModelAttribute Search search) {
         if (search.getPageNumber()==0) {
             search.setPageNumber(1);
-            search.setPageSize(10);
+            search.setPageSize(7);
         }
+        log.info("페이지 사이즈 : {}", search.getPageSize());
         Pageable pageable = PageRequest.of(search.getPageNumber() - 1, search.getPageSize(), Sort.by(Sort.Direction.ASC, "memEnrollDate"));
         Map<String, Object> result = new HashMap<>();
 

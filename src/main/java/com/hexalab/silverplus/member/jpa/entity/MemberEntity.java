@@ -41,8 +41,8 @@ public class MemberEntity {
     private String memPhone;        // MEM_PHONE	VARCHAR2(50 BYTE)
     @Column(name = "MEM_RNN", nullable = false)
     private String memRnn;      // MEM_RNN	VARCHAR2(50 BYTE)
-    @Column(name = "MEM_GOV_CODE")
-    private String memGovCode;      // MEM_GOV_CODE	VARCHAR2(50 BYTE)
+    @Column(name = "MEM_ORG_NAME")
+    private String memOrgName;      // MEM_GOV_CODE	VARCHAR2(50 BYTE)
     @Column(name = "MEM_STATUS", nullable = false, columnDefinition = "ACTIVE")
     private String memStatus;       // MEM_STATUS	VARCHAR2(50 BYTE)
     @Column(name = "MEM_ENROLL_DATE", nullable = false)
@@ -75,6 +75,8 @@ public class MemberEntity {
     private String memNaverPi;
     @Column(name = "MEM_SENIOR_PROFILE")
     private String memSeniorProfile;
+    @Column(name = "MEM_SEN_FAM_RELATIONSHIP")
+    private String memSenFamRelationship;
 
     @PrePersist
     public void prePersist() {
@@ -93,7 +95,7 @@ public class MemberEntity {
                 .memCellphone(memCellphone)
                 .memPhone(memPhone)
                 .memRnn(memRnn)
-                .memGovCode(memGovCode)
+                .memOrgName(memOrgName)
                 .memStatus(memStatus)
                 .memEnrollDate(memEnrollDate)
                 .memChangeStatus(memChangeStatus)
@@ -110,6 +112,7 @@ public class MemberEntity {
                 .memKakaoPi(memKakaoPi)
                 .memNaverPi(memNaverPi)
                 .memSeniorProfile(memSeniorProfile)
+                .memSenFamRelationship(memSenFamRelationship)
                 .build();
     }
 }

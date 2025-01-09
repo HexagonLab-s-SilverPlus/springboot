@@ -32,7 +32,7 @@ public class Member implements java.io.Serializable {
     private String memCellphone;        // MEM_CELLPHONE	VARCHAR2(50 BYTE)
     private String memPhone;        // MEM_PHONE	VARCHAR2(50 BYTE)
     private String memRnn;      // MEM_RNN	VARCHAR2(50 BYTE)
-    private String memGovCode;      // MEM_GOV_CODE	VARCHAR2(50 BYTE)
+    private String memOrgName;      // MEM_GOV_CODE	VARCHAR2(50 BYTE)
     @NotBlank
     private String memStatus;       // MEM_STATUS	VARCHAR2(50 BYTE)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
@@ -53,6 +53,7 @@ public class Member implements java.io.Serializable {
     private String memKakaoPi;
     private String memNaverPi;
     private String memSeniorProfile;
+    private String memSenFamRelationship;
 
     public MemberEntity toEntity() {
         return MemberEntity.builder()
@@ -66,7 +67,7 @@ public class Member implements java.io.Serializable {
                 .memCellphone(memCellphone)
                 .memPhone(memPhone)
                 .memRnn(memRnn)
-                .memGovCode(memGovCode)
+                .memOrgName(memOrgName)
                 .memStatus(memStatus)
                 .memEnrollDate(memEnrollDate)
                 .memChangeStatus(memChangeStatus)
@@ -83,6 +84,7 @@ public class Member implements java.io.Serializable {
                 .memKakaoPi(memKakaoPi)
                 .memNaverPi(memNaverPi)
                 .memSeniorProfile(memSeniorProfile)
+                .memSenFamRelationship(memSenFamRelationship)
                 .build();
     }
 }

@@ -241,6 +241,11 @@ public class MemberService {
     public int selectSeniorNameFamCount(String keyword) {
         return (int) memberRepository.selectSeniorNameFamCount(keyword);
     }
+    
+    // 가족이 회원가입 시 선택한 어르신의 정보 수정 메소드
+    public int updateSeniorFamApproval(String memUUID, String relationship, String memUUIDFam) {
+        return (int) memberRepository.updateSeniorFamApproval(memUUID, relationship, memUUIDFam);
+    }
 
 
 }
