@@ -11,4 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MemberRepository extends JpaRepository<MemberEntity, String>, MemberRepositoryCustom {}
+public interface MemberRepository extends JpaRepository<MemberEntity, String>, MemberRepositoryCustom {
+    /* 2025-01-08. 은영이가 구현 */
+    // memUUID로 memName 조회하는 인터페이스
+    MemberEntity findByMemUUID(String memUUID);
+}

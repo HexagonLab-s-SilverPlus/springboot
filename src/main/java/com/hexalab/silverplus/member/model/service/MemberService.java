@@ -180,6 +180,7 @@ public class MemberService {
         }
     }
 
+
     // 어르신 전체 카운트 메소드
     public int selectAllSeniorCount() {
         return (int) memberRepository.selectAllSeniorCount();
@@ -209,5 +210,4 @@ public class MemberService {
     public int updateApproval(String memUUID, String status) {
         return (int) memberRepository.updateApproval(memUUID, status);
     }
-
 }

@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ProgramRepository extends JpaRepository<ProgramEntity, String>, ProgramRepositoryCustom {
+
 }

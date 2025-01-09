@@ -62,14 +62,12 @@ public class QnAController {
 
         Pageable pageable = PageRequest.of(search.getPageNumber() - 1,
                 search.getPageSize(), Sort.by(Sort.Direction.DESC, "qnaWUpdateAt"));
-        int listCount = 0;
         try {
             Map<String, Object> qnaList = new HashMap<>();
             if (uuid != null ) {
                 //not Admin
                 if(search.getAction().equals("all")){
                     search.setListCount(qnaService.selectMytListCount(uuid));
-                    qnaList = qnaService.selectMytList(uuid, pageable, search);
                 }else if(search.getAction().equals("title")) {
                     search.setListCount(qnaService.selectTitleListCount(uuid, search.getKeyword()));
                 }else if(search.getAction().equals("date")) {

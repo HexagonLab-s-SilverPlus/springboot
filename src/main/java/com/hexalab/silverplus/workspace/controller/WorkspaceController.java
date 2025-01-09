@@ -27,7 +27,7 @@ public class WorkspaceController {
      *
      * @param memUuid         사용자 UUID
      * @param workspaceStatus 워크스페이스 상태 (ACTIVE, ARCHIVED, DELETED)
-     * @param page            페이지 번호 (1-based)
+     * @param offset           시작하는 인덱스
      * @param size            페이지 크기
      * @return 페이징된 워크스페이스 목록
      */
@@ -35,16 +35,17 @@ public class WorkspaceController {
     public ResponseEntity<ApiResponse<List<Workspace>>> getWorkspacesByStatus(
             @PathVariable String memUuid,
             @RequestParam String workspaceStatus,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int offset, // 0-based offset
             @RequestParam(defaultValue = "5") int size) {
+        log.info("Received request: memUuid={}, workspaceStatus={}, offset={}, size={}", memUuid, workspaceStatus, offset, size); // 요청 로그 추가
         try {
             log.info("memUuid: {}", memUuid);
             log.info("workspaceStatus: {}", workspaceStatus);
-            log.info("page: {}", page);
+            log.info("page: {}", offset);
             log.info("size: {}", size);
 
-            // 1-based page -> 0-based offset 계산
-            int offset = (page - 1) * size;
+//            // 1-based page -> 0-based offset 계산
+//            int offset = (page - 1) * size;
 
             // 서비스 호출
             List<Workspace> workspaces = workspaceService.getWorkspacesPagedWithStatus(memUuid, offset, size, workspaceStatus);

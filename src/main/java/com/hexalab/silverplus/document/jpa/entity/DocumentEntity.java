@@ -29,8 +29,8 @@ public class DocumentEntity {
     @Column(name = "DOC_COMPLETED_AT", nullable = false)
     private Timestamp docCompletedAt;
 
-    @Column(name = "IS_APPROVED")
-    private String isApproved;
+    @Column(name = "IS_APPROVED", columnDefinition = "VARCHAR2(20) DEFAULT '대기중'")
+    private String isApproved = "대기중";
 
     @Column(name = "APPROVED_AT")
     private Timestamp approvedAt;
@@ -40,6 +40,9 @@ public class DocumentEntity {
 
     @Column(name = "APPROVED_BY")
     private String approvedBy;
+
+    @Column(name = "SUBMITTED_AT")
+    private Timestamp submittedAt;
 
 
 
@@ -53,6 +56,7 @@ public class DocumentEntity {
                 .approvedAt(this.getApprovedAt())
                 .writtenBy(this.getWrittenBy())
                 .approvedBy(this.getApprovedBy())
+                .submittedAt(this.submittedAt)
                 .build();
     }
 }
