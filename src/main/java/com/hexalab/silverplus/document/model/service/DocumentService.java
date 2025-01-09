@@ -1,5 +1,6 @@
 package com.hexalab.silverplus.document.model.service;
 
+import com.hexalab.silverplus.common.Paging;
 import com.hexalab.silverplus.document.jpa.entity.DocFileEntity;
 import com.hexalab.silverplus.document.jpa.entity.DocumentEntity;
 import com.hexalab.silverplus.document.jpa.repository.DocumentRepository;
@@ -174,11 +175,9 @@ public class DocumentService {
     }
 
 
-    public List<Map<String, Object>> getDocumentsWithFiles2(String memUuid, String status) {
+    public List<Map<String, Object>> getDocumentsWithFiles2(String memUuid, String status, Paging paging) {
         // 문서 목록을 사용자별로 가져오기
         List<Document> documents = getDocumentsByMemUuid(memUuid);
-
-        log.info("All Documents: {}", documents); // 전체 문서 확인
 
         // status 값이 존재하고 공백이 아니면 해당 상태로 필터링
         if (status != null && !status.trim().isEmpty()) {
@@ -189,11 +188,15 @@ public class DocumentService {
                     .collect(Collectors.toList());
         }
 
+        // 페이징 처리: startRow, endRow에 해당하는 데이터만 추출
+        List<Document> pagedDocuments = documents.subList(paging.getStartRow() - 1, Math.min(paging.getEndRow(), documents.size()));
+
+
         log.info("Filtered Documents by status '{}': {}", status, documents);
-        log.info("Fetched Documents: {}", documents);
+
 
         // 파일과 문서 정보를 함께 반환
-        return documents.stream()
+        return pagedDocuments.stream()
                 .map(document -> {
                     DocFile docFile = docFileService.getDocFilesByDocId(document.getDocId());
 
@@ -202,22 +205,25 @@ public class DocumentService {
                             "file", docFile
                     );
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
 
-@Transactional
-public void mupdateDocumentStatus(String docId, String status) {
-    // 1. DocumentEntity를 가져옵니다.
-    DocumentEntity documentEntity = documentRepository.findById(docId)
-            .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + docId));
+    @Transactional
+    public void mupdateDocumentStatus(String docId, String status, String approvedBy, Timestamp approvedAt) {
+        // 1. DocumentEntity를 가져옵니다.
+        DocumentEntity documentEntity = documentRepository.findById(docId)
+                .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + docId));
 
-    // 2. 상태를 업데이트합니다.
-    documentEntity.setIsApproved(status);  // 엔티티에서 직접 상태를 업데이트
+        // 2. 상태를 업데이트합니다.
+        documentEntity.setIsApproved(status);  // 문서의 상태를 업데이트
+        documentEntity.setApprovedBy(approvedBy);  // 승인자 UUID를 설정
+        documentEntity.setApprovedAt(approvedAt);  // 승인 시각을 설정
 
-    // 3. 엔티티를 데이터베이스에 저장합니다.
-    documentRepository.save(documentEntity);  // DocumentEntity를 저장
-}
+        // 3. 엔티티를 데이터베이스에 저장합니다.
+        documentRepository.save(documentEntity);  // 문서 정보를 저장
+    }
+
 
 
 

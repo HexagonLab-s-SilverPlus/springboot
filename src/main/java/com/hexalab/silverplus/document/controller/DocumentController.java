@@ -3,6 +3,7 @@ package com.hexalab.silverplus.document.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.common.Paging;
+import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.document.model.dto.DocFile;
 import com.hexalab.silverplus.document.model.dto.Document;
 import com.hexalab.silverplus.document.model.service.DocumentService;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -266,24 +268,46 @@ public class DocumentController {
 
 
 
-    //공문서 파일 다운로드 및 승인 반려 처리
     @GetMapping("/{memUuid}/request")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocManagedList(
             @PathVariable String memUuid,
-            @RequestParam(required = false) String status // status가 전달되지 않으면 대기중 상태로 기본값 설정
+            @RequestParam(required = false) String status, // status가 전달되지 않으면 대기중 상태로 기본값 설정
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer pageNumber,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) Integer listCount
+
     ) {
         try {
             log.info("Fetching documents for memUuid: {}, status: {}", memUuid, status);
+            log.info("Received pageNumber: {}", pageNumber);  // pageNumber 로그 찍기
+            log.info("Received pageSize: {}", pageSize);
+            log.info("Received listCount: {}", listCount);
 
             // status가 null 또는 빈 값이면 대기중으로 기본값 설정
             if (status == null || status.trim().isEmpty()) {
                 status = "값없음";
             }
 
-            // 상태에 맞는 문서만 필터링해서 반환
-            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, status);
+            // 기본값 설정 (null일 경우)
+            pageNumber = pageNumber == null ? 1 : pageNumber;
+            pageSize = pageSize == null ? 5 : pageSize;
+            listCount = listCount == null ? 0 : listCount;
+
+            //Paging 객체를 생성하고 페이징 계산
+            Paging paging = new Paging(listCount, pageSize, pageNumber);
+            paging.calculate(); // 페이지 계산
+
+            // 상태에 맞는 문서만 필터링하고, 페이징 처리된 결과 반환
+            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, status, paging);
 
             log.info("Documents with status '{}': {}", status, documentsWithFiles);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalElements", listCount); // 총 데이터 개수
+            response.put("totalPages", paging.getMaxPage()); // 전체 페이지 수
+            response.put("currentPage", pageNumber); // 현재 페이지 번호
+            response.put("pageSize", pageSize); // 페이지 크기
 
             // JSON 직렬화로 보기 좋게 출력
             ObjectMapper objectMapper = new ObjectMapper();
@@ -309,22 +333,35 @@ public class DocumentController {
     }
 
 
+
+    // 문서 상태 업데이트 (승인 또는 반려)
     // 문서 상태 업데이트 (승인 또는 반려)
     @PutMapping("/{docId}/approve")
     public ResponseEntity<ApiResponse<Void>> approveDocument(
             @PathVariable String docId,
-            @RequestParam String status // "승인" 또는 "반려"
+            @RequestParam String status, // "승인" 또는 "반려"
+            @RequestParam(required = false) String approvedBy, // 승인자 UUID
+            @RequestParam(required = false) String approvedAt // 승인 시각
     ) {
         try {
-            // 문서 상태 업데이트
-            documentService.mupdateDocumentStatus(docId, status);
+            // `approvedAt` 값이 ISO 8601 형식이라면 이를 Timestamp 형식으로 변환
+            if (approvedAt != null && !approvedAt.isEmpty()) {
+                // 예시: "2025-01-09T10:30:00Z" => "2025-01-09 10:30:00"
+                String formattedDate = approvedAt.replace("T", " ").substring(0, 19); // "yyyy-MM-dd HH:mm:ss" 형식으로 변경
+                Timestamp timestamp = Timestamp.valueOf(formattedDate);
 
-            return ResponseEntity.ok(
-                    ApiResponse.<Void>builder()
-                            .success(true)
-                            .message("문서 상태 업데이트 성공")
-                            .build()
-            );
+                // 문서 상태 업데이트
+                documentService.mupdateDocumentStatus(docId, status, approvedBy, timestamp);
+
+                return ResponseEntity.ok(
+                        ApiResponse.<Void>builder()
+                                .success(true)
+                                .message("문서 상태 업데이트 성공")
+                                .build()
+                );
+            } else {
+                throw new IllegalArgumentException("approvedAt 값이 필요합니다.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
@@ -335,6 +372,7 @@ public class DocumentController {
             );
         }
     }
+
 
 
 
