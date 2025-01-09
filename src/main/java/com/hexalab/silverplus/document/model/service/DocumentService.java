@@ -18,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 
 
@@ -35,7 +37,7 @@ public class DocumentService {
 
     @Transactional
     public Document saveDocument(Document document) {
-        document.setIsApproved(document.getIsApproved() != null ? document.getIsApproved() : "대기중");
+        document.setIsApproved(document.getIsApproved() != null ? document.getIsApproved() : "제출전");
         DocumentEntity entity = document.toEntity();
         DocumentEntity savedEntity = documentRepository.save(entity);
         log.info("문서 메타 정보 저장: {}", savedEntity);
@@ -111,12 +113,13 @@ public class DocumentService {
      */
 
     @Transactional
-    public void sendDocumentToApprover(String docId, String approverId) {
+    public Document submitDocumentToMgr(String docId) {
         DocumentEntity entity = documentRepository.findById(docId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
-        entity.setApprovedBy(approverId);
+        entity.setIsApproved("대기중"); // 제출전 -> 대기중
+        entity.setSubmittedAt(new Timestamp(System.currentTimeMillis())); // 현재 Timestamp 를 제출날짜로 설정
         documentRepository.save(entity);
-        log.info("문서 담당자 전송 완료: {}", approverId);
+        return entity.toDto();
     }
 
 
