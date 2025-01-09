@@ -132,7 +132,7 @@ public class DocumentController {
     @GetMapping("/mgrName/{memUuid}")
     public ResponseEntity<ApiResponse<Member>> getMemberByUUID(@PathVariable String memUuid) {
         try{
-            Member member = memberService.findByMemUUID(memUuid);
+            Member member = memberService.selectMember(memUuid);
             return ResponseEntity.ok(
                     ApiResponse.<Member>builder()
                             .success(true)

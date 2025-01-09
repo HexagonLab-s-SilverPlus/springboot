@@ -167,19 +167,47 @@ public class MemberService {
         }
     }
 
+    // 어르신 목록 출력 처리 메소드
+    public List<Member> selectAllSenior(Pageable pageable, Search search) {
+        try {
+            log.info("조회하는 값 확인(서비스)(selectAllSenior) : {}", memberRepository.selectAllSenior(pageable, search));
+            return toList(memberRepository.selectAllSenior(pageable, search));
 
-
-
-    /* 2025-01-08.
-    은영이가 공문서 쪽에서 memUUID로 memName 조회할 일이 있어서 추가.
-    */
-    public Member findByMemUUID(String memUUID) {
-        MemberEntity memberEntity = memberRepository.findByMemUUID(memUUID);
-        if(memberEntity != null) {
-            return memberEntity.toDto();
-        } else {
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
             return null;
         }
     }
 
+
+    // 어르신 전체 카운트 메소드
+    public int selectAllSeniorCount() {
+        return (int) memberRepository.selectAllSeniorCount();
+    }
+
+    // 어르신 이름으로 카운트 메소드
+    public int selectSeniorNameCount(String keyword) {
+        return (int) memberRepository.selectSeniorNameCount(keyword);
+    }
+
+    // 어르신 성별로 카운트 메소드
+    public int selectSeniorGenderCount(String keyword) {
+        return (int) memberRepository.selectSeniorGenderCount(keyword);
+    }
+
+    // 어르신 나이로 카운트 메소드
+    public int selectSeniorAgeCount(String keyword) {
+        return (int) memberRepository.selectSeniorAgeCount(keyword);
+    }
+
+    // 어르신 주소로 카운트 메소드
+    public int selectSeniorAddressCount(String keyword) {
+        return (int) memberRepository.selectSeniorAddressCount(keyword);
+    }
+
+    // 가족계정 승인처리 메소드
+    public int updateApproval(String memUUID, String status) {
+        return (int) memberRepository.updateApproval(memUUID, status);
+    }
 }

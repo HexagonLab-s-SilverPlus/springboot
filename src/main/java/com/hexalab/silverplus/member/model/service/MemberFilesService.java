@@ -38,4 +38,13 @@ public class MemberFilesService {
             return null;
         }
     }
+
+    public MemberFilesEntity findByProfileMemUuid(String memUuid) {
+        try {
+            return memberFilesRepository.findByProfileMemUuid(memUuid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
