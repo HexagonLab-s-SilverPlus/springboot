@@ -20,7 +20,7 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/program")
+@RequestMapping("/medical")
 @CrossOrigin
 public class MedicalController {
     //service DI
@@ -55,7 +55,7 @@ public class MedicalController {
 //        }
 //    }//selectMedicalList end
 
-    @GetMapping("/medical/{mediSnrUUID}")
+    @GetMapping("/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> selectMedicalList(
             @RequestParam String mediSnrUUID,
             @ModelAttribute Search search
@@ -85,7 +85,7 @@ public class MedicalController {
     }//selectMedicalList end
 
     //Save Medical
-    @PostMapping("/medical/{mediSnrUUID}")
+    @PostMapping("/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> insertMedical(
             @PathVariable String mediSnrUUID,
             @RequestBody Medical medical
@@ -116,7 +116,7 @@ public class MedicalController {
     }//insertMedical end
 
     //isPublic update
-    @PutMapping("/medical/privacy/{mediSnrUUID}")
+    @PutMapping("/privacy/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> updateMedicalPrivacy(
         @PathVariable String mediSnrUUID,
         @RequestBody Map<String, String> requestBody
@@ -141,7 +141,7 @@ public class MedicalController {
     }//updateMedicalPrivacy end
 
     //Update Medical
-    @PutMapping("/medical/{mediSnrUUID}")
+    @PutMapping("/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> updateMedical(
             @PathVariable String mediSnrUUID,
             @RequestBody Medical updatedMedical
@@ -174,7 +174,7 @@ public class MedicalController {
     }//updateMedical end
 
     //Delete Medical
-    @DeleteMapping("/medical")
+    @DeleteMapping
     public ResponseEntity<Map<String, Object>> deleteMedicals(
             @RequestBody List<String> mediIds
     ) {
