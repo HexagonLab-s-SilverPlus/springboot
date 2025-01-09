@@ -175,24 +175,27 @@ public class DocumentService {
 
 
     public List<Map<String, Object>> getDocumentsWithFiles2(String memUuid, String status) {
+        // 문서 목록을 사용자별로 가져오기
         List<Document> documents = getDocumentsByMemUuid(memUuid);
 
         log.info("All Documents: {}", documents); // 전체 문서 확인
 
+        // status 값이 존재하고 공백이 아니면 해당 상태로 필터링
         if (status != null && !status.trim().isEmpty()) {
+            // 상태 값에 따라 필터링 (대기중, 승인, 반려)
             documents = documents.stream()
-                    .filter(doc -> doc.getIsApproved() != null)
-                    .filter(doc -> "대기중".equals(doc.getIsApproved()))  // "대기중" 상태만 필터링
+                    .filter(doc -> doc.getIsApproved() != null) // 상태가 null이 아니어야 필터링
+                    .filter(doc -> doc.getIsApproved().equals(status)) // 전달된 상태에 맞는 문서만 필터링
                     .collect(Collectors.toList());
-
         }
 
         log.info("Filtered Documents by status '{}': {}", status, documents);
         log.info("Fetched Documents: {}", documents);
+
+        // 파일과 문서 정보를 함께 반환
         return documents.stream()
                 .map(document -> {
                     DocFile docFile = docFileService.getDocFilesByDocId(document.getDocId());
-
 
                     return Map.of(
                             "document", document,
@@ -200,37 +203,23 @@ public class DocumentService {
                     );
                 })
                 .toList();
-
     }
 
 
-//    public List<Map<String, Object>> getDocumentsWithFiles(String memUuid, String status) {
-//        List<Document> documents = getDocumentsByMemUuid(memUuid);
-//
-//        // 상태 필터링
-//        if (status != null) {
-//            documents = documents.stream()
-//                    .filter(doc -> doc.getIsApproved().equalsIgnoreCase(status))
-//                    .collect(Collectors.toList());
-//        }
-//
-//        return documents.stream()
-//                .map(document -> {
-//                    DocFile docFile = docFileService.getDocFilesByDocId(document.getDocId());
-//                    return Map.of(
-//                            "document", document,
-//                            "file", docFile
-//                    );
-//                })
-//                .collect(Collectors.toList());
-//    }
+@Transactional
+public void mupdateDocumentStatus(String docId, String status) {
+    // 1. DocumentEntity를 가져옵니다.
+    DocumentEntity documentEntity = documentRepository.findById(docId)
+            .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + docId));
 
-//    public void updateDocumentStatus(String docId, String status) {
-//        Document document = documentRepository.findById(docId)
-//                .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + docId));
-//        document.setIsApproved(status);
-//        documentRepository.save(document);
-//    }
+    // 2. 상태를 업데이트합니다.
+    documentEntity.setIsApproved(status);  // 엔티티에서 직접 상태를 업데이트
+
+    // 3. 엔티티를 데이터베이스에 저장합니다.
+    documentRepository.save(documentEntity);  // DocumentEntity를 저장
+}
+
+
 
 
 

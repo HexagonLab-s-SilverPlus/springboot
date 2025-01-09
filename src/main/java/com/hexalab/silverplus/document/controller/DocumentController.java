@@ -264,46 +264,30 @@ public class DocumentController {
         return response;
     }
 
-//    //어르신 관리 뷰에서 공문서 승인 반려 처리
-//    @GetMapping("/document/{memUUID}")
-//    public ResponseEntity<Map> docManagedList(@PathVariable String memUUID
-////            @PathVariable("docId") String docId
-//    ){
-//        log.info("Received docId: " + memUUID);
-//        Map<String,Object> map = new HashMap<>();
-//        List<Map<String, Object>> fileList = new ArrayList<>();
-//
-//        try{
-//            //공문서 요청목록 불러오기
-//            Document document = documentService.getDocumentById(memUUID);
-//            log.info("doc : " + document);
-//            map.put("doc", document);
-//
-//            //공문서 갯수 확인
-////            ArrayList<DocFile> docFiles = new ArrayList<>();
-////            int fileCount = documentfile
-//            return ResponseEntity.ok(map);
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-//    }
+
 
     //공문서 파일 다운로드 및 승인 반려 처리
     @GetMapping("/{memUuid}/request")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocManagedList(
-            @PathVariable String memUuid) {
-        try{
-            log.info("Fetching documents for memUuid: {}", memUuid);
-            // 대기중 상태의 문서만 필터링해서 반환
-            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, "대기중");
-            log.info("Documents with status '대기중': {}", documentsWithFiles); // 여기서 필터링된 결과를 확인
+            @PathVariable String memUuid,
+            @RequestParam(required = false) String status // status가 전달되지 않으면 대기중 상태로 기본값 설정
+    ) {
+        try {
+            log.info("Fetching documents for memUuid: {}, status: {}", memUuid, status);
+
+            // status가 null 또는 빈 값이면 대기중으로 기본값 설정
+            if (status == null || status.trim().isEmpty()) {
+                status = "값없음";
+            }
+
+            // 상태에 맞는 문서만 필터링해서 반환
+            List<Map<String, Object>> documentsWithFiles = documentService.getDocumentsWithFiles2(memUuid, status);
+
+            log.info("Documents with status '{}': {}", status, documentsWithFiles);
 
             // JSON 직렬화로 보기 좋게 출력
             ObjectMapper objectMapper = new ObjectMapper();
-
             log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
-
 
             return ResponseEntity.ok(
                     ApiResponse.<List<Map<String, Object>>>builder()
@@ -313,24 +297,27 @@ public class DocumentController {
                             .build()
             );
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     ApiResponse.<List<Map<String, Object>>>builder()
                             .success(false)
-                            .message("공문서와 목록 조회 실패")
+                            .message("공문서 목록 조회 실패")
                             .build()
             );
         }
     }
 
+
+    // 문서 상태 업데이트 (승인 또는 반려)
     @PutMapping("/{docId}/approve")
     public ResponseEntity<ApiResponse<Void>> approveDocument(
             @PathVariable String docId,
             @RequestParam String status // "승인" 또는 "반려"
     ) {
         try {
-            documentService.updateDocumentStatus(docId, status);
+            // 문서 상태 업데이트
+            documentService.mupdateDocumentStatus(docId, status);
 
             return ResponseEntity.ok(
                     ApiResponse.<Void>builder()
@@ -348,6 +335,8 @@ public class DocumentController {
             );
         }
     }
+
+
 
 
 
