@@ -273,7 +273,7 @@ public class DocumentController {
 
     @GetMapping("/{memUuid}/request")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDocManagedList(
-            @PathVariable String memUuid,
+            @PathVariable String memUuid,   //senior uuid
             @RequestParam(required = false) String action, // status가 전달되지 않으면 대기중 상태로 기본값 설정
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer pageNumber,
