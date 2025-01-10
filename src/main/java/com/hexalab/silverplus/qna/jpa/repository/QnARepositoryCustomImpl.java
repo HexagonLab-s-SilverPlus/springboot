@@ -6,6 +6,7 @@ import com.hexalab.silverplus.member.jpa.entity.QMemberEntity;
 import com.hexalab.silverplus.qna.jpa.entity.QQnAEntity;
 import com.hexalab.silverplus.qna.jpa.entity.QnAEntity;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,14 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                     .select(qna, member)
                     .from(qna)
                     .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
-                    .orderBy(qna.qnaWUpdateAt.desc())
+                    .orderBy(
+                            new CaseBuilder()
+                                    .when(qna.qnaADCreateBy.isNotNull()).then(1)  // qnaADCreateBy가 null이 아니면 0 (우선순위 높음)
+                                    .otherwise(0)  // qnaADCreateBy가 null이면 1 (우선순위 낮음)
+                                    .asc(),
+                            qna.qnaWUpdateAt.desc(), // qnaWUpdateAt을 내림차순으로 정렬
+                            qna.qnaADCreateBy.asc()  // 마지막으로 qnaADCreateBy가 null인 항목들을 정렬
+                    )
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
@@ -53,7 +61,7 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                     .from(qna)
                     .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
                     .where(qna.qnaTitle.like("%" + search.getKeyword() + "%"))
-                    .orderBy(qna.qnaWUpdateAt.desc())
+                    .orderBy(qna.qnaADCreateBy.desc(), qna.qnaWUpdateAt.desc())
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
@@ -63,7 +71,7 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
                     .from(qna)
                     .leftJoin(member).on(qna.qnaWCreateBy.eq(member.memUUID))
                     .where(qna.qnaWCreateAt.between(search.getStartDate(), search.getEndDate()))
-                    .orderBy(qna.qnaWUpdateAt.desc())
+                    .orderBy(qna.qnaADCreateBy.desc(), qna.qnaWUpdateAt.desc())
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
                     .fetch();
@@ -74,9 +82,11 @@ public class QnARepositoryCustomImpl implements QnARepositoryCustom {
         ArrayList<MemberEntity> memberList = new ArrayList<>();
 
         for (Tuple tuple : qnaEntityList) {
+
             qnaList.add(tuple.get(0, QnAEntity.class));
             memberList.add(tuple.get(1, MemberEntity.class));
         }
+
         resultList.put("qna", qnaList);
         resultList.put("member", memberList);
         resultList.put("search", search);
