@@ -185,6 +185,7 @@ public class QnAController {
         try {
             FTPUtility ftpUtility = new FTPUtility();
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
+            ftpUtility.uploadFile_mkDir(ftpRemoteDir + "qna/" + qna.getQnaId());
 
             QnA qnaO = qnaService.selectOne(qna.getQnaId());
             if(role.equals("ADMIN")) {
@@ -243,7 +244,11 @@ public class QnAController {
             }
 
             if(newFiles != null && newFiles.length > 0) {
-                int idx = ftpUtility.search(ftpRemoteDir + "qna/").length;
+                String[] names = ftpUtility.search(ftpRemoteDir + "qna/" + qnaO.getQnaId() + "/");
+                int idx = 0;
+                if(names != null) {
+                    idx = names.length;
+                }
 
                 for (int i = 0; i < newFiles.length; i++) {
                     String ext = newFiles[i].getOriginalFilename().substring(newFiles[i].getOriginalFilename().indexOf(".") + 1);

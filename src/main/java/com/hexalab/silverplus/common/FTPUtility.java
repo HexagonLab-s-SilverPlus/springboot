@@ -31,6 +31,7 @@ public class FTPUtility implements AutoCloseable {
     public String[] search(String remoteFilePath){
         try {
             String[] fileNames = ftpClient.listNames( remoteFilePath);
+            log.info("fileNames : " + fileNames.length);
             return fileNames;
         } catch (Exception e){
             e.printStackTrace();
@@ -56,11 +57,10 @@ public class FTPUtility implements AutoCloseable {
     }
 
     public void uploadFile_mkDir(String remoteDirectory) throws IOException {
-        if (!ftpClient.changeWorkingDirectory(remoteDirectory)) {
-            // 디렉토리가 없으면 생성
-            if (!ftpClient.makeDirectory(remoteDirectory)) {
-                throw new IOException("디렉토리 생성 실패: " + ftpClient.getReplyString());
-            }
+        try{
+            ftpClient.makeDirectory(remoteDirectory);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

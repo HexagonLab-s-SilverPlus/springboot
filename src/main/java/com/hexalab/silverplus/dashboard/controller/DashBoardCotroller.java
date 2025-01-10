@@ -1,11 +1,14 @@
 package com.hexalab.silverplus.dashboard.controller;
 
+import com.hexalab.silverplus.common.ApiResponse;
 import com.hexalab.silverplus.dashboard.model.dto.DashBoard;
 import com.hexalab.silverplus.dashboard.model.service.DashBoardService;
 import com.hexalab.silverplus.document.model.service.DocumentService;
+import com.hexalab.silverplus.member.model.service.MemberService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -121,13 +124,43 @@ public class DashBoardCotroller {
 
     //공문서 목록 카운트
     private final DocumentService documentService;
+    @GetMapping("/Count/{mgrUUID}")
+    public ApiResponse<Long> getDocumentCount(@PathVariable String mgrUUID) {
+        long count = documentService.countPendingDocuments(mgrUUID);
+        log.info("Count 확인: {}", count);
+        log.info("mgrUUID: {}", mgrUUID);
 
-
-    @GetMapping("/count")
-    public Map<String, Object> getDocumentCount() {
-        int documentCount = documentService.dselectListCount();
-        return Map.of("documentCount", documentCount);
+        return ApiResponse.<Long>builder()
+                .success(true)
+                .message("대기중 문서 개수 조회 성공")
+                .data(count)
+                .build();
     }
+    @Autowired
+    private MemberService memberService;
+
+//    @GetMapping("/Countsnr/{memUUID}")
+//    public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
+//        try {
+//            log.info("Received memUUID: {}", memUUID); // memUUID 확인
+//            int count = memberService.selectAllSeniorCount(memUUID);
+//            log.info("Senior Count for {}: {}", memUUID, count); // 결과 확인
+//
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("count", count);
+//            result.put("message", "매니저가 관리하는 노인 수 조회 성공");
+//            return ResponseEntity.ok(result);
+//        } catch (Exception e) {
+//            log.error("Error fetching senior count for memUUID {}: {}", memUUID, e.getMessage());
+//            Map<String, Object> errorResult = new HashMap<>();
+//            errorResult.put("message", "매니저가 관리하는 노인 수 조회 실패");
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+//        }
+//    }
+
+
+
+
 
 
 }//DashBoard End.

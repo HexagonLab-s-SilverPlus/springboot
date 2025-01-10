@@ -18,4 +18,7 @@ public interface DocumentRepository extends JpaRepository<DocumentEntity, String
     // '대기중' 상태이면서 승인자가 본인인 문서 조회
     Page<DocumentEntity> findByIsApprovedAndApprovedBy(String isApproved, String approvedBy, Pageable pageable);
 
+    // 대기중인 공문서의 데이터 갯수 반환
+    long countByIsApprovedAndApprovedBy(String isApproved, String approvedBy);
+
 }
