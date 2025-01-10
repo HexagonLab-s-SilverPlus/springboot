@@ -219,58 +219,61 @@ public class DocumentController {
     }
 
 
-    // 수진 작업
-    @Autowired
-    public DocumentController(DocumentService documentService) {
-        this.documentService = documentService;
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * '대기중' 상태 문서 조회 (페이징)
+     * @param page 현재 페이지
+     * @param size 페이지 크기 (기본값: 10)
+     * @param mgrUUID 로그인한 사용자의 UUID
+     * @return ApiResponse<Page<Document>>
+     */
+    @GetMapping("/pending")
+    public ApiResponse<Page<Document>> getPendingDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam String mgrUUID
+    ) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Document> pendingDocuments = documentService.getPendingDocuments(mgrUUID, pageable);
+            return ApiResponse.<Page<Document>>builder()
+                    .success(true)
+                    .message("대기중 문서 조회 성공")
+                    .data(pendingDocuments)
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error fetching pending documents: {}", e.getMessage(), e);
+            return ApiResponse.<Page<Document>>builder()
+                    .success(false)
+                    .message("대기중 문서 조회 실패")
+                    .build();
+        }
     }
-    @GetMapping()
-    public Map<String, Object> documentList(
-            @RequestParam(name = "page", defaultValue = "1") int currentPage,
-            @RequestParam(name = "limit", defaultValue = "10") int limit)
-    {
-        // 받은 값을 로그로 확인
-        System.out.println("Received pageNumber: " + currentPage);
-        System.out.println("Received limit: " + limit);
-
-        int listCount = documentService.dselectListCount();
-        System.out.println("Total list count: " + listCount);
-
-        Paging paging = new Paging(listCount, limit, currentPage);
-        paging.calculate();
-        System.out.println("Paging after calculate: " + paging);
-
-        Pageable pageable = PageRequest.of(paging.getCurrentPage() - 1, paging.getLimit(),
-                Sort.by(Sort.Direction.DESC, "docId"));
-        System.out.println("Created Pageable: " + pageable);
 
 
-        List<Map<String, Object>> document = documentService.getCustomDocumentList(currentPage, limit);
 
 
-        Page<Document> page = documentService.selectList(pageable);
-        List<Document> list = page.getContent();
-        System.out.println("Data for current page: " + list);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("list", list);
-        response.put("list", document);
-        response.put("paging", Map.of(
-                "currentPage", page.getNumber() + 1,
-                "listCount", (int) page.getTotalElements(),
-                "pageSize", page.getSize(),
-                "totalPages", page.getTotalPages()
-        ));
 
 
-        return response;
-    }
+
+
 
 
 
     @GetMapping("/{memUuid}/request")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDocManagedList(
-            @PathVariable String memUuid,
+            @PathVariable String memUuid,   //senior uuid
             @RequestParam(required = false) String action, // status가 전달되지 않으면 대기중 상태로 기본값 설정
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer pageNumber,

@@ -238,4 +238,9 @@ public class DocumentService {
         return ((Number) query.getSingleResult()).intValue();
     }
 
+
+    public Page<Document> getPendingDocuments(String approvedBy, Pageable pageable) {
+        return documentRepository.findByIsApprovedAndApprovedBy("대기중", approvedBy, pageable)
+                .map(DocumentEntity::toDto);
+    }
 }
