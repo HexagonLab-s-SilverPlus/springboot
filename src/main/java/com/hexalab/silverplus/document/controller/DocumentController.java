@@ -220,16 +220,6 @@ public class DocumentController {
 
 
 
-
-
-
-
-
-
-
-
-
-
     /**
      * '대기중' 상태 문서 조회 (페이징)
      * @param page 현재 페이지
@@ -237,6 +227,7 @@ public class DocumentController {
      * @param mgrUUID 로그인한 사용자의 UUID
      * @return ApiResponse<Page<Document>>
      */
+    //담당자가 관리중인 어르신들의 공문서 요청 목록 조회
     @GetMapping("/pending")
     public ApiResponse<Page<Document>> getPendingDocuments(
             @RequestParam(defaultValue = "0") int page,
@@ -244,6 +235,7 @@ public class DocumentController {
             @RequestParam String mgrUUID
     ) {
         try {
+
             Pageable pageable = PageRequest.of(page, size);
             Page<Document> pendingDocuments = documentService.getPendingDocuments(mgrUUID, pageable);
             return ApiResponse.<Page<Document>>builder()
@@ -251,6 +243,7 @@ public class DocumentController {
                     .message("대기중 문서 조회 성공")
                     .data(pendingDocuments)
                     .build();
+
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Error fetching pending documents: {}", e.getMessage(), e);
@@ -261,16 +254,19 @@ public class DocumentController {
         }
     }
 
+    //관리중인 어르신들의 공문서 요청 카운트
+    @GetMapping("/pending/count")
+    public ApiResponse<Long> getPendingDocumentCount(@RequestParam String mgrUUID) {
+        long count = documentService.countPendingDocuments(mgrUUID);
+        return ApiResponse.<Long>builder()
+                .success(true)
+                .message("대기중 문서 개수 조회 성공")
+                .data(count)
+                .build();
+    }
 
 
-
-
-
-
-
-
-
-
+    //어르신관리에서 공문서 조회(컴포넌트)
     @GetMapping("/{memUuid}/request")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDocManagedList(
             @PathVariable String memUuid,   //senior uuid
@@ -304,7 +300,6 @@ public class DocumentController {
             // 기본값 설정 (null일 경우)
             pageNumber = pageNumber == null ? 1 : pageNumber;
             pageSize = pageSize == null ? 5 : pageSize;
-//            listCount = listCount == null ? 0 : listCount;
             log.info("pageNumber: {}", pageNumber);
             log.info("pageSize: {}", pageSize);
             log.info("listCount: {}", listCount);
@@ -330,9 +325,6 @@ public class DocumentController {
             response.put("maxPage", paging.getMaxPage());        // 최대 페이지
             response.put("documents", documentsWithFiles);       // 문서 데이터
 
-            // JSON 직렬화로 보기 좋게 출력
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            log.info("Documents with files: {}", objectMapper.writeValueAsString(documentsWithFiles));
 
             return ResponseEntity.ok(
                     ApiResponse.<Map<String, Object>>builder()
@@ -355,8 +347,7 @@ public class DocumentController {
 
 
 
-    // 문서 상태 업데이트 (승인 또는 반려)
-    // 문서 상태 업데이트 (승인 또는 반려)
+    // 어르신관리에서 공문서 상태 업데이트 (승인 또는 반려)
     @PutMapping("/{docId}/approve")
     public ResponseEntity<ApiResponse<Void>> approveDocument(
             @PathVariable String docId,
@@ -365,10 +356,9 @@ public class DocumentController {
             @RequestParam(required = false) String approvedAt // 승인 시각
     ) {
         try {
-            // `approvedAt` 값이 ISO 8601 형식이라면 이를 Timestamp 형식으로 변환
             if (approvedAt != null && !approvedAt.isEmpty()) {
-                // 예시: "2025-01-09T10:30:00Z" => "2025-01-09 10:30:00"
-                String formattedDate = approvedAt.replace("T", " ").substring(0, 19); // "yyyy-MM-dd HH:mm:ss" 형식으로 변경
+
+                String formattedDate = approvedAt.replace("T", " ").substring(0, 19); // 형식변경
                 Timestamp timestamp = Timestamp.valueOf(formattedDate);
 
                 // 문서 상태 업데이트
@@ -393,13 +383,6 @@ public class DocumentController {
             );
         }
     }
-
-
-
-
-
-
-
 
 
 
