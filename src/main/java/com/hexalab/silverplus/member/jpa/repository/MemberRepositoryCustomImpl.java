@@ -483,6 +483,16 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         return list;
     }
 
+    // 대시보드용 어르신 처리 쿼리
+    @Override
+    public long selectAllSeniorCount(String memUUID) {
+        return queryFactory
+                .selectFrom(senior)
+                .where(senior.memUUIDMgr.eq(memUUID))
+                .fetchCount();
+    }
+
+
     // 검색 조건에 따라 카운트하는 쿼리문
     @Override
     public long selectSeniorCount(String keyword, String memUUID, String action) {

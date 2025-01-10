@@ -181,6 +181,12 @@ public class MemberService {
         }
     }
 
+    // 대시보드용 어르신 전체 카운트 메소드
+    public int selectAllSeniorCount(String memUUID) {
+        return (int) memberRepository.selectAllSeniorCount(memUUID);
+    }
+
+
     // 검색 조건에 따라 카운트 메소드
     public int selectSeniorCount(String keyword,String memUUID, String action) {
         return (int) memberRepository.selectSeniorCount(keyword,memUUID, action);
