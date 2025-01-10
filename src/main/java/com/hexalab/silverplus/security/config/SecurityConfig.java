@@ -144,9 +144,12 @@ public class SecurityConfig {
                             .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login/**", "/member/**", "/reissue",
                                                 "/api/**", "/program/**", "/dashboard/**", "/qna/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             // Notice
-                            .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // POST 요청은 ADMIN 롤 필요
-                            .requestMatchers(HttpMethod.PUT, "/notice/{noticeNo}").hasRole("ADMIN")    // PUT 요청은 ADMIN 롤 필요
-                            .requestMatchers(HttpMethod.DELETE, "/notice/{noticeNo}").hasRole("ADMIN") // DELETE 요청은 ADMIN 롤 필요
+                            .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // 작성
+                            .requestMatchers(HttpMethod.GET, "/notice").hasAnyRole("ADMIN", "SENIOR", "MANAGER", "FAMILY")  // 목록출력
+                            .requestMatchers(HttpMethod.GET, "/notice/delete/{notId}").hasAnyRole("ADMIN", "SENIOR", "MANAGER", "FAMILY")   // 상세보기
+                            .requestMatchers(HttpMethod.DELETE, "/notice/nfdown").hasAnyRole("ADMIN", "SENIOR", "MANAGER", "FAMILY")    // 파일 다운로드
+                            .requestMatchers(HttpMethod.DELETE, "/notice/{notId}").hasRole("ADMIN") // 삭제
+                            .requestMatchers(HttpMethod.DELETE, "/notice/update").hasRole("ADMIN")  // 수정
 
                             // QnA
 

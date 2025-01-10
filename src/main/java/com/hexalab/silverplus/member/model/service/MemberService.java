@@ -170,11 +170,10 @@ public class MemberService {
     }
 
     // 어르신 목록 출력 처리 메소드
-    public List<Member> selectAllSenior(Pageable pageable, Search search, String memUUID) {
+    public List<Member> selectAllSenior(Pageable pageable, Search search, String memUUID, String type) {
         try {
-            log.info("조회하는 값 확인(서비스)(selectAllSenior) : {}", memberRepository.selectAllSenior(pageable, search, memUUID));
-            return toList(memberRepository.selectAllSenior(pageable, search, memUUID));
-
+            log.info("조회하는 값 확인(서비스)(selectAllSenior) : {}", memberRepository.selectAllSenior(pageable, search, memUUID, type));
+            return toList(memberRepository.selectAllSenior(pageable, search, memUUID, type));
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -182,30 +181,9 @@ public class MemberService {
         }
     }
 
-
-    // 어르신 전체 카운트 메소드
-    public int selectAllSeniorCount(String memUUID) {
-        return (int) memberRepository.selectAllSeniorCount(memUUID);
-    }
-
-    // 어르신 이름으로 카운트 메소드
-    public int selectSeniorNameCount(String keyword,String memUUID) {
-        return (int) memberRepository.selectSeniorNameCount(keyword,memUUID);
-    }
-
-    // 어르신 성별로 카운트 메소드
-    public int selectSeniorGenderCount(String keyword,String memUUID) {
-        return (int) memberRepository.selectSeniorGenderCount(keyword, memUUID);
-    }
-
-    // 어르신 나이로 카운트 메소드
-    public int selectSeniorAgeCount(String keyword, String memUUID) {
-        return (int) memberRepository.selectSeniorAgeCount(keyword, memUUID);
-    }
-
-    // 어르신 주소로 카운트 메소드
-    public int selectSeniorAddressCount(String keyword, String memUUID) {
-        return (int) memberRepository.selectSeniorAddressCount(keyword,memUUID);
+    // 검색 조건에 따라 카운트 메소드
+    public int selectSeniorCount(String keyword,String memUUID, String action) {
+        return (int) memberRepository.selectSeniorCount(keyword,memUUID, action);
     }
 
     // 가족계정 승인처리 메소드

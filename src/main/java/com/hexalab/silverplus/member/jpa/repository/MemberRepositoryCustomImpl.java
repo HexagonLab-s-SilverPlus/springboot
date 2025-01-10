@@ -357,114 +357,172 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     // management
     // 검색 처리용 쿼리문(담당자용)
     @Override
-    public List<MemberEntity> selectAllSenior(Pageable pageable, Search search, String memUUID) {
+    public List<MemberEntity> selectAllSenior(Pageable pageable, Search search, String memUUID, String type) {
         List<MemberEntity> list = new ArrayList<>();
-        switch (search.getAction()) {
-            case "all" -> {
-                list = queryFactory
-                        .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)))
-                        .orderBy(member.memEnrollDate.asc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
-                log.info("조회하는 값 확인(전체)(selectAllSenior) : {}", list);
-            }
-            case "이름" -> {
-                list = queryFactory
-                        .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memName.like("%" + search.getKeyword() + "%")))
-                        .orderBy(member.memEnrollDate.asc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
-                log.info("조회하는 값 확인(이름)(selectAllSenior) : {}", list);
-            }
-            case "성별" -> {
-                list = queryFactory
-                        .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(member.memRnn, search.getKeyword())))
-                        .orderBy(member.memEnrollDate.asc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
-                log.info("조회하는 값 확인(성별)(selectAllSenior) : {}", list);
-            }
-            case "나이" -> {
-                int minAge = Integer.parseInt(search.getKeyword());
-                int maxAge;
-                if (minAge == 100) {
-                    maxAge = 99999;
-                } else {
-                    maxAge = minAge + 9;
+        if (type.equals("MANAGER")) {  // 담당자 어르신 관리 페이지 출력
+            switch (search.getAction()) {
+                case "all" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(전체)(selectAllSenior) : {}", list);
                 }
-                list = queryFactory
-                        .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
-                        .orderBy(member.memEnrollDate.asc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
-                log.info("조회하는 값 확인(나이)(selectAllSenior) : {}", list);
+                case "이름" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memName.like("%" + search.getKeyword() + "%")))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(이름)(selectAllSenior) : {}", list);
+                }
+                case "성별" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(senior.memRnn, search.getKeyword())))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(성별)(selectAllSenior) : {}", list);
+                }
+                case "나이" -> {
+                    int minAge = Integer.parseInt(search.getKeyword());
+                    int maxAge;
+                    if (minAge == 100) {
+                        maxAge = 99999;
+                    } else {
+                        maxAge = minAge + 9;
+                    }
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(나이)(selectAllSenior) : {}", list);
+                }
+                case "주소" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memAddress.like("%" + search.getKeyword() + "%")))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(주소)(selectAllSenior) : {}", list);
+                }
             }
-            case "주소" -> {
-                list = queryFactory
-                        .selectFrom(member)
-                        .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memAddress.like("%" + search.getKeyword() + "%")))
-                        .orderBy(member.memEnrollDate.asc())
-                        .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
-                        .fetch();
-                log.info("조회하는 값 확인(주소)(selectAllSenior) : {}", list);
+        } else if (type.equals("FAMILY")) { // 가족이 어르신 관리 페이지 출력
+            switch (search.getAction()) {
+                case "all" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(전체)(selectAllSenior) : {}", list);
+                }
+                case "이름" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(senior.memName.like("%" + search.getKeyword() + "%")))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(이름)(selectAllSenior) : {}", list);
+                }
+                case "성별" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(extractGenderCondition(senior.memRnn, search.getKeyword())))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(성별)(selectAllSenior) : {}", list);
+                }
+                case "나이" -> {
+                    int minAge = Integer.parseInt(search.getKeyword());
+                    int maxAge;
+                    if (minAge == 100) {
+                        maxAge = 99999;
+                    } else {
+                        maxAge = minAge + 9;
+                    }
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(나이)(selectAllSenior) : {}", list);
+                }
+                case "주소" -> {
+                    list = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(senior.memAddress.like("%" + search.getKeyword() + "%")))
+                            .orderBy(senior.memEnrollDate.asc())
+                            .offset(pageable.getOffset())
+                            .limit(pageable.getPageSize())
+                            .fetch();
+                    log.info("조회하는 값 확인(주소)(selectAllSenior) : {}", list);
+                }
             }
         }
         return list;
     }
 
-    // 어르신 전체목록 카운트하는 쿼리문
-    public long selectAllSeniorCount(String memUUID) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)))
-                .fetchCount();
-    }
-
-    // 어르신 이름으로 카운트하는 쿼리문
+    // 검색 조건에 따라 카운트하는 쿼리문
     @Override
-    public long selectSeniorNameCount(String keyword, String memUUID) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memName.like("%" + keyword + "%")))
-                .fetchCount();
-    }
-
-    // 어르신 성별로 카운트하는 쿼리문
-    @Override
-    public long selectSeniorGenderCount(String keyword, String memUUID) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(member.memRnn, keyword)))
-                .fetchCount();
-    }
-
-    // 어르신 나이로 카운트하는 쿼리문
-    @Override
-    public long selectSeniorAgeCount(String keyword, String memUUID) {
-        int minAge = Integer.parseInt(keyword);
-        int maxAge = minAge + 9;
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(member.memRnn, minAge, maxAge)))
-                .fetchCount();
-    }
-
-    // 어르신 주소로 카운트하는 쿼리문
-    @Override
-    public long selectSeniorAddressCount(String keyword, String memUUID) {
-        return queryFactory
-                .selectFrom(member)
-                .where(member.memType.eq("SENIOR").and(member.memUUIDMgr.eq(memUUID)).and(member.memAddress.like("%" + keyword + "%")))
-                .fetchCount();
+    public long selectSeniorCount(String keyword, String memUUID, String action) {
+        long result;
+        switch (action) {
+            case "all" -> {
+                result = queryFactory
+                        .selectFrom(senior)
+                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)))
+                        .fetchCount();
+            }
+            case "이름" -> {
+                result = queryFactory
+                        .selectFrom(senior)
+                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memName.like("%" + keyword + "%")))
+                        .fetchCount();
+            }
+            case "성별" -> {
+                result = queryFactory
+                        .selectFrom(senior)
+                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(senior.memRnn, keyword)))
+                        .fetchCount();
+            }
+            case "나이" -> {
+                int minAge = Integer.parseInt(keyword);
+                int maxAge = minAge + 9;
+                result = queryFactory
+                        .selectFrom(senior)
+                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
+                        .fetchCount();
+            }
+            case "주소" -> {
+                result = queryFactory
+                        .selectFrom(senior)
+                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memAddress.like("%" + keyword + "%")))
+                        .fetchCount();
+            }
+            default -> {result=0;}
+        }
+        return result;
     }
 
     // 가족 계정 승인처리 쿼리문
