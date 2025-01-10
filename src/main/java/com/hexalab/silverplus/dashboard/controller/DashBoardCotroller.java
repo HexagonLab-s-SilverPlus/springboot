@@ -139,24 +139,24 @@ public class DashBoardCotroller {
     @Autowired
     private MemberService memberService;
 
-    @GetMapping("/Countsnr/{memUUID}")
-    public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
-        try {
-            log.info("Received memUUID: {}", memUUID); // memUUID 확인
-            int count = memberService.selectAllSeniorCount(memUUID);
-            log.info("Senior Count for {}: {}", memUUID, count); // 결과 확인
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("count", count);
-            result.put("message", "매니저가 관리하는 노인 수 조회 성공");
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            log.error("Error fetching senior count for memUUID {}: {}", memUUID, e.getMessage());
-            Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("message", "매니저가 관리하는 노인 수 조회 실패");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
-        }
-    }
+//    @GetMapping("/Countsnr/{memUUID}")
+//    public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
+//        try {
+//            log.info("Received memUUID: {}", memUUID); // memUUID 확인
+//            int count = memberService.selectAllSeniorCount(memUUID);
+//            log.info("Senior Count for {}: {}", memUUID, count); // 결과 확인
+//
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("count", count);
+//            result.put("message", "매니저가 관리하는 노인 수 조회 성공");
+//            return ResponseEntity.ok(result);
+//        } catch (Exception e) {
+//            log.error("Error fetching senior count for memUUID {}: {}", memUUID, e.getMessage());
+//            Map<String, Object> errorResult = new HashMap<>();
+//            errorResult.put("message", "매니저가 관리하는 노인 수 조회 실패");
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+//        }
+//    }
 
 
 
