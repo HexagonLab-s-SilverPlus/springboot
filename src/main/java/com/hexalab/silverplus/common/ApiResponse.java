@@ -16,31 +16,3 @@ public class ApiResponse<T> {
     private T data; // 데이터
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
