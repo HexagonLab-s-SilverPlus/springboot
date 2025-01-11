@@ -4,7 +4,6 @@ import com.hexalab.silverplus.common.Search;
 import com.hexalab.silverplus.member.jpa.entity.MemberEntity;
 import com.hexalab.silverplus.member.jpa.repository.MemberRepository;
 import com.hexalab.silverplus.member.model.dto.Member;
-import com.querydsl.core.Tuple;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -180,11 +179,12 @@ public class MemberService {
             return null;
         }
     }
-
+    //25-01-11(수진이가 수정)
     // 대시보드용 어르신 전체 카운트 메소드
-    public int selectAllSeniorCount(String memUUID) {
-        return (int) memberRepository.selectAllSeniorCount(memUUID);
+    public int selectAllSeniorCount(String memUUID, String memType) {
+        return memberRepository.selectAllSeniorCount(memUUID,memType);
     }
+
 
 
     // 검색 조건에 따라 카운트 메소드

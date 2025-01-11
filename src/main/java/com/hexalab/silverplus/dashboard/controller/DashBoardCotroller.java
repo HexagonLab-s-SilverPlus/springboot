@@ -158,6 +158,36 @@ public class DashBoardCotroller {
 //        }
 //    }
 
+    @GetMapping("/Countsnr/{memUUID}")
+    public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
+        try {
+            // memUUID 값이 올바르게 전달되었는지 확인
+            if (memUUID == null || memUUID.isEmpty()) {
+                log.warn("memUUID 값이 비어있습니다.");
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("message", "memUUID가 필요합니다.");
+                return ResponseEntity.badRequest().body(errorResult);
+            }
+
+            log.info("Received memUUID: {}", memUUID);
+
+            // 'SENIOR' 유형의 회원 수를 계산
+            int count = memberService.selectAllSeniorCount(memUUID, "SENIOR");
+            log.info("Senior Count for {}: {}", memUUID, count);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("count", count);
+            result.put("message", "매니저가 관리하는 노인 수 조회 성공");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error fetching senior count for memUUID {}: {}", memUUID, e.getMessage());
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("message", "매니저가 관리하는 노인 수 조회 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+        }
+    }
+
+
 
 
 
