@@ -52,20 +52,6 @@ public class DashBoardCotroller {
 
     }
 
-////    목록
-//    @GetMapping("/date/{taskDate}")
-//    public ResponseEntity<List<DashBoard>> getTodosByDate(@PathVariable Timestamp taskDate) {
-//        log.info("Fetching todos for date: {}", taskDate);
-//
-//        List<DashBoard> tasks = dashBoardService.findByDate(taskDate);
-//
-//        if (!tasks.isEmpty()) {
-//            return ResponseEntity.ok(tasks);
-//        } else {
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-//        }
-//    }
-
     //    TODO 전체목록 보기처리용
     @GetMapping
     public Map<String, Object> dashboardList() {
@@ -139,25 +125,6 @@ public class DashBoardCotroller {
     @Autowired
     private MemberService memberService;
 
-//    @GetMapping("/Countsnr/{memUUID}")
-//    public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
-//        try {
-//            log.info("Received memUUID: {}", memUUID); // memUUID 확인
-//            int count = memberService.selectAllSeniorCount(memUUID);
-//            log.info("Senior Count for {}: {}", memUUID, count); // 결과 확인
-//
-//            Map<String, Object> result = new HashMap<>();
-//            result.put("count", count);
-//            result.put("message", "매니저가 관리하는 노인 수 조회 성공");
-//            return ResponseEntity.ok(result);
-//        } catch (Exception e) {
-//            log.error("Error fetching senior count for memUUID {}: {}", memUUID, e.getMessage());
-//            Map<String, Object> errorResult = new HashMap<>();
-//            errorResult.put("message", "매니저가 관리하는 노인 수 조회 실패");
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
-//        }
-//    }
-
     @GetMapping("/Countsnr/{memUUID}")
     public ResponseEntity<Map<String, Object>> getSeniorCount(@PathVariable("memUUID") String memUUID) {
         try {
@@ -171,7 +138,7 @@ public class DashBoardCotroller {
 
             log.info("Received memUUID: {}", memUUID);
 
-            // 'SENIOR' 유형의 회원 수를 계산
+            // SENIOR회원 수 계산
             int count = memberService.selectAllSeniorCount(memUUID, "SENIOR");
             log.info("Senior Count for {}: {}", memUUID, count);
 
