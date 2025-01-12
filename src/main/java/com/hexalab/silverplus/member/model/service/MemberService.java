@@ -231,5 +231,19 @@ public class MemberService {
         return (int) memberRepository.updateSeniorFamApproval(memUUID, relationship, memUUIDFam);
     }
 
+    // 담당자가 관리하는 어르신의 가족계정 승인요청 목록
+    public Map<String, Object> selectApprovalList(Pageable pageable, Search search, String memUUID) {
+        try {
+            Map<String, Object> list = memberRepository.selectApprovalList(pageable, search, memUUID);
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return null;
+        }
+    }
 
+    public int selectApprovalCount(String memUUID) {
+        return (int) memberRepository.selectApprovalCount(memUUID);
+    }
 }

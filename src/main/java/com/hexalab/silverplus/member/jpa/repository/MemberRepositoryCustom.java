@@ -40,5 +40,7 @@ public interface MemberRepositoryCustom {
     long selectSeniorNameFamCount(String keyword);
     long updateSeniorFamApproval(String memUUID, String relationship, String memUUIDFam);
     long selectAllSeniorCount(String memUUID);
+    Map<String, Object> selectApprovalList(Pageable pageable, Search search, String memUUID);
+    long selectApprovalCount(String memUUID);
 
 }

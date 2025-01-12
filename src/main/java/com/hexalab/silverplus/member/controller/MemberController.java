@@ -807,7 +807,31 @@ public class MemberController {
         }
     }
 
+    @GetMapping("/approvalList")
+    public ResponseEntity<Map<String, Object>> selectApprovalListMethod(@ModelAttribute Search search, @RequestParam("memUUID") String memUUID) {
+        if (search.getPageNumber()==0) {
+            search.setPageNumber(1);
+            search.setPageSize(10);
+        }
+        log.info("페이지 사이즈 : {}", search.getPageSize());
+        Pageable pageable = PageRequest.of(search.getPageNumber() - 1, search.getPageSize(), Sort.by(Sort.Direction.ASC, "memEnrollDate"));
+        Map<String, Object> result = new HashMap<>();
 
+        try {
+            search.setListCount(memberService.selectApprovalCount(memUUID));
+            result = memberService.selectApprovalList(pageable, search, memUUID);
+            log.info("조회해 온 리스트 확인(전체)(familyEnrollSeniorSearch) : {}", result);
+
+            result.put("search", search);
+            log.info("클라이언트로 보낼 데이터 확인 : {}", result);
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("회원목록 출력 실패 : {}", e.getMessage());
+            return null;
+        }
+    }
 
 
 

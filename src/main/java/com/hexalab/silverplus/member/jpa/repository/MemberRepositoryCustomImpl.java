@@ -496,7 +496,6 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchCount();
     }
 
-
     // 검색 조건에 따라 카운트하는 쿼리문
     @Override
     public long selectSeniorCount(String keyword, String memUUID, String action, String type) {
@@ -747,6 +746,40 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         return result;
     }
 
+    @Override
+    public Map<String, Object> selectApprovalList(Pageable pageable, Search search, String memUUID) {
+        List<Tuple> list =
+                queryFactory
+                .select(senior, family)
+                .from(senior)
+                .leftJoin(family)
+                .on(senior.memUUIDFam.eq(family.memUUID))
+                .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memFamilyApproval.eq("PENDING")))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Map<String, Object> result = new HashMap<>();
+        ArrayList<MemberEntity> senior = new ArrayList<>();
+        ArrayList<MemberEntity> family = new ArrayList<>();
+        for (Tuple tuple : list) {
+            senior.add(tuple.get(0, MemberEntity.class));
+            family.add(tuple.get(1, MemberEntity.class));
+        }
+
+        result.put("senior", senior);
+        result.put("family", family);
+
+        return result;
+    }
+
+    @Override
+    public long selectApprovalCount(String memUUID) {
+        return queryFactory
+                .selectFrom(senior)
+                .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memFamilyApproval.eq("PENDING")))
+                .fetchCount();
+    }
 
 }
 
