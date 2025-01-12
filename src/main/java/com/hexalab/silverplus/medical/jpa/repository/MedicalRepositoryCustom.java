@@ -9,4 +9,5 @@ public interface MedicalRepositoryCustom {
     List<MedicalEntity> selectAllMedicalList(String mediSnrUUID, Pageable pageable);
     int selectAllCount(String mediSnrUUID);
     int updateMedicalPrivacy(String mediSnrUUID, String mediPrivacy);
+    String selectMedicalStatus(String mediSnrUUID);
 }//MedicalRepositoryCustom end

@@ -50,4 +50,14 @@ public class MedicalRepositoryImpl implements MedicalRepositoryCustom {
 
         return (int) updatedRows;
     }
+
+    @Override
+    public String selectMedicalStatus(String mediSnrUUID) {
+        return queryFactory
+                .select(medical.mediPrivacy) // 가져오고자 하는 필드 선택
+                .from(medical)
+                .where(medical.mediSnrUUID.eq(mediSnrUUID))
+                .limit(1) // 여러 개의 결과 중 하나만 가져오기
+                .fetchOne(); // 단일 결과 반환
+    }
 }//MedicalRepositoryImpl end

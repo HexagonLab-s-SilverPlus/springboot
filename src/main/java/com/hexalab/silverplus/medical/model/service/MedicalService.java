@@ -93,4 +93,12 @@ public class MedicalService {
         }
     }
 
+    public String selectMedicalStatus(String mediSnrUUID) {
+        if (mediSnrUUID == null) {
+            log.warn("mediSnrUUID is null"); // mediSnrUUID가 null인지 확인
+        } else {
+            log.info("selectMedicalStatus mediSnrUUID = {}", mediSnrUUID); // 값 출력
+        }
+        return medicalRepository.selectMedicalStatus(mediSnrUUID);
+    }
 }//MedicalService end

@@ -28,33 +28,6 @@ public class MedicalController {
     private final MemberService memberService;
 
     //Medical list
-//    @GetMapping("/medical/{mediSnrUUID}")
-//    public ResponseEntity<Map<String, Object>> selectMedicalList(
-//            @PathVariable String mediSnrUUID
-//    ) {
-//        log.info("mediSnrUUID: {}", mediSnrUUID);
-//
-//        try {
-//            Member snrMember = memberService.selectMember(mediSnrUUID);
-//
-//            ArrayList<Medical> medicalList = medicalService.selectAllMedicalList(snrMember.getMemUUID());
-//            if (medicalList == null || medicalList.isEmpty()) {
-//                return ResponseEntity.ok(Map.of("list", new ArrayList<>()));
-//            }
-//
-//            log.info("medicalList: {}", medicalList);
-//            log.info("medicalList size: {}", medicalList.size());
-//
-//            Map<String, Object> map = new HashMap<>();
-//            map.put("list", medicalList);
-//
-//            return ResponseEntity.ok(map);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-//    }//selectMedicalList end
-
     @GetMapping("/{mediSnrUUID}")
     public ResponseEntity<Map<String, Object>> selectMedicalList(
             @RequestParam String mediSnrUUID,
@@ -196,5 +169,26 @@ public class MedicalController {
         }
 
     }//deleteMedicals end
+
+    @GetMapping("/{mediSnrUUID}/tf")
+    public ResponseEntity<String> selectMedicalStatus(
+            @PathVariable String mediSnrUUID
+    ) {
+        log.info("mediSnrUUID: {}", mediSnrUUID);
+
+        try {
+            String status = medicalService.selectMedicalStatus(mediSnrUUID);
+
+            if (status == null || status.isEmpty()) {
+                status = "F";
+            }
+
+            log.info("selectMedicalStatus status : " + status);
+            return ResponseEntity.ok(status);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }//selectMedicalList end
 
 }//MedicalController end
