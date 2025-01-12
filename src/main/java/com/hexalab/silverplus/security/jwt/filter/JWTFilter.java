@@ -45,7 +45,7 @@ public class JWTFilter extends OncePerRequestFilter {
                "/api/email/verify",      // 이메일인증 URL
                 "/member/fid",       // 아이디 찾기 URL
                 "/member/fpwd",     // 비밀번호 찾기 URL
-                "/pwdupdate",        // 비밀번호 변경 URL
+                "/member/pwdupdate",        // 비밀번호 변경 URL
                 "/oauth2",
                 "/fsSearch"
         );

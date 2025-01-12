@@ -364,16 +364,16 @@ public class MemberController {
     }
 
     // 비밀번호 수정 처리 메소드
-    @PutMapping("/pwdupdate/{memUUID}")
-    public ResponseEntity memberUpdatePwdMethod(@PathVariable String memUUID, @RequestBody Member member) {
+    @PostMapping("/pwdupdate")
+    public ResponseEntity memberUpdatePwdMethod(@RequestBody Member member) {
+        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", member);
         log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", member.getMemPw());
-        log.info("전달 온 값 확인(memberUpdatePwdMethod) : {}", memUUID);
-
 
         if (member.getMemPw() != null && member.getMemPw().length() > 0) {
             String encodeMemPw = bCryptPasswordEncoder.encode(member.getMemPw());
+            log.info("전달 온 UUID 값 확인 : ", member.getMemUUID());
             log.info("암호화 처리된 비밀번호 확인(memberUpdatePwdMethod) : {}", encodeMemPw);
-            int result = memberService.updateMemPw(encodeMemPw, memUUID);
+            int result = memberService.updateMemPw(encodeMemPw, member.getMemUUID());
             if (result > 0) {
                 log.info("비밀번호 수정 성공 여부(memberUpdatePwdMethod) : {}", result);
                 return ResponseEntity.ok().header("Response", "success").build();
@@ -480,46 +480,48 @@ public class MemberController {
             if (type.equals("MANAGER")) {
                 if (search.getAction() == null || search.getAction().isEmpty()) {
                     search.setAction("all");
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(),type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(전체)(managementListMethod)(담당자) : {}", list);
+                    log.info("조회한 search 값 확인(전체) : {}", search);
                 } else if (search.getAction().equals("이름")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(이름)(managementListMethod)(담당자) : {}", list);
                 } else if (search.getAction().equals("성별")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(성별)(managementListMethod)(담당자) : {}", list);
                 } else if (search.getAction().equals("나이")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(나이)(managementListMethod)(담당자) : {}", list);
                 } else if (search.getAction().equals("주소")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(주소)(managementListMethod)(담당자) : {}", list);
                 }
             } else if (type.equals("FAMILY")) {
                 if (search.getAction() == null || search.getAction().isEmpty()) {
                     search.setAction("all");
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(전체)(managementListMethod)(가족) : {}", list);
+                    log.info("조회한 search 값 확인(전체) : {}", search);
                 } else if (search.getAction().equals("이름")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(이름)(managementListMethod)(가족) : {}", list);
                 } else if (search.getAction().equals("성별")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(성별)(managementListMethod)(가족) : {}", list);
                 } else if (search.getAction().equals("나이")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(나이)(managementListMethod)(가족) : {}", list);
                 } else if (search.getAction().equals("주소")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction()));
+                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
                     list = memberService.selectAllSenior(pageable, search, memUUID, type);
                     log.info("조회해 온 리스트 확인(주소)(managementListMethod)(가족) : {}", list);
                 }
@@ -568,7 +570,7 @@ public class MemberController {
                 member.setMemFamilyApproval("N/A");       // 가족 승인 여부 default 값 처리
                 member.setMemSeniorProfile(fileName);       // 프로필 사진 이름 저장
                 member.setMemSenFamRelationship("N/A");     // 어르신과 가족계정의 관계정보 초기값 설정
-                member.setMemUUIDMgr("N/A");        // 어르신의 담당자 UUID 초기값 설정
+                member.setMemUUIDFam("N/A");        // 어르신의 가족 UUID 초기값 설정
 
                 memberService.insertMember(member);
 
@@ -608,11 +610,6 @@ public class MemberController {
             } else {
                 log.info("비밀번호 변경요청안함 처리 확인(managementUpdateMethod)");
             }
-
-            member.setMemSocialKakao("N");  // 소셜 연동 여부 default 값 처리
-            member.setMemSocialGoogle("N");     // 소셜 연동 여부 default 값 처리
-            member.setMemSocialNaver("N");      // 소셜 연동 여부 default 값 처리
-            member.setMemFamilyApproval("N");       // 가족 승인 여부 default 값 처리
 
             ftpUtility.connect(ftpServer,ftpPort,ftpUsername,ftpPassword);
 
@@ -758,6 +755,8 @@ public class MemberController {
             }
 
             result.put("search", search);
+            log.info("클라이언트로 보낼 데이터 확인 : {}", result);
+
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {

@@ -188,8 +188,8 @@ public class MemberService {
 
 
     // 검색 조건에 따라 카운트 메소드
-    public int selectSeniorCount(String keyword,String memUUID, String action) {
-        return (int) memberRepository.selectSeniorCount(keyword,memUUID, action);
+    public int selectSeniorCount(String keyword,String memUUID, String action, String type) {
+        return (int) memberRepository.selectSeniorCount(keyword,memUUID, action, type);
     }
 
     // 가족계정 승인처리 메소드

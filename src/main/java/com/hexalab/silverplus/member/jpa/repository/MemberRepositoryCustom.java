@@ -32,7 +32,7 @@ public interface MemberRepositoryCustom {
     long updateSocial(Boolean linking, String provider, String socialPi, String memUUID);
     MemberEntity findByProfile(String memSeniorProfile);
     List<MemberEntity> selectAllSenior(Pageable pageable, Search search, String memUUID, String type);
-    long selectSeniorCount(String keyword, String memUUID, String action);
+    long selectSeniorCount(String keyword, String memUUID, String action, String type);
     long updateApproval(String memUUID, String status);
     long selectNeedApprovalCount(String memUUID);
     Map<String, Object> selectAllSeniorFam(Pageable pageable, Search search);

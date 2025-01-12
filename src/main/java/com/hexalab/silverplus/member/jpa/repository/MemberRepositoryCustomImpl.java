@@ -23,9 +23,13 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private final EntityManager entityManager;
     private final QMemberEntity member = QMemberEntity.memberEntity;
-    QMemberEntity manager = new QMemberEntity("manager");       // 동일한 entity 객체를 사용할 경우 이와같이 별칭 사용 필수
-    QMemberEntity senior = new QMemberEntity("senior");
-    QMemberEntity family = new QMemberEntity("family");
+//    private final QMemberEntity manager = new QMemberEntity("manager");       // 동일한 entity 객체를 사용할 경우 이와같이 별칭 사용 필수
+//    private final QMemberEntity manager = QMemberEntity.memberEntity;
+//    private final QMemberEntity senior = QMemberEntity.memberEntity;
+//    private final QMemberEntity family = QMemberEntity.memberEntity;
+    private final QMemberEntity manager = new QMemberEntity("manager");
+    private final QMemberEntity senior = new QMemberEntity("senior");
+    private final QMemberEntity family = new QMemberEntity("family");
 
 
     private StringExpression extractSubstring(StringPath column, int start, int length) {
@@ -495,42 +499,86 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
     // 검색 조건에 따라 카운트하는 쿼리문
     @Override
-    public long selectSeniorCount(String keyword, String memUUID, String action) {
-        long result;
-        switch (action) {
-            case "all" -> {
-                result = queryFactory
-                        .selectFrom(senior)
-                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)))
-                        .fetchCount();
+    public long selectSeniorCount(String keyword, String memUUID, String action, String type) {
+        long result = 0;
+        if (type.equals("MANAGER")) {
+            switch (action) {
+                case "all" -> {
+                    log.info("카운트쿼리문 작동확인(어르신)(전체)");
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)))
+                            .fetchCount();
+                }
+                case "이름" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memName.like("%" + keyword + "%")))
+                            .fetchCount();
+                }
+                case "성별" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(senior.memRnn, keyword)))
+                            .fetchCount();
+                }
+                case "나이" -> {
+                    int minAge = Integer.parseInt(keyword);
+                    int maxAge = minAge + 9;
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
+                            .fetchCount();
+                }
+                case "주소" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memAddress.like("%" + keyword + "%")))
+                            .fetchCount();
+                }
+                default -> {
+                    result = 0;
+                }
             }
-            case "이름" -> {
-                result = queryFactory
-                        .selectFrom(senior)
-                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memName.like("%" + keyword + "%")))
-                        .fetchCount();
+        } else if (type.equals("FAMILY")) {
+            switch (action) {
+                case "all" -> {
+                    log.info("카운트쿼리문 작동확인(어르신)(전체)");
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)))
+                            .fetchCount();
+                }
+                case "이름" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(senior.memName.like("%" + keyword + "%")))
+                            .fetchCount();
+                }
+                case "성별" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(extractGenderCondition(senior.memRnn, keyword)))
+                            .fetchCount();
+                }
+                case "나이" -> {
+                    int minAge = Integer.parseInt(keyword);
+                    int maxAge = minAge + 9;
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
+                            .fetchCount();
+                }
+                case "주소" -> {
+                    result = queryFactory
+                            .selectFrom(senior)
+                            .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)).and(senior.memAddress.like("%" + keyword + "%")))
+                            .fetchCount();
+                }
+                default -> {
+                    result = 0;
+                }
             }
-            case "성별" -> {
-                result = queryFactory
-                        .selectFrom(senior)
-                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(extractGenderCondition(senior.memRnn, keyword)))
-                        .fetchCount();
-            }
-            case "나이" -> {
-                int minAge = Integer.parseInt(keyword);
-                int maxAge = minAge + 9;
-                result = queryFactory
-                        .selectFrom(senior)
-                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(calculateAgeCondition(senior.memRnn, minAge, maxAge)))
-                        .fetchCount();
-            }
-            case "주소" -> {
-                result = queryFactory
-                        .selectFrom(senior)
-                        .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)).and(senior.memAddress.like("%" + keyword + "%")))
-                        .fetchCount();
-            }
-            default -> {result=0;}
         }
         return result;
     }
@@ -604,8 +652,8 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                         .select(senior, family)
                         .from(senior)
                         .leftJoin(family)
-                        .on(senior.memUUID.eq(family.memUUIDMgr))
-                        .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + search.getKeyword() + "%")))
+                        .on(senior.memUUIDFam.eq(family.memUUID))
+                        .where(senior.memType.eq("SENIOR").and(senior.memName.like(search.getKeyword())))
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
@@ -640,7 +688,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         return queryFactory
                 .select(senior)
                 .from(senior)
-                .where(senior.memType.eq("SENIOR").and(senior.memName.like("%" + keyword + "%")))
+                .where(senior.memType.eq("SENIOR").and(senior.memName.like(keyword)))
                 .fetchCount();
     }
 
