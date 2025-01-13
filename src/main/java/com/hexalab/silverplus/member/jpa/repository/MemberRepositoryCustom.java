@@ -42,5 +42,7 @@ public interface MemberRepositoryCustom {
     long selectAllSeniorCount(String memUUID);
     Map<String, Object> selectApprovalList(Pageable pageable, Search search, String memUUID);
     long selectApprovalCount(String memUUID);
+    MemberEntity findByMemNameCellphone(String memName, String memCellphone);
+    MemberEntity findByMemNameEmail(String memName, String memEmail);
 
 }

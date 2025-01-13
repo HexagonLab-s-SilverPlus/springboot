@@ -247,6 +247,22 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public MemberEntity findByMemNameCellphone(String memName, String memCellphone) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memName.eq(memName).and(member.memCellphone.eq(memCellphone)))
+                .fetchOne();
+    }
+
+    @Override
+    public MemberEntity findByMemNameEmail(String memName, String memEmail) {
+        return queryFactory
+                .selectFrom(member)
+                .where(member.memName.eq(memName).and(member.memEmail.eq(memEmail)))
+                .fetchOne();
+    }
+
     // 비밀번호 재설정 쿼리문
     @Override
     public long updateMemPw(String memPw, String memUUID) {
@@ -425,7 +441,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             }
         } else if (type.equals("FAMILY")) { // 가족이 어르신 관리 페이지 출력
             switch (search.getAction()) {
-                case "all" -> {
+                case "선택" -> {
                     list = queryFactory
                             .selectFrom(senior)
                             .where(senior.memType.eq("SENIOR").and(senior.memUUIDFam.eq(memUUID)))
