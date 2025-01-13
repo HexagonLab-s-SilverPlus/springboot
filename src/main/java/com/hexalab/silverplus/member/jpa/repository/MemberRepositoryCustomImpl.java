@@ -365,7 +365,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         List<MemberEntity> list = new ArrayList<>();
         if (type.equals("MANAGER")) {  // 담당자 어르신 관리 페이지 출력
             switch (search.getAction()) {
-                case "all" -> {
+                case "선택" -> {
                     list = queryFactory
                             .selectFrom(senior)
                             .where(senior.memType.eq("SENIOR").and(senior.memUUIDMgr.eq(memUUID)))
@@ -502,7 +502,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         long result = 0;
         if (type.equals("MANAGER")) {
             switch (action) {
-                case "all" -> {
+                case "선택" -> {
                     log.info("카운트쿼리문 작동확인(어르신)(전체)");
                     result = queryFactory
                             .selectFrom(senior)
@@ -541,7 +541,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
             }
         } else if (type.equals("FAMILY")) {
             switch (action) {
-                case "all" -> {
+                case "선택" -> {
                     log.info("카운트쿼리문 작동확인(어르신)(전체)");
                     result = queryFactory
                             .selectFrom(senior)

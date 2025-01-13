@@ -467,10 +467,10 @@ public class MemberController {
         log.info("전달 온 담당자 UUID 확인 : {}", memUUID);
         String type = memberService.selectMember(memUUID).getMemType();
 
-        if (search.getPageNumber()==0) {
-            search.setPageNumber(1);
-            search.setPageSize(10);
-        }
+//        if (search.getPageNumber()==0) {
+//            search.setPageNumber(1);
+//            search.setPageSize(10);
+//        }
         Pageable pageable = PageRequest.of(search.getPageNumber() - 1, search.getPageSize(), Sort.by(Sort.Direction.ASC, "memEnrollDate"));
         Map<String, Object> result = new HashMap<>();
 
@@ -478,52 +478,62 @@ public class MemberController {
         try {
             List<Member> list = new ArrayList<Member>();
             if (type.equals("MANAGER")) {
-                if (search.getAction() == null || search.getAction().isEmpty()) {
-                    search.setAction("all");
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(),type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(전체)(managementListMethod)(담당자) : {}", list);
-                    log.info("조회한 search 값 확인(전체) : {}", search);
-                } else if (search.getAction().equals("이름")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(이름)(managementListMethod)(담당자) : {}", list);
-                } else if (search.getAction().equals("성별")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(성별)(managementListMethod)(담당자) : {}", list);
-                } else if (search.getAction().equals("나이")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(나이)(managementListMethod)(담당자) : {}", list);
-                } else if (search.getAction().equals("주소")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(주소)(managementListMethod)(담당자) : {}", list);
+                switch (search.getAction()) {
+                    case "선택" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(전체)(managementListMethod)(담당자) : {}", list);
+                        log.info("조회한 search 값 확인(전체) : {}", search);
+                    }
+                    case "이름" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(이름)(managementListMethod)(담당자) : {}", list);
+                    }
+                    case "성별" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(성별)(managementListMethod)(담당자) : {}", list);
+                    }
+                    case "나이" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(나이)(managementListMethod)(담당자) : {}", list);
+                    }
+                    case "주소" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(주소)(managementListMethod)(담당자) : {}", list);
+                    }
                 }
             } else if (type.equals("FAMILY")) {
-                if (search.getAction() == null || search.getAction().isEmpty()) {
-                    search.setAction("all");
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(전체)(managementListMethod)(가족) : {}", list);
-                    log.info("조회한 search 값 확인(전체) : {}", search);
-                } else if (search.getAction().equals("이름")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(이름)(managementListMethod)(가족) : {}", list);
-                } else if (search.getAction().equals("성별")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(성별)(managementListMethod)(가족) : {}", list);
-                } else if (search.getAction().equals("나이")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(나이)(managementListMethod)(가족) : {}", list);
-                } else if (search.getAction().equals("주소")) {
-                    search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
-                    list = memberService.selectAllSenior(pageable, search, memUUID, type);
-                    log.info("조회해 온 리스트 확인(주소)(managementListMethod)(가족) : {}", list);
+                switch (search.getAction()) {
+                    case "선택" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(전체)(managementListMethod)(가족) : {}", list);
+                        log.info("조회한 search 값 확인(전체) : {}", search);
+                    }
+                    case "이름" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(이름)(managementListMethod)(가족) : {}", list);
+                    }
+                    case "성별" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(성별)(managementListMethod)(가족) : {}", list);
+                    }
+                    case "나이" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(나이)(managementListMethod)(가족) : {}", list);
+                    }
+                    case "주소" -> {
+                        search.setListCount(memberService.selectSeniorCount(search.getKeyword(), memUUID, search.getAction(), type));
+                        list = memberService.selectAllSenior(pageable, search, memUUID, type);
+                        log.info("조회해 온 리스트 확인(주소)(managementListMethod)(가족) : {}", list);
+                    }
                 }
             }
 
