@@ -308,7 +308,7 @@ public class MemberController {
         if (member.getMemEmail() != null && member.getMemEmail().length() > 0) {        // 이메일 인증으로 아이디 찾기 시도 시
             if (!memberService.findByEmailName(member.getMemEmail(), member.getMemName())) {        // 전달온 이메일 정보와 이름 정보로 DB 조회
                 // DB 정보 조회 성공 시 전달온 이름 정보로 DB 에서 member 정보 조회하여 저장
-                Member resultMember = memberService.findByMemName(member.getMemName());
+                Member resultMember = memberService.findByMemNameEmail(member.getMemName(), member.getMemEmail());
                 // 저장된 객체에서 아이디 정보만 추출하여 클라이언트로 반환
                 return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemId());
             } else {
@@ -317,8 +317,9 @@ public class MemberController {
             }
         } else if (member.getMemCellphone() != null && member.getMemCellphone().length() > 0) {     // 휴대전화 인증으로 아이디 찾기 시도 시
             if (!memberService.findByPhoneName(member.getMemCellphone(), member.getMemName())) {        // 전달온 휴대전화 정보와 이름 정보로 DB 조회
+                log.info("휴대전화 인증 아이디 찾기 작동 확인");
                 // DB 정보 조회 성공 시 전달온 이름 정보로 DB 에서 member 정보 조회하여 저장
-                Member resultMember = memberService.findByMemName(member.getMemName());
+                Member resultMember = memberService.findByMemNameCellphone(member.getMemName(), member.getMemCellphone());
                 // 저장된 객체에서 아이디 정보만 추출하여 클라이언트로 반환
                 return ResponseEntity.ok().header("Response", "success").body(resultMember.getMemId());
             } else {

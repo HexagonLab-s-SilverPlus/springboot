@@ -246,4 +246,22 @@ public class MemberService {
     public int selectApprovalCount(String memUUID) {
         return (int) memberRepository.selectApprovalCount(memUUID);
     }
+
+    public Member findByMemNameCellphone(String memName, String memCellphone) {
+        MemberEntity memberEntity = memberRepository.findByMemNameCellphone(memName, memCellphone);
+        if(memberEntity != null) {
+            return memberEntity.toDto();
+        } else {
+            return null;
+        }
+    }
+
+    public Member findByMemNameEmail(String memName, String memEmail) {
+        MemberEntity memberEntity = memberRepository.findByMemNameEmail(memName, memEmail);
+        if(memberEntity != null) {
+            return memberEntity.toDto();
+        } else {
+            return null;
+        }
+    }
 }
