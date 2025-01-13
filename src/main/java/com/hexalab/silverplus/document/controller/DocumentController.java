@@ -291,7 +291,7 @@ public class DocumentController {
             //총 갯수 조회
             listCount = documentService.selectDocListCountByAction(memUuid, action);
             if (listCount == null || listCount < 1) {
-                listCount = 1;
+                listCount = 0;
             } else {
                 listCount = listCount;
             }
