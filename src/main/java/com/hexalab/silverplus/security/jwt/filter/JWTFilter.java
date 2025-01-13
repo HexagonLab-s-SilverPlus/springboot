@@ -47,7 +47,8 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/member/fpwd",     // 비밀번호 찾기 URL
                 "/member/pwdupdate",        // 비밀번호 변경 URL
                 "/oauth2",
-                "/fsSearch"
+                "/fsSearch",
+                "/facelogin"
         );
 //        return passURLs.contains(requestURI);
         return passURLs.stream().anyMatch(requestURI::contains);
