@@ -96,11 +96,8 @@ public class MemberController {
 
             member.setMemUUID(UUID.randomUUID().toString());
             member.setMemSocialKakao("N");      // 카카오 소셜 연동 여부 초기값 설정
-            member.setMemKakaoEmail("N/A");
             member.setMemSocialGoogle("N");     // 구글 소셜 연동 여부 초기값 설정
-            member.setMemGoogleEmail("N/A");
             member.setMemSocialNaver("N");      // 네이버 소셜 연동 여부 초기값 설정
-            member.setMemNaverEmail("N/A");
             member.setMemKakaoPi("N/A");        // 카카오 소셜 고유 ID 초기값 설정
             member.setMemGooglePi("N/A");       // 구글 소셜 고유 ID 초기값 설정
             member.setMemNaverPi("N/A");        // 네이버 소셜 고유 ID 초기값 설정
@@ -569,16 +566,13 @@ public class MemberController {
 
                 member.setMemUUID(UUID.randomUUID().toString());
                 member.setMemSocialKakao("N");  // 소셜 연동 여부 default 값 처리
-                member.setMemKakaoEmail("N/A");
                 member.setMemKakaoPi("N/A");        // 카카오 소셜 고유 ID 초기값 설정
                 member.setMemSocialGoogle("N");     // 소셜 연동 여부 default 값 처리
-                member.setMemGoogleEmail("N/A");
                 member.setMemGooglePi("N/A");       // 구글 소셜 고유 ID 초기값 설정
                 member.setMemSocialNaver("N");      // 소셜 연동 여부 default 값 처리
                 member.setMemNaverPi("N/A");        // 네이버 소셜 고유 ID 초기값 설정
-                member.setMemNaverEmail("N/A");
                 member.setMemFamilyApproval("N/A");       // 가족 승인 여부 default 값 처리
-                member.setMemSeniorProfile(fileName);       // 프로필 사진 이름 저장
+                member.setMemSeniorProfile(renamFileName);       // 프로필 사진 이름 저장
                 member.setMemSenFamRelationship("N/A");     // 어르신과 가족계정의 관계정보 초기값 설정
                 member.setMemUUIDFam("N/A");        // 어르신의 가족 UUID 초기값 설정
 
@@ -629,7 +623,7 @@ public class MemberController {
                 String fileName = sprofile.getOriginalFilename();
                 String renamFileName = CreateRenameFileName.create(mFiles.getMfId(), fileName);
 
-                member.setMemSeniorProfile(fileName);       // 프로필 사진 이름 저장
+                member.setMemSeniorProfile(renamFileName);       // 프로필 사진 이름 저장
 
                 memberService.insertMember(member);
 

@@ -1,14 +1,10 @@
 package com.hexalab.silverplus.common.sms.model.service;
 
-import com.hexalab.silverplus.common.sms.model.jpa.repository.SMSRepository;
+import com.hexalab.silverplus.common.sms.jpa.repository.SMSRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
-import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
-import net.nurigo.sdk.message.service.DefaultMessageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;

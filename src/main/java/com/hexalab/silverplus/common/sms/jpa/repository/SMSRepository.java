@@ -1,4 +1,4 @@
-package com.hexalab.silverplus.common.sms.model.jpa.repository;
+package com.hexalab.silverplus.common.sms.jpa.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

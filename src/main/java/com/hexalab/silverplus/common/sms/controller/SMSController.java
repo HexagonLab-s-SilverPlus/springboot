@@ -1,20 +1,15 @@
 package com.hexalab.silverplus.common.sms.controller;
 
 import com.hexalab.silverplus.common.sms.model.dto.SMS;
-import com.hexalab.silverplus.common.sms.model.jpa.repository.SMSRepository;
 import com.hexalab.silverplus.common.sms.model.service.SMSService;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
 import net.nurigo.sdk.message.service.DefaultMessageService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import net.nurigo.sdk.message.response.SingleMessageSentResponse;
-
-import java.util.Random;
 
 @Slf4j
 @RestController
