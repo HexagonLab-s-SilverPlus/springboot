@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProgramFile {
+public class  ProgramFile {
     private String snrFileId;   //SNR_FILE_ID	VARCHAR2(100 BYTE)
     private String snrFileOGName;   //SNR_FILE_OG_NAME	VARCHAR2(1000 BYTE)
     private String snrFileName; //SNR_FILE_NAME	VARCHAR2(1000 BYTE)
