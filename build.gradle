@@ -83,17 +83,47 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-core'
 }
 
-////sourceSets
-////gradle build 시 QClass 소스도 함께 build 하기 위해서 sourceSets 에 해당 위치를 추가해준다.
-//def querydslSrcDir = 'src/main/generated'
-//sourceSets {
-//    main {
-//        java {
-//            srcDirs += [ querydslSrcDir ]
-//        }
+/* React auto build */
+//tasks.named('bootBuildImage') {
+//    builder = 'paketobuildpacks/builder-jammy-base:latest'
+//}
+//
+//tasks.register('npmInstall', Exec) {
+//    // workingDir = file("${projectDir}/src/main/frontend")
+//    workingDir = file("D:/FinalProject(ver_gitdesktop)/react")
+//    commandLine 'cmd', '/c', 'npm', 'install'
+//}
+//
+//tasks.register('npmBuild', Exec) {
+//    dependsOn npmInstall
+//    // workingDir = file("${projectDir}/src/main/frontend")
+//    workingDir = file("D:/FinalProject(ver_gitdesktop)/react")
+//    commandLine 'cmd', '/c', 'npm', 'run', 'build'
+//}
+//
+//tasks.register('copyReactBuild', Copy) {
+//    dependsOn npmBuild
+//    //from("${projectDir}/src/main/frontend/build")
+//    from("D:/FinalProject(ver_gitdesktop)/react/build")
+//    into("D:/FinalProject(ver_gitdesktop)/springboot/src/main/resources/static")
+//}
+//
+//// 명시적으로 의존성 추가
+//tasks.named('processResources') {
+//    mustRunAfter(copyReactBuild)
+//}
+//
+//bootJar {
+//    dependsOn copyReactBuild
+//    from("D:/FinalProject(ver_gitdesktop)/springboot/src/main/resources/static") {
+//        into 'BOOT-INF/classes/static'
 //    }
 //}
-
-tasks.named('test') {
-    useJUnitPlatform()
-}
+//
+//tasks.named('build') {
+//    dependsOn copyReactBuild
+//}
+//
+//tasks.named('test') {
+//    useJUnitPlatform()
+//}

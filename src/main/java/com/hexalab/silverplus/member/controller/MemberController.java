@@ -102,12 +102,11 @@ public class MemberController {
             member.setMemGooglePi("N/A");       // 구글 소셜 고유 ID 초기값 설정
             member.setMemNaverPi("N/A");        // 네이버 소셜 고유 ID 초기값 설정
             member.setMemSeniorProfile("N/A");      // 어르신 프로필파일 정보 초기값 설정
-            member.setMemSenFamRelationship("N/A");     // 어르신과 가족계정의 관계정보 초기값 설정
             member.setMemFamilyApproval("N/A");     // 가족계정 승인여부 초기값 설정
-            member.setMemPhone("N/A");      // 일반전화번호 초기값 설정
             member.setMemUUIDFam("N/A");        // 어르신의 가족 UUID 초기값 설정
             member.setMemUUIDMgr("N/A");        // 어르신의 담당자 UUID 초기값 설정
             if (member.getMemType().equals("MANAGER")) {    // 회원가입 하는 사용자가 담당자일 경우
+                member.setMemSenFamRelationship("N/A");     // 어르신과 가족계정의 관계정보 초기값 설정
                 if (orgData != null) {
                     Map<String, String> orgDataSet =new ObjectMapper().readValue(orgData, Map.class);
                     String orgName = orgDataSet.get("name");
@@ -117,6 +116,7 @@ public class MemberController {
                 }
 
             } else if(member.getMemType().equals("FAMILY")) {       // 회원가입 하는 사용자가 가족일 경우
+                member.setMemPhone("N/A");      // 일반전화번호 초기값 설정
                 if (seniorRelationshipData != null) {
                     List<Map<String, String>> relationship = new ObjectMapper().readValue(seniorRelationshipData, new TypeReference<List<Map<String, String>>>() {});
                     for (Map<String, String> data : relationship) {

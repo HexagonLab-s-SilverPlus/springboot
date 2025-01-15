@@ -48,7 +48,8 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/member/pwdupdate",        // 비밀번호 변경 URL
                 "/oauth2",
                 "/fsSearch",
-                "/facelogin"
+                "/facelogin",
+                "/static"
         );
 //        return passURLs.contains(requestURI);
         return passURLs.stream().anyMatch(requestURI::contains);
@@ -74,6 +75,10 @@ public class JWTFilter extends OncePerRequestFilter {
                 log.info("조건문 작동확인");
                 filterChain.doFilter(request, response);
                 return;
+            }
+            if (requestURI.equals("/") || requestURI.equals("/logo.png") || requestURI.startsWith("/static/") || requestURI.equals("/index.html") || requestURI.equals("/favicon.ico")) {
+                filterChain.doFilter(request, response);
+                return; // 검사 없이 종료
             }
 
             if (request_accessToken != null && request_refreshToken != null) {

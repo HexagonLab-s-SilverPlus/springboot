@@ -102,6 +102,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000"); // React 클라이언트 URL
+        configuration.addAllowedOrigin("http://localhost:8080"); // 클라이언트 URL
         configuration.addAllowedOrigin("http://localhost:5000"); // Flask 서버 URL 추가
         configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
         configuration.addAllowedHeader("*"); // 모든 헤더 허용
@@ -142,7 +143,7 @@ public class SecurityConfig {
 
                             // JWT 사용시 추가되는 설정임
                             .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login/**", "/member/**", "/reissue",
-                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**", "/**", "/favicon.ico", "/static/**", "/index.html").permitAll() // 공개 경로 설정 및 인증 경로 허용
                             // Notice
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // 작성
                             .requestMatchers(HttpMethod.GET, "/notice").hasAnyRole("ADMIN", "SENIOR", "MANAGER", "FAMILY")  // 목록출력
