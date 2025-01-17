@@ -80,3 +80,6 @@ Thumbs.db
 /package-lock.json
 /pnpm-lock.yaml
 /yarn.lock
+
+# React 빌드 파일 제외
+/static/
