@@ -56,12 +56,12 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                         .build();
                 refreshService.save(refreshToken);
 
-                String redirectURL = String.format("http://localhost:3000/oauth2?linked=%s&accessToken=%s&refreshToken=%s", linked, access, refresh);
+                String redirectURL = String.format("http://localhost:8080/oauth2?linked=%s&accessToken=%s&refreshToken=%s", linked, access, refresh);
 
                 getRedirectStrategy().sendRedirect(request, response, redirectURL);
             } else {    // 연동이 안되어있을 시
                 String linked = "off";
-                String redirectURL = String.format("http://localhost:3000/oauth2?provider=%s&socialId=%s&linked=%s", provider, providerId, linked);
+                String redirectURL = String.format("http://localhost:8080/oauth2?provider=%s&socialId=%s&linked=%s", provider, providerId, linked);
                 getRedirectStrategy().sendRedirect(request, response, redirectURL);
             }
         } catch (Exception e) {

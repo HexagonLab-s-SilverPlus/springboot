@@ -51,15 +51,19 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/facelogin",
                 "/static"
         );
-//        return passURLs.contains(requestURI);
         return passURLs.stream().anyMatch(requestURI::contains);
     }
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         log.info("JWT filter running...");
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("Authorization Header Missing or Invalid");
+        } else {
+            System.out.println("Authorization Header Found: " + authHeader);
+        }
 
         String request_accessToken = request.getHeader("Authorization");
         String request_refreshToken = request.getHeader("RefreshToken");
@@ -76,7 +80,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-            if (requestURI.equals("/") || requestURI.equals("/logo.png") || requestURI.startsWith("/static/") || requestURI.equals("/index.html") || requestURI.equals("/favicon.ico")) {
+            if (requestURI.equals("/") || requestURI.equals("/logo.png") || requestURI.equals("/index.html") || requestURI.equals("/favicon.ico") || requestURI.equals("/dashlist")) {
                 filterChain.doFilter(request, response);
                 return; // 검사 없이 종료
             }
@@ -178,68 +182,5 @@ public class JWTFilter extends OncePerRequestFilter {
         }
     }
 }
-
-/*
-
-            // 토큰 만료 여부 확인
-            if (jwtUtil.isTokenExpired(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setHeader("token_expired");
-                log.info("만료여부확인");
-                return;
-            }
-
-            // 토큰 카테고리 확인
-            String category = jwtUtil.getCategoryFromToken(token);
-            if (!"access".equals(category)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid access token");
-                log.info("카테고리확인");
-                return;
-            }
-
-            // 사용자 정보 추출
-            String username = jwtUtil.getUserIdFromToken(token);
-            String role = jwtUtil.getRoleFromToken(token);
-
-            // 사용자 인증 객체 생성
-            MemberEntity member = new MemberEntity();
-            member.setMemId(username);
-            member.setMemType(role);
-            member.setMemPw("tempPassword");
-
-            log.info("Authenticated member: {}", member);
-
-            // ROLE_ Prefix 추가: Spring Security에서 권한을 인식하려면 ROLE_ prefix가 필요합니다.
-            // SimpleGrantedAuthority: GrantedAuthority를 정확하게 설정합니다.
-            // CustomUserDetails 및 Authentication 객체 생성
-            CustomUserDetails customUserDetails = new CustomUserDetails(member);
-
-            Authentication authToken = new UsernamePasswordAuthenticationToken(
-                    customUserDetails,
-                    null
-                    , Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-            );
-
-
-            Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-
-            log.info(authToken.toString());
-            // SecurityContext에 저장
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            log.info(" 확인 : " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
-            filterChain.doFilter(request, response);
-        } catch (ExpiredJwtException e) {
-            log.error("Token expired: {}", e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Access token expired");
-        } catch (Exception e) {
-            log.error("Error in JWTFilter: ", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("An error occurred during JWT processing.");
-        }
-    }
-
-*/
 
 

@@ -142,8 +142,12 @@ public class SecurityConfig {
                 // 현재 프로젝트 안에 뷰 페이지를 작업할 때 설정하는 방식임 (리액트 작업시 제외)
 
                             // JWT 사용시 추가되는 설정임
+
                             .requestMatchers(  "/css/**", "/public/**", "/js/**", "/login/**", "/member/**", "/reissue",
-                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**", "/**", "/favicon.ico", "/static/**", "/index.html").permitAll() // 공개 경로 설정 및 인증 경로 허용
+                                                "/api/**", "/program/**", "/dashboard/**", "/qna/**", "/**").permitAll() // 공개 경로 설정 및 인증 경로 허용
+//                            .requestMatchers("/favicon.ico", "/static/**", "/index.html").permitAll()
+//                            .requestMatchers("/static/**", "/", "/favicon.ico", "/**/*.css", "/**/*.js", "/**/*.png").permitAll()
+
                             // Notice
                             .requestMatchers(HttpMethod.POST, "/notice").hasRole("ADMIN")   // 작성
                             .requestMatchers(HttpMethod.GET, "/notice").hasAnyRole("ADMIN", "SENIOR", "MANAGER", "FAMILY")  // 목록출력
