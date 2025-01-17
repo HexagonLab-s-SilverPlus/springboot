@@ -42,7 +42,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/member/idchk",        // 아이디 중복체크 URL
                 "/member/enroll",       // 회원가입 URL
                 "/api/email",       // 이메일인증번호 요청 URL
-               "/api/email/verify",      // 이메일인증 URL
+                "/api/email/verify",      // 이메일인증 URL
                 "/member/fid",       // 아이디 찾기 URL
                 "/member/fpwd",     // 비밀번호 찾기 URL
                 "/member/pwdupdate",        // 비밀번호 변경 URL
@@ -52,6 +52,18 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/static"
         );
         return passURLs.stream().anyMatch(requestURI::contains);
+    }
+
+    private boolean isPassURL2(String requestURI) {
+        List<String> passURLs = Arrays.asList(
+                "/memRouter",
+                "/seniorlist",
+                "/mlistview",
+                "/myinfomanager",
+                "/myinfofamily",
+                "/myinfoadmin"
+        );
+        return passURLs.stream().anyMatch(requestURI::startsWith);
     }
 
     @Override
@@ -83,6 +95,10 @@ public class JWTFilter extends OncePerRequestFilter {
             if (requestURI.equals("/") || requestURI.equals("/logo.png") || requestURI.equals("/index.html") || requestURI.equals("/favicon.ico") || requestURI.equals("/dashlist")) {
                 filterChain.doFilter(request, response);
                 return; // 검사 없이 종료
+            }
+
+            if (isPassURL2(requestURI)) {
+                filterChain.doFilter(request, response);
             }
 
             if (request_accessToken != null && request_refreshToken != null) {
